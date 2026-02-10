@@ -1,5 +1,7 @@
 import admin from "firebase-admin";
 
+let db: FirebaseFirestore.Firestore;
+
 export const dbConnect = async () => {
   // Initialize Firebase Admin
   admin.initializeApp({
@@ -10,8 +12,11 @@ export const dbConnect = async () => {
     } as admin.ServiceAccount),
     projectId: process.env.FIREBASE_PROJECT_ID,
   });
+  
+  // Initialize Firestore after admin app is initialized
+  db = admin.firestore();
   console.log("✅ Connected to Firestore");
 };
 
-export const db = admin.firestore();
+export const getDb = () => db;
 export default admin;
