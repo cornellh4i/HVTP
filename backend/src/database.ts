@@ -1,18 +1,17 @@
-import mongoose, { ConnectOptions } from "mongoose";
+import admin from "firebase-admin";
 
 export const dbConnect = async () => {
-  const uri =
-    process.env.NODE_ENV == "dev" || process.env.NODE_ENV == "test"
-      ? process.env.DEV_URI
-      : process.env.PROD_URI;
-  await mongoose.connect(uri!, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  } as ConnectOptions);
-  console.log("✅ Connected to MongoDB");
+  // Initialize Firebase Admin
+  admin.initializeApp({
+    credential: admin.credential.cert({
+      projectId: process.env.FIREBASE_PROJECT_ID,
+      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+    } as admin.ServiceAccount),
+    projectId: process.env.FIREBASE_PROJECT_ID,
+  });
+  console.log("✅ Connected to Firestore");
 };
 
-export const dbDisconnect = async () => {
-  await mongoose.disconnect();
-  console.log("✅ Disconnected from MongoDB");
-};
+export const db = admin.firestore();
+export default admin;
