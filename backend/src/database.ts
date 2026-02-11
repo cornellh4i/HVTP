@@ -1,22 +1,10 @@
-import admin from "firebase-admin";
+import admin, { getDb }from "./config/firebase";
 
 let db: FirebaseFirestore.Firestore;
 
 export const dbConnect = async () => {
-  // Initialize Firebase Admin
-  admin.initializeApp({
-    credential: admin.credential.cert({
-      projectId: process.env.FIREBASE_PROJECT_ID,
-      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
-      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-    } as admin.ServiceAccount),
-    projectId: process.env.FIREBASE_PROJECT_ID,
-  });
-  
-  // Initialize Firestore after admin app is initialized
-  db = admin.firestore();
+  // Initialize Firestore (Firebase already initialized in firebase.ts)
+  db = getDb();
   console.log("✅ Connected to Firestore");
 };
 
-export const getDb = () => db;
-export default admin;
