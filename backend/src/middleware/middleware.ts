@@ -18,20 +18,21 @@ export const authenticateToken = async (
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
         res.status(401).json({ message: 'Unauthorized: No token provided' });
-        return
+        return;
     } 
 
     const idToken = authHeader.split('Bearer ')[1];
 
     try {
         const decodedToken = await admin.auth().verifyIdToken(idToken);
-        req.user = {uid: decodedToken.uid,
+        req.user = {
+            uid: decodedToken.uid,
             email: decodedToken.email
         };
         next();
     } catch (error) {
         console.error('Error verifying token:', error);
         res.status(401).json({ message: 'Unauthorized: Invalid token' });
-        return
+        return;
     }
 }

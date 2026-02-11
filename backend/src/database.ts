@@ -7,4 +7,3 @@ export const dbConnect = async () => {
   db = getDb();
   console.log("✅ Connected to Firestore");
 };
-
