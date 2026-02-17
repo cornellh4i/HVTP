@@ -9,7 +9,7 @@ import { dbConnect } from "./database";
 const app = express();
 
 // Middleware to parse json request bodies
-app.use(bodyParser.json());
+app.use(bodyParser.json()); 
 app.use("/api-docs", swaggerUI.serve, swaggerUI.setup(spec));
 
 /**

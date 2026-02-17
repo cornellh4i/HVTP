@@ -3,6 +3,10 @@
     "dev": "concurrently \"npm --prefix backend start\" \"npm --prefix frontend start\""
   },
   "devDependencies": {
+    "@types/react": "^19.2.14",
     "concurrently": "^7.0.0"
+  },
+  "dependencies": {
+    "react": "^19.2.4"
   }
 }
