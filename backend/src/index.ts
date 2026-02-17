@@ -1,13 +1,14 @@
 import express from "express";
 import bodyParser from "body-parser";
 // import userRouter from "./users/views";
+import itemsRouter from "./routes/items"; // or "./items/routes" depending on your folder name
 import customerRouter from "./customers/views";
 import swaggerUI from "swagger-ui-express";
 import spec from "../api-spec.json";
 import { dbConnect } from "./database";
 
 const app = express();
-
+ 
 // Middleware to parse json request bodies
 app.use(bodyParser.json()); 
 app.use("/api-docs", swaggerUI.serve, swaggerUI.setup(spec));
@@ -17,6 +18,7 @@ app.use("/api-docs", swaggerUI.serve, swaggerUI.setup(spec));
  */
 // app.use("/users", userRouter);
 app.use("/customers", customerRouter);
+app.use("/api/middleware", itemsRouter);
 
 /**
  * Some dummy routes to illustrate express syntax
