@@ -1,37 +1,38 @@
-import express from "express";
-import bodyParser from "body-parser";
-// import userRouter from "./users/views";
-import itemsRouter from "./routes/items"; // or "./items/routes" depending on your folder name
-import customerRouter from "./customers/views";
-import swaggerUI from "swagger-ui-express";
-import spec from "../api-spec.json";
-import { dbConnect } from "./database";
+import express from 'express';
+import bodyParser from 'body-parser';
+// import userRouter from './users/views';
+import itemsRouter from './routes/items'; // or './items/routes' depending on your folder name
+import customerRouter from './customers/views';
+import swaggerUI from 'swagger-ui-express';
+import spec from '../api-spec.json';
+import { dbConnect } from './database';
+import itemRoutes from './routes/items';
 
 const app = express();
  
 // Middleware to parse json request bodies
 app.use(bodyParser.json()); 
-app.use("/api-docs", swaggerUI.serve, swaggerUI.setup(spec));
+app.use('/api-docs', swaggerUI.serve, swaggerUI.setup(spec));
 
 /**
- * Sub-routers for our main router, we should have one sub-router per "entity" in the application
+ * Sub-routers for our main router, we should have one sub-router per 'entity' in the application
  */
-// app.use("/users", userRouter);
-app.use("/customers", customerRouter);
-app.use("/api/middleware", itemsRouter);
+// app.use('/users', userRouter);
+app.use('/customers', customerRouter);
+app.use('/api/middleware', itemRoutes);
 
 /**
  * Some dummy routes to illustrate express syntax
  */
-app.get("/", function (req, res) {
-  res.send("Hello World!");
+app.get('/', function (req, res) {
+  res.send('Hello World!');
 });
 
-app.post("/", (req, res) => {
+app.post('/', (req, res) => {
   res.send(req.body);
 });
 
 app.listen(process.env.PORT || 8000, async () => {
-  console.log("✅ Server is up and running");
+  console.log('✅ Server is up and running');
   await dbConnect();
 });

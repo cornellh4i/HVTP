@@ -1,16 +1,18 @@
-import express from "express";
+import express from 'express';
 // This is is where you would write the code for the User Routes. 
 // You would call your implementation on `controllers/items.ts`
-import bodyParser from "body-parser";
-import customerRouter from "../customers/views";
-import swaggerUI from "swagger-ui-express";
-import spec from "../../api-spec.json";
-import { dbConnect } from "../database";
-import { getAllItems } from "../controllers/items";
+import {
+  getAllItems,
+  getItemById,
+  addItem,
+  updateItem
+} from '../controllers/items';
 
 const router = express.Router();
 
-// Routes
-router.get("/allItems", getAllItems);
+router.get('/allitems', getAllItems);
+router.get('/itemById', getItemById);
+router.post('/addItem', addItem);
+router.patch('/updateItem', updateItem);
 
 export default router;
