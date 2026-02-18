@@ -5,6 +5,7 @@ import customerRouter from "./customers/views";
 import swaggerUI from "swagger-ui-express";
 import spec from "../api-spec.json";
 import { dbConnect } from "./database";
+import itemRoutes from "./routes/items";
 
 const app = express();
 
@@ -17,6 +18,7 @@ app.use("/api-docs", swaggerUI.serve, swaggerUI.setup(spec));
  */
 // app.use("/users", userRouter);
 app.use("/customers", customerRouter);
+app.use('/api/middleware', itemRoutes);
 
 /**
  * Some dummy routes to illustrate express syntax
