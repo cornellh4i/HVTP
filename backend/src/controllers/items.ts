@@ -18,6 +18,11 @@ export const getAllItems = async (req: Request, res: Response) => {
 export const getItemById = async (req: Request, res: Response) => {
   try {
     const { id } = req.query;
+
+    if (!id) {
+      return res.status(400).json({ error: "Missing ID" });
+    }
+
     const snapshot = await db.collection("items").where("id", "==", id).get();
 
     if (snapshot.empty) {
@@ -58,6 +63,11 @@ export const addItem = async (req: Request, res: Response) => {
 export const updateItem = async (req: Request, res: Response) => {
   try {
     const { id } = req.query;
+
+    if (!id) {
+      return res.status(400).json({ error: "Missing ID" });
+    }
+
     const snapshot = await db.collection("items").where("id", "==", id).get();
 
     if (snapshot.empty) {
@@ -65,8 +75,30 @@ export const updateItem = async (req: Request, res: Response) => {
     }
 
     const ref = snapshot.docs[0].ref;
-    ref.update(req.body);
+    await ref.update(req.body);
     res.status(200).json({ message: "Item updated" });
+  } catch {
+    res.status(500).json({ error: "Update failed" });
+  }
+};
+
+export const deleteItem = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.query;
+
+    if (!id) {
+      return res.status(400).json({ error: "Missing ID" });
+    }
+
+    const snapshot = await db.collection("items").where("id", "==", id).get();
+
+    if (snapshot.empty) {
+      return res.status(404).json({ error: "Item not found" });
+    }
+
+    const ref = snapshot.docs[0].ref;
+    await ref.delete();
+    res.status(200).json({ message: "Item deleted" });
   } catch {
     res.status(500).json({ error: "Update failed" });
   }
