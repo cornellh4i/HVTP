@@ -44,7 +44,6 @@ export const getUserById = async (req: Request, res: Response): Promise<void> =>
         }
 
         const user: UserFields = {
-            id: userDoc.id,
             ...userDoc.data()
         } as UserFields;
         res.status(200).json(successJson(user));
