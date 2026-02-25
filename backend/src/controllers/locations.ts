@@ -22,3 +22,76 @@ export const getAllLocations = async (req: Request, res: Response) => {
     return res.status(500).json({ message: "Error fetching locations", error: errror });
   }
 };
+
+export const getLocationById = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.query;
+
+    if (!id) {
+      return res.status(400).json({ message: "ID is required" });
+    }
+
+    const doc = await db.collection("locations").doc(id as string).get();
+
+    if (!doc.exists) {
+      return res.status(404).json({ message: "Location not found" });
+    }
+
+    return res.status(200).json({
+      id: doc.id,
+      ...doc.data()
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      message: "Error fetching location",
+      error
+    });
+  }
+};
+
+export const createLocation = async (req: Request, res: Response) => {
+  try {
+    const newLocation = req.body;
+
+    const docRef = await db.collection("locations").add(newLocation);
+
+    return res.status(201).json({
+      id: docRef.id,
+      ...newLocation,
+    });
+
+  } catch (error) {
+    return res.status(500).json({ message: "Error creating location", error });
+  }
+};
+
+export const updateLocation = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.body; // assuming id comes in body
+    const updates = req.body;
+
+    if (!id) {
+      return res.status(400).json({ message: "ID is required" });
+    }
+
+    const docRef = db.collection("locations").doc(id);
+    const doc = await docRef.get();
+
+    if (!doc.exists) {
+      return res.status(404).json({ message: "Location not found" });
+    }
+
+    await docRef.update(updates);
+
+    return res.status(200).json({
+      message: "Location updated successfully"
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      message: "Error updating location",
+      error
+    });
+  }
+};
