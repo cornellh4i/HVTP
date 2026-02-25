@@ -14,8 +14,7 @@ export const getAllUsers = async (req: Request, res: Response): Promise<void> =>
 
         usersSnapshot.forEach(doc => {
             users.push({
-                id: doc.id,
-                ...doc.data()
+               ...doc.data()
             } as UserFields);
         });
         res.status(200).json(successJson(users));
