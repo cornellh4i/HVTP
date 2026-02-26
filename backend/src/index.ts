@@ -1,12 +1,13 @@
 import express from 'express';
 import bodyParser from 'body-parser';
 // import userRouter from './users/views';
-import itemsRouter from './routes/items'; // or './items/routes' depending on your folder name
+import itemsRouter from './routes/items'; 
 import customerRouter from './customers/views';
 import swaggerUI from 'swagger-ui-express';
 import spec from '../api-spec.json';
 import { dbConnect } from './database';
 import itemRoutes from './routes/items';
+import userRouter from "./routes/users";
 
 const app = express();
  
@@ -20,6 +21,7 @@ app.use('/api-docs', swaggerUI.serve, swaggerUI.setup(spec));
 // app.use('/users', userRouter);
 app.use('/customers', customerRouter);
 app.use('/api/middleware', itemRoutes);
+app.use("/api/middleware", userRouter);
 
 /**
  * Some dummy routes to illustrate express syntax

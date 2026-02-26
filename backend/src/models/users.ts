@@ -1,8 +1,7 @@
 export interface UserFields { 
-    id?: string; 
     email: string;
     name: string;
 }
 
-export type UserInsert = UserFields;
-export type UserUpdate = Partial<UserFields>;
+export type UserInsert = Omit<UserFields, 'id'>;
+export type UserUpdate = Partial<UserInsert>;
