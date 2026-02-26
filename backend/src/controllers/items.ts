@@ -23,13 +23,15 @@ export const getItemById = async (req: Request, res: Response) => {
       return res.status(400).json({ error: "Missing ID" });
     }
 
-    const snapshot = await db.collection("items").where("id", "==", id).get();
+    const doc = await db
+      .collection("items")
+      .doc(id as string)
+      .get();
 
-    if (snapshot.empty) {
+    if (!doc) {
       return res.status(404).json({ error: "Item not found" });
     }
 
-    const doc = snapshot.docs[0];
     res.status(200).json({ docId: doc.id, ...doc.data() });
   } catch {
     res.status(500).json({ error: "Error retrieving item" });
@@ -68,13 +70,16 @@ export const updateItem = async (req: Request, res: Response) => {
       return res.status(400).json({ error: "Missing ID" });
     }
 
-    const snapshot = await db.collection("items").where("id", "==", id).get();
+    const doc = await db
+      .collection("items")
+      .doc(id as string)
+      .get();
 
-    if (snapshot.empty) {
+    if (!doc) {
       return res.status(404).json({ error: "Item not found" });
     }
 
-    const ref = snapshot.docs[0].ref;
+    const ref = doc.ref;
     await ref.update(req.body);
     res.status(200).json({ message: "Item updated" });
   } catch {
@@ -90,13 +95,16 @@ export const deleteItem = async (req: Request, res: Response) => {
       return res.status(400).json({ error: "Missing ID" });
     }
 
-    const snapshot = await db.collection("items").where("id", "==", id).get();
+    const doc = await db
+      .collection("items")
+      .doc(id as string)
+      .get();
 
-    if (snapshot.empty) {
+    if (!doc) {
       return res.status(404).json({ error: "Item not found" });
     }
 
-    const ref = snapshot.docs[0].ref;
+    const ref = doc.ref;
     await ref.delete();
     res.status(200).json({ message: "Item deleted" });
   } catch {
