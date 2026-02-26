@@ -5,7 +5,7 @@ import { getDb } from "../config/firebase";
 const db = getDb();
 
 
-export const getAllLocations = async (req: Request, res: Response) => {
+export const allLocations = async (req: Request, res: Response) => { // get all items
   try {
     // from the locations collection in Firestore, retrieve all documents
     const snapshot = await db.collection("locations").get();
@@ -25,7 +25,7 @@ export const getAllLocations = async (req: Request, res: Response) => {
 
 export const getLocationById = async (req: Request, res: Response) => {
   try {
-    const { id } = req.query;
+    const { id } = req.params;
 
     if (!id) {
       return res.status(400).json({ message: "ID is required" });
@@ -50,25 +50,10 @@ export const getLocationById = async (req: Request, res: Response) => {
   }
 };
 
-export const createLocation = async (req: Request, res: Response) => {
-  try {
-    const newLocation = req.body;
-
-    const docRef = await db.collection("locations").add(newLocation);
-
-    return res.status(201).json({
-      id: docRef.id,
-      ...newLocation,
-    });
-
-  } catch (error) {
-    return res.status(500).json({ message: "Error creating location", error });
-  }
-};
 
 export const updateLocation = async (req: Request, res: Response) => {
   try {
-    const { id } = req.body; // assuming id comes in body
+    const { id } = req.params; 
     const updates = req.body;
 
     if (!id) {
@@ -93,5 +78,21 @@ export const updateLocation = async (req: Request, res: Response) => {
       message: "Error updating location",
       error
     });
+  }
+};
+
+export const addLocation = async (req: Request, res: Response) => {
+  try {
+    const newLocation = req.body;
+
+    const docRef = await db.collection("locations").add(newLocation);
+
+    return res.status(201).json({
+      id: docRef.id,
+      ...newLocation,
+    });
+
+  } catch (error) {
+    return res.status(500).json({ message: "Error creating location", error });
   }
 };

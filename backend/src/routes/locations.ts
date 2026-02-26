@@ -1,18 +1,18 @@
 import express from "express";
 import { 
-    getAllLocations,
-    getLocationById,
-    createLocation,
+    allLocations,
+    getLocationById,    
     updateLocation,
+    addLocation
 
 } from "../controllers/locations";
 
 
 const router = express.Router();
 
-router.get("/locations", getAllLocations);
+router.get("/locations", allLocations);
 router.get("/:id", getLocationById);
-router.post("/", createLocation);
-router.put("/:id", updateLocation);
+router.patch("/:id", updateLocation);
+router.post("/", addLocation);
 
 export default router;

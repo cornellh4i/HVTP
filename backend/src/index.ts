@@ -19,7 +19,7 @@ app.use("/api-docs", swaggerUI.serve, swaggerUI.setup(spec));
 // app.use("/users", userRouter);
 app.use("/customers", customerRouter);
 
-app.use("/", locationRoutes);
+app.use("/api/middleware", locationRoutes);
 
 /**
  * Some dummy routes to illustrate express syntax
