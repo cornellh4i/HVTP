@@ -11,8 +11,8 @@ import {
 const router = express.Router();
 
 router.get("/locations", allLocations);
-router.get("/:id", getLocationById);
-router.patch("/:id", updateLocation);
-router.post("/", addLocation);
+router.get("/locationById/:id", getLocationById);
+router.patch("/updateLocation/:id", updateLocation);
+router.post("/addLocation", addLocation);
 
 export default router;
