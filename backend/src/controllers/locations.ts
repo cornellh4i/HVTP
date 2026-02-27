@@ -85,6 +85,15 @@ export const addLocation = async (req: Request, res: Response) => {
   try {
     const newLocation = req.body;
 
+    if (
+      !newLocation.createdAt ||
+      !newLocation.isActive ||
+      !newLocation.name ||
+      !newLocation.section
+    ) { 
+      return res.status(400).json({ error: "Missing required fields for location" });
+    }
+
     const docRef = await db.collection("locations").add(newLocation);
 
     return res.status(201).json({
