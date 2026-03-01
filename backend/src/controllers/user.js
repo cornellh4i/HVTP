@@ -8,72 +8,153 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __rest = (this && this.__rest) || function (s, e) {
-    var t = {};
-    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
-        t[p] = s[p];
-    if (s != null && typeof Object.getOwnPropertySymbols === "function")
-        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
-            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
-                t[p[i]] = s[p[i]];
-        }
-    return t;
-};
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.updateUser = exports.addUser = exports.deleteUserById = exports.getUserById = exports.getAllUsers = void 0;
 const firebase_1 = require("../config/firebase");
-const usersCollection = "users";
-const mapUserDoc = (id, data) => ({
-    id,
-    name: data.name,
-    email: data.email,
-});
-/**
- * Finds a user by Firestore document id.
- */
-const getUserById = (id) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
-    const doc = yield (0, firebase_1.getDb)().collection(usersCollection).doc(id).get();
-    if (!doc.exists) {
-        return null;
+const jsonResponses_1 = require("../utils/jsonResponses");
+// This is is where you would write the code for the User controllers. 
+// Get all users controller
+const getAllUsers = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const db = (0, firebase_1.getDb)();
+        const usersSnapshot = yield db.collection('users').get();
+        const users = [];
+        usersSnapshot.forEach(doc => {
+            users.push(Object.assign({ id: doc.id }, doc.data()));
+        });
+        res.status(200).json((0, jsonResponses_1.successJson)(users));
     }
-    return mapUserDoc(doc.id, (_a = doc.data()) !== null && _a !== void 0 ? _a : {});
+    catch (error) {
+        console.error('Error fetching users:', error);
+        res.status(500).json((0, jsonResponses_1.errorJson)('Failed to fetch users'));
+    }
 });
-/**
- * Creates a user in Firestore.
- */
-const createUser = (user) => __awaiter(void 0, void 0, void 0, function* () {
-    var _b, _c;
-    const { id } = user, userData = __rest(user, ["id"]);
-    if (id && id.trim() !== "") {
-        const userRef = (0, firebase_1.getDb)().collection(usersCollection).doc(id.trim());
-        yield userRef.set(userData);
+exports.getAllUsers = getAllUsers;
+// Get user by ID controller
+const getUserById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { id } = req.query;
+        if (!id || typeof id !== 'string') {
+            res.status(400).json((0, jsonResponses_1.errorJson)('Invalid or missing user ID'));
+            return;
+        }
+        const db = (0, firebase_1.getDb)();
+        const userDoc = yield db.collection('users').doc(id).get();
+        if (!userDoc.exists) {
+            res.status(404).json((0, jsonResponses_1.errorJson)('User not found'));
+            return;
+        }
+        const user = Object.assign({ id: userDoc.id }, userDoc.data());
+        res.status(200).json((0, jsonResponses_1.successJson)(user));
+    }
+    catch (error) {
+        console.error('Error fetching user by ID:', error);
+        res.status(500).json((0, jsonResponses_1.errorJson)('Failed to fetch user by ID'));
+    }
+});
+exports.getUserById = getUserById;
+// Delete user by ID controller
+const deleteUserById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { id } = req.params;
+        if (!id || typeof id !== 'string') {
+            res.status(400).json((0, jsonResponses_1.errorJson)('Invalid or missing user ID'));
+            return;
+        }
+        const db = (0, firebase_1.getDb)();
+        const userDoc = yield db.collection('users').doc(id).get();
+        if (!userDoc.exists) {
+            res.status(404).json((0, jsonResponses_1.errorJson)('User not found'));
+            return;
+        }
+        yield db.collection('users').doc(id).delete();
+        res.status(200).json((0, jsonResponses_1.successJson)('User with ID ' + id + ' deleted successfully'));
+    }
+    catch (error) {
+        console.error('Error deleting user by ID:', error);
+        res.status(500).json((0, jsonResponses_1.errorJson)('Failed to delete user by ID'));
+    }
+});
+exports.deleteUserById = deleteUserById;
+// Add user controller
+const addUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { id, name, email } = req.body;
+        if (!name || typeof name !== 'string' || name.trim() === '') {
+            res.status(400).json((0, jsonResponses_1.errorJson)("Missing or invalid 'name' in request body"));
+            return;
+        }
+        if (!email || typeof email !== 'string' || email.trim() === '') {
+            res.status(400).json((0, jsonResponses_1.errorJson)("Missing or invalid 'email' in request body"));
+            return;
+        }
+        if (id !== undefined && (typeof id !== 'string' || id.trim() === '')) {
+            res.status(400).json((0, jsonResponses_1.errorJson)("Invalid 'id' in request body"));
+            return;
+        }
+        const db = (0, firebase_1.getDb)();
+        const payload = {
+            name: name.trim(),
+            email: email.trim(),
+        };
+        let userRef;
+        if (typeof id === 'string' && id.trim() !== '') {
+            userRef = db.collection('users').doc(id.trim());
+            yield userRef.set(payload);
+        }
+        else {
+            userRef = yield db.collection('users').add(payload);
+        }
         const createdDoc = yield userRef.get();
-        return mapUserDoc(createdDoc.id, (_b = createdDoc.data()) !== null && _b !== void 0 ? _b : {});
+        const createdUser = Object.assign({ id: createdDoc.id }, createdDoc.data());
+        res.status(201).json((0, jsonResponses_1.successJson)(createdUser));
     }
-    const userRef = yield (0, firebase_1.getDb)().collection(usersCollection).add(userData);
-    const createdDoc = yield userRef.get();
-    return mapUserDoc(createdDoc.id, (_c = createdDoc.data()) !== null && _c !== void 0 ? _c : {});
+    catch (error) {
+        console.error('Error adding user:', error);
+        res.status(500).json((0, jsonResponses_1.errorJson)('Failed to add user'));
+    }
 });
-/**
- * Updates existing user fields by Firestore document id.
- */
-const updateUser = (id, updates) => __awaiter(void 0, void 0, void 0, function* () {
-    var _d;
-    const safeUpdates = Object.assign({}, updates);
-    if (Object.keys(safeUpdates).length === 0) {
-        return getUserById(id);
+exports.addUser = addUser;
+// Update user controller
+const updateUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { id, name, email } = req.body;
+        if (!id || typeof id !== 'string' || id.trim() === '') {
+            res.status(400).json((0, jsonResponses_1.errorJson)("Missing or invalid 'id' in request body"));
+            return;
+        }
+        if (name !== undefined && (typeof name !== 'string' || name.trim() === '')) {
+            res.status(400).json((0, jsonResponses_1.errorJson)("Invalid 'name' field"));
+            return;
+        }
+        if (email !== undefined && (typeof email !== 'string' || email.trim() === '')) {
+            res.status(400).json((0, jsonResponses_1.errorJson)("Invalid 'email' field"));
+            return;
+        }
+        const db = (0, firebase_1.getDb)();
+        const userRef = db.collection('users').doc(id.trim());
+        const existingDoc = yield userRef.get();
+        if (!existingDoc.exists) {
+            res.status(404).json((0, jsonResponses_1.errorJson)('User not found'));
+            return;
+        }
+        const updates = {};
+        if (typeof name === 'string') {
+            updates.name = name.trim();
+        }
+        if (typeof email === 'string') {
+            updates.email = email.trim();
+        }
+        if (Object.keys(updates).length > 0) {
+            yield userRef.update(updates);
+        }
+        const updatedDoc = yield userRef.get();
+        const updatedUser = Object.assign({ id: updatedDoc.id }, updatedDoc.data());
+        res.status(200).json((0, jsonResponses_1.successJson)(updatedUser));
     }
-    const userRef = (0, firebase_1.getDb)().collection(usersCollection).doc(id);
-    const existingDoc = yield userRef.get();
-    if (!existingDoc.exists) {
-        return null;
+    catch (error) {
+        console.error('Error updating user:', error);
+        res.status(500).json((0, jsonResponses_1.errorJson)('Failed to update user'));
     }
-    yield userRef.update(safeUpdates);
-    const updatedDoc = yield userRef.get();
-    return mapUserDoc(updatedDoc.id, (_d = updatedDoc.data()) !== null && _d !== void 0 ? _d : {});
 });
-exports.default = {
-    createUser,
-    getUserById,
-    updateUser,
-};
+exports.updateUser = updateUser;

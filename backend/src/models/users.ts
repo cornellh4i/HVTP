@@ -1,4 +1,5 @@
 export interface UserFields { 
+    id?: string;
     email: string;
     name: string;
 }
