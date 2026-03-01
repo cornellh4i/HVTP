@@ -1,5 +1,5 @@
 NODE_ENV = "dev"
 PORT = "8000"
-FIREBASE_PROJECT_ID = "[insert here]"
-FIREBASE_CLIENT_EMAIL = "[insert here]"
+FIREBASE_PROJECT_ID = "[insert here]" 
+FIREBASE_CLIENT_EMAIL = "[insert here]" 
 FIREBASE_PRIVATE_KEY = "[insert here]"

@@ -1,78 +1,82 @@
-import { UserInsert, UserRecord, UserUpdate } from "../models/users";
-import { getDb } from "../config/firebase";
+import { UserFields } from '../models/users';
+import { getDb } from '../config/firebase';
+import { Request, Response } from 'express';
+import { successJson, errorJson } from '../utils/jsonResponses';
 
-const usersCollection = "users";
+// This is is where you would write the code for the User controllers. 
 
-const mapUserDoc = (
-  id: string,
-  data: FirebaseFirestore.DocumentData
-): UserRecord => ({
-  id,
-  name: data.name as string,
-  email: data.email as string,
-});
+// Get all users controller
+export const getAllUsers = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const db = getDb();
+        const usersSnapshot = await db.collection('users').get();
+        const users: UserFields[] = [];
 
-/**
- * Finds a user by Firestore document id.
- */
-const getUserById = async (id: string): Promise<UserRecord | null> => {
-  const doc = await getDb().collection(usersCollection).doc(id).get();
+        usersSnapshot.forEach(doc => {
+            users.push({
+               ...doc.data()
+            } as UserFields);
+        });
+        res.status(200).json(successJson(users));
 
-  if (!doc.exists) {
-    return null;
-  }
-
-  return mapUserDoc(doc.id, doc.data() ?? {});
+    } catch (error) {
+        console.error('Error fetching users:', error);
+        res.status(500).json(errorJson('Failed to fetch users'));
+    }
 };
 
-/**
- * Creates a user in Firestore.
- */
-const createUser = async (user: UserInsert): Promise<UserRecord> => {
-  const { id, ...userData } = user;
+// Get user by ID controller
+export const getUserById = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { id } = req.query;
 
-  if (id && id.trim() !== "") {
-    const userRef = getDb().collection(usersCollection).doc(id.trim());
-    await userRef.set(userData);
-    const createdDoc = await userRef.get();
-    return mapUserDoc(createdDoc.id, createdDoc.data() ?? {});
-  }
+        if (!id || typeof id !== 'string') {
+            res.status(400).json(errorJson('Invalid or missing user ID'));
+            return;
+        }
 
-  const userRef = await getDb().collection(usersCollection).add(userData);
-  const createdDoc = await userRef.get();
-  return mapUserDoc(createdDoc.id, createdDoc.data() ?? {});
+        const db = getDb();
+        const userDoc = await db.collection('users').doc(id).get();
+
+        if (!userDoc.exists) {
+            res.status(404).json(errorJson('User not found'));
+            return;
+        }
+
+        const user: UserFields = {
+            ...userDoc.data()
+        } as UserFields;
+        res.status(200).json(successJson(user));
+
+    } catch (error) {
+        console.error('Error fetching user by ID:', error);
+        res.status(500).json(errorJson('Failed to fetch user by ID'));
+    }
 };
 
-/**
- * Updates existing user fields by Firestore document id.
- */
-const updateUser = async (
-  id: string,
-  updates: UserUpdate
-): Promise<UserRecord | null> => {
-  const safeUpdates: UserUpdate = { ...updates };
+// Delete user by ID controller
+export const deleteUserById = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { id } = req.params;
 
-  if (Object.keys(safeUpdates).length === 0) {
-    return getUserById(id);
-  }
+        if (!id || typeof id !== 'string') {
+            res.status(400).json(errorJson('Invalid or missing user ID'));
+            return;
+        }
 
-  const userRef = getDb().collection(usersCollection).doc(id);
-  const existingDoc = await userRef.get();
+        const db = getDb();
+        const userDoc = await db.collection('users').doc(id).get();
 
-  if (!existingDoc.exists) {
-    return null;
-  }
+        if (!userDoc.exists) {
+            res.status(404).json(errorJson('User not found'));
+            return;
+        }
 
-  await userRef.update(
-    safeUpdates as FirebaseFirestore.UpdateData<FirebaseFirestore.DocumentData>
-  );
-  const updatedDoc = await userRef.get();
+        await db.collection('users').doc(id).delete();
+        res.status(200).json(successJson('User with ID ' + id + ' deleted successfully'));
 
-  return mapUserDoc(updatedDoc.id, updatedDoc.data() ?? {});
-};
-
-export default {
-  createUser,
-  getUserById,
-  updateUser,
-};
+    } catch (error) {
+        console.error('Error deleting user by ID:', error);
+        res.status(500).json(errorJson('Failed to delete user by ID'));
+    }
+} 
