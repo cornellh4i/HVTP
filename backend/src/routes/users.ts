@@ -1,16 +1,32 @@
-import { Router } from "express";
+import { Request, Router } from "express";
 import UserController from "../controllers/user";
 import { authenticateToken } from "../middleware/middleware";
+import { UserInsert, UserUpdate } from "../models/users";
 import { errorJson, successJson } from "../utils/jsonResponses";
 
 const userRouter = Router();
 
 userRouter.use(authenticateToken);
 
-userRouter.get("/userById", async (req, res) => {
+interface GetUserQuery {
+  id?: string;
+}
+
+type AddUserBody = UserInsert;
+
+interface UpdateUserBody extends UserUpdate {
+  id?: string;
+}
+
+const isNonEmptyString = (value: unknown): value is string =>
+  typeof value === "string" && value.trim() !== "";
+
+userRouter.get(
+  "/userById",
+  async (req: Request<{}, unknown, unknown, GetUserQuery>, res) => {
   const { id } = req.query;
 
-  if (typeof id !== "string" || id.trim() === "") {
+  if (!isNonEmptyString(id)) {
     res.status(400).send(errorJson("Missing or invalid 'id' query parameter"));
     return;
   }
@@ -27,26 +43,23 @@ userRouter.get("/userById", async (req, res) => {
   } catch (error) {
     res.status(500).send(errorJson(error));
   }
-});
+}
+);
 
-userRouter.post("/createUser", async (req, res) => {
-  const { id, name, email } = req.body as {
-    id?: string;
-    name?: string;
-    email?: string;
-  };
+userRouter.post("/addUser", async (req: Request<{}, unknown, AddUserBody>, res) => {
+  const { id, name, email } = req.body;
 
-  if (!name || typeof name !== "string" || name.trim() === "") {
+  if (!isNonEmptyString(name)) {
     res.status(400).send(errorJson("Missing or invalid 'name' in request body"));
     return;
   }
 
-  if (!email || typeof email !== "string" || email.trim() === "") {
+  if (!isNonEmptyString(email)) {
     res.status(400).send(errorJson("Missing or invalid 'email' in request body"));
     return;
   }
 
-  if (id !== undefined && (typeof id !== "string" || id.trim() === "")) {
+  if (id !== undefined && !isNonEmptyString(id)) {
     res.status(400).send(errorJson("Invalid 'id' in request body"));
     return;
   }
@@ -64,30 +77,20 @@ userRouter.post("/createUser", async (req, res) => {
   }
 });
 
-userRouter.patch("/updateUser", async (req, res) => {
-  const { id, ...updates } = req.body as {
-    id?: string;
-    name?: string;
-    email?: string;
-  };
+userRouter.patch("/updateUser", async (req: Request<{}, unknown, UpdateUserBody>, res) => {
+  const { id, ...updates } = req.body;
 
-  if (!id || typeof id !== "string" || id.trim() === "") {
+  if (!isNonEmptyString(id)) {
     res.status(400).send(errorJson("Missing or invalid 'id' in request body"));
     return;
   }
 
-  if (
-    updates.name !== undefined &&
-    (typeof updates.name !== "string" || updates.name.trim() === "")
-  ) {
+  if (updates.name !== undefined && !isNonEmptyString(updates.name)) {
     res.status(400).send(errorJson("Invalid 'name' field"));
     return;
   }
 
-  if (
-    updates.email !== undefined &&
-    (typeof updates.email !== "string" || updates.email.trim() === "")
-  ) {
+  if (updates.email !== undefined && !isNonEmptyString(updates.email)) {
     res.status(400).send(errorJson("Invalid 'email' field"));
     return;
   }

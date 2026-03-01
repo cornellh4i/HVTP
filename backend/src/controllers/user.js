@@ -60,7 +60,6 @@ const createUser = (user) => __awaiter(void 0, void 0, void 0, function* () {
 const updateUser = (id, updates) => __awaiter(void 0, void 0, void 0, function* () {
     var _d;
     const safeUpdates = Object.assign({}, updates);
-    delete safeUpdates.id;
     if (Object.keys(safeUpdates).length === 0) {
         return getUserById(id);
     }

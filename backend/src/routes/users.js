@@ -29,9 +29,10 @@ const middleware_1 = require("../middleware/middleware");
 const jsonResponses_1 = require("../utils/jsonResponses");
 const userRouter = (0, express_1.Router)();
 userRouter.use(middleware_1.authenticateToken);
+const isNonEmptyString = (value) => typeof value === "string" && value.trim() !== "";
 userRouter.get("/userById", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id } = req.query;
-    if (typeof id !== "string" || id.trim() === "") {
+    if (!isNonEmptyString(id)) {
         res.status(400).send((0, jsonResponses_1.errorJson)("Missing or invalid 'id' query parameter"));
         return;
     }
@@ -47,17 +48,17 @@ userRouter.get("/userById", (req, res) => __awaiter(void 0, void 0, void 0, func
         res.status(500).send((0, jsonResponses_1.errorJson)(error));
     }
 }));
-userRouter.post("/createUser", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+userRouter.post("/addUser", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id, name, email } = req.body;
-    if (!name || typeof name !== "string" || name.trim() === "") {
+    if (!isNonEmptyString(name)) {
         res.status(400).send((0, jsonResponses_1.errorJson)("Missing or invalid 'name' in request body"));
         return;
     }
-    if (!email || typeof email !== "string" || email.trim() === "") {
+    if (!isNonEmptyString(email)) {
         res.status(400).send((0, jsonResponses_1.errorJson)("Missing or invalid 'email' in request body"));
         return;
     }
-    if (id !== undefined && (typeof id !== "string" || id.trim() === "")) {
+    if (id !== undefined && !isNonEmptyString(id)) {
         res.status(400).send((0, jsonResponses_1.errorJson)("Invalid 'id' in request body"));
         return;
     }
@@ -71,17 +72,15 @@ userRouter.post("/createUser", (req, res) => __awaiter(void 0, void 0, void 0, f
 }));
 userRouter.patch("/updateUser", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const _a = req.body, { id } = _a, updates = __rest(_a, ["id"]);
-    if (!id || typeof id !== "string" || id.trim() === "") {
+    if (!isNonEmptyString(id)) {
         res.status(400).send((0, jsonResponses_1.errorJson)("Missing or invalid 'id' in request body"));
         return;
     }
-    if (updates.name !== undefined &&
-        (typeof updates.name !== "string" || updates.name.trim() === "")) {
+    if (updates.name !== undefined && !isNonEmptyString(updates.name)) {
         res.status(400).send((0, jsonResponses_1.errorJson)("Invalid 'name' field"));
         return;
     }
-    if (updates.email !== undefined &&
-        (typeof updates.email !== "string" || updates.email.trim() === "")) {
+    if (updates.email !== undefined && !isNonEmptyString(updates.email)) {
         res.status(400).send((0, jsonResponses_1.errorJson)("Invalid 'email' field"));
         return;
     }

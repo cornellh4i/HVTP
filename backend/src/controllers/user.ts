@@ -1,4 +1,4 @@
-import { UserFields, UserUpdate } from "../models/users";
+import { UserInsert, UserRecord, UserUpdate } from "../models/users";
 import { getDb } from "../config/firebase";
 
 const usersCollection = "users";
@@ -6,7 +6,7 @@ const usersCollection = "users";
 const mapUserDoc = (
   id: string,
   data: FirebaseFirestore.DocumentData
-): UserFields => ({
+): UserRecord => ({
   id,
   name: data.name as string,
   email: data.email as string,
@@ -15,7 +15,7 @@ const mapUserDoc = (
 /**
  * Finds a user by Firestore document id.
  */
-const getUserById = async (id: string): Promise<UserFields | null> => {
+const getUserById = async (id: string): Promise<UserRecord | null> => {
   const doc = await getDb().collection(usersCollection).doc(id).get();
 
   if (!doc.exists) {
@@ -28,7 +28,7 @@ const getUserById = async (id: string): Promise<UserFields | null> => {
 /**
  * Creates a user in Firestore.
  */
-const createUser = async (user: UserFields): Promise<UserFields> => {
+const createUser = async (user: UserInsert): Promise<UserRecord> => {
   const { id, ...userData } = user;
 
   if (id && id.trim() !== "") {
@@ -49,9 +49,8 @@ const createUser = async (user: UserFields): Promise<UserFields> => {
 const updateUser = async (
   id: string,
   updates: UserUpdate
-): Promise<UserFields | null> => {
+): Promise<UserRecord | null> => {
   const safeUpdates: UserUpdate = { ...updates };
-  delete safeUpdates.id;
 
   if (Object.keys(safeUpdates).length === 0) {
     return getUserById(id);
@@ -64,7 +63,9 @@ const updateUser = async (
     return null;
   }
 
-  await userRef.update(safeUpdates);
+  await userRef.update(
+    safeUpdates as FirebaseFirestore.UpdateData<FirebaseFirestore.DocumentData>
+  );
   const updatedDoc = await userRef.get();
 
   return mapUserDoc(updatedDoc.id, updatedDoc.data() ?? {});
