@@ -12,7 +12,7 @@ interface GetUserQuery {
   id?: string;
 }
 
-type AddUserBody = UserInsert;
+type CreateUserBody = UserInsert;
 
 interface UpdateUserBody extends UserUpdate {
   id?: string;
@@ -46,7 +46,7 @@ userRouter.get(
 }
 );
 
-userRouter.post("/addUser", async (req: Request<{}, unknown, AddUserBody>, res) => {
+userRouter.post("/addUser", async (req: Request<{}, unknown, CreateUserBody>, res) => {
   const { id, name, email } = req.body;
 
   if (!isNonEmptyString(name)) {
