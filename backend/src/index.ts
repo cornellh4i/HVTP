@@ -1,5 +1,6 @@
 import express from 'express';
 import bodyParser from 'body-parser';
+import { NextFunction, Request, Response } from "express";
 // import userRouter from './users/views';
 import itemsRouter from './routes/items'; 
 import customerRouter from './customers/views';
@@ -9,6 +10,7 @@ import { dbConnect } from './database';
 import itemRoutes from './routes/items';
 import userRouter from "./routes/users";
 import locationRoutes from "./routes/locations";
+import inventoryRoutes from "./routes/inventory";
 
 const app = express();
  
@@ -25,6 +27,7 @@ app.use('/api/middleware', itemRoutes);
 app.use("/api/middleware", userRouter);
 
 app.use("/api/middleware", locationRoutes);
+app.use("/api", inventoryRoutes);
 
 /**
  * Some dummy routes to illustrate express syntax
@@ -35,6 +38,21 @@ app.get('/', function (req, res) {
 
 app.post('/', (req, res) => {
   res.send(req.body);
+});
+
+app.use((_req: Request, res: Response) => {
+  res.status(404).json({
+    success: false,
+    error: "Route not found",
+  });
+});
+
+app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
+  console.error("Unhandled server error:", err);
+  res.status(500).json({
+    success: false,
+    error: "Internal server error",
+  });
 });
 
 app.listen(process.env.PORT || 8000, async () => {
