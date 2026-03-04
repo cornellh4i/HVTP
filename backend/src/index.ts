@@ -7,6 +7,7 @@ import swaggerUI from 'swagger-ui-express';
 import spec from '../api-spec.json';
 import { dbConnect } from './database';
 import itemRoutes from './routes/items';
+import auditLogRoutes from './routes/auditLogs';
 
 const app = express();
  
@@ -31,6 +32,11 @@ app.get('/', function (req, res) {
 app.post('/', (req, res) => {
   res.send(req.body);
 });
+
+/**
+ * audit log routes
+ */
+app.use('/api/auditLogs', auditLogRoutes);
 
 app.listen(process.env.PORT || 8000, async () => {
   console.log('✅ Server is up and running');
