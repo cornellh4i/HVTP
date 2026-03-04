@@ -21,7 +21,7 @@ export const getAllUsers = async (req: Request, res: Response): Promise<void> =>
         res.status(200).json(successJson(users));
 
     } catch (error) {
-        console.error('Error fetching users:', error);
+        console.error('Error fetching users: ', error);
         res.status(500).json(errorJson('Failed to fetch users'));
     }
 };
@@ -193,3 +193,4 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
         res.status(500).json(errorJson('Failed to update user'));
     }
 };
+

@@ -9,6 +9,7 @@ import { dbConnect } from './database';
 import itemRoutes from './routes/items';
 import userRouter from "./routes/users";
 import locationRoutes from "./routes/locations";
+import inventoryRoutes from "./routes/inventory";
 
 const app = express();
  
@@ -23,7 +24,7 @@ app.use('/api-docs', swaggerUI.serve, swaggerUI.setup(spec));
 app.use('/customers', customerRouter);
 app.use('/api/middleware', itemRoutes);
 app.use("/api/middleware", userRouter);
-
+app.use("/api/middleware", inventoryRoutes);
 app.use("/api/middleware", locationRoutes);
 
 /**
