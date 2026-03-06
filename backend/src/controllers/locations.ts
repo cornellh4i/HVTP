@@ -105,3 +105,26 @@ export const addLocation = async (req: Request, res: Response) => {
     return res.status(500).json({ message: "Error creating location", error });
   }
 };
+
+export const deleteLocation = async (req: Request, res: Response) => {
+  try {
+    const id = req.params.id?.trim();
+
+    if (!id) {
+      return res.status(400).json({ message: "ID is required" });
+    }
+
+    const docRef = db.collection("locations").doc(id);
+    const doc = await docRef.get();
+
+    if (!doc.exists) {
+      return res.status(404).json({ message: "Location not found" });
+    }
+
+    await docRef.delete();
+
+    return res.status(200).json({ message: "Location deleted successfully" });
+  } catch (error) {
+    return res.status(500).json({ message: "Error deleting location", error });
+  }
+};
