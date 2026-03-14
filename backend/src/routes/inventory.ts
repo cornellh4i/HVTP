@@ -1,8 +1,11 @@
 import express from "express";
 import {
     getAllInventory,
-    getInventoryByItemId
+    getInventoryByItemId, 
+    addInventory, 
+    updateInventory
 } from '../controllers/inventory';
+
 import { authenticateToken } from "../middleware/middleware";
 
 const router = express.Router()
@@ -10,5 +13,9 @@ const router = express.Router()
 router.get('/allInventories', authenticateToken, getAllInventory);
 router.get('/inventoryByItemId', authenticateToken, getInventoryByItemId);
 
-export default router;
 
+
+router.post("/addInventory", addInventory);
+router.patch("/updateInventory", updateInventory);
+
+export default router;
