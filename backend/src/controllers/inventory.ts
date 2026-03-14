@@ -13,6 +13,9 @@ type InventoryInsertBody = {
   updatedAt?: unknown;
 };
 
+const isNonEmptyString = (value: unknown): value is string =>
+  typeof value === "string" && value.trim().length > 0;
+
 const isInteger = (value: unknown): value is number =>
   typeof value === "number" && Number.isInteger(value);
 
@@ -45,8 +48,8 @@ export const addInventory = async (
       return;
     }
 
-    if (!isInteger(itemId) || !isInteger(locationsId)) {
-      res.status(400).json(errorJson("'itemId' and 'locationsId' must be integers"));
+    if (!isNonEmptyString(itemId) || !isNonEmptyString(locationsId)) {
+      res.status(400).json(errorJson("'itemId' and 'locationsId' must be non-empty strings"));
       return;
     }
 
@@ -106,7 +109,7 @@ export const updateInventory = async (
     const { itemId, locationsId, quantity, isActive, updatedAt } =
       req.body as InventoryInsertBody;
 
-    if (!isInteger(itemId) || !isInteger(locationsId)) {
+    if (!isNonEmptyString(itemId) || !isNonEmptyString(locationsId)) {
       res
         .status(400)
         .json(errorJson("Missing or invalid 'itemId' and 'locationsId'"));
