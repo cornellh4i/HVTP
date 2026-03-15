@@ -1,4 +1,4 @@
-import { auth } from "@/utils/firebase";
+import { auth } from "@/utils/firebase/firebase";
 
 const API_BASE = "http://localhost:8000";
 
