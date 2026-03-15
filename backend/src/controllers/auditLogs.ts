@@ -1,6 +1,5 @@
 import {getDb} from '../config/firebase';
 import { Request, Response } from 'express';
-import { getDb } from "../config/firebase";
 
 const db = getDb();
 

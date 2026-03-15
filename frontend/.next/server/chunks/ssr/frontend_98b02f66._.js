@@ -1,0 +1,3 @@
+module.exports=[36399,a=>{a.n(a.i(35829))},45232,a=>{a.n(a.i(28613))},58260,a=>{a.n(a.i(12070))},37440,a=>{a.n(a.i(90307))},89577,a=>{"use strict";var b=a.i(18332);function c(){return(0,b.jsx)("main",{className:"flex min-h-screen items-center justify-center",children:(0,b.jsx)("h1",{className:"text-2xl font-bold",children:"HVTP"})})}a.s(["default",()=>c])}];
+
+//# sourceMappingURL=frontend_98b02f66._.js.map

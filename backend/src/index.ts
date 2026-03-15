@@ -1,5 +1,6 @@
 import express from 'express';
 import bodyParser from 'body-parser';
+import cors from 'cors';
 import { NextFunction, Request, Response } from "express";
 // import userRouter from './users/views';
 import customerRouter from "./customers/views";
@@ -15,6 +16,7 @@ import auditLogRoutes from "./routes/auditLogs";
 const app = express();
 
 // Middleware to parse json request bodies
+app.use(cors({ origin: "http://localhost:3000" }));
 app.use(bodyParser.json());
 app.use("/api-docs", swaggerUI.serve, swaggerUI.setup(spec));
 
