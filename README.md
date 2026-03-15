@@ -22,6 +22,7 @@
   - Rohan Sahu
   - Lillian Wang
   - Sydney Chin
+  - Jack Nguyen
 - Designers
   - Aiden Montesinos
   - Shun Tanaka
