@@ -12,6 +12,7 @@ import userRouter from "./routes/users";
 import locationRoutes from "./routes/locations";
 import inventoryRoutes from "./routes/inventory";
 import auditLogRoutes from "./routes/auditLogs";
+import farmerRoutes from "./routes/farmers";
 
 const app = express();
 
@@ -30,6 +31,7 @@ app.use("/api/middleware", userRouter);
 app.use("/api/middleware", inventoryRoutes);
 app.use("/api/middleware", locationRoutes);
 app.use("/api/", auditLogRoutes);
+app.use("/api/", farmerRoutes);
 app.use("/api", inventoryRoutes);
 
 /**

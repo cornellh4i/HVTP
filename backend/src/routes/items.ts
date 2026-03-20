@@ -1,6 +1,4 @@
 import express from "express";
-// This is is where you would write the code for the User Routes.
-// You would call your implementation on `controllers/items.ts`
 import {
   getAllItems,
   getItemById,
@@ -11,10 +9,10 @@ import {
 
 const router = express.Router();
 
-router.get("/allitems", getAllItems);
-router.get("/itemById", getItemById);
+router.get("/getAllItems", getAllItems);
+router.get("/getItemById/:id", getItemById);
 router.post("/addItem", addItem);
-router.patch("/updateItem", updateItem);
-router.delete("/deleteItem", deleteItem);
+router.patch("/updateItem/:id", updateItem);
+router.delete("/deleteItem/:id", deleteItem);
 
 export default router;

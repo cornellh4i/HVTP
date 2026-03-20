@@ -1,8 +1,8 @@
-import express from "express";
 import { Request, Response } from "express";
 import { ItemInsert, ItemUpdate } from "../models/item";
 import { getDb } from "../config/firebase";
-// This is is where you would write the code for the User controllers
+import { successJson, errorJson } from "../utils/jsonResponses";
+
 const db = getDb();
 
 export const getAllItems = async (req: Request, res: Response) => {
@@ -12,32 +12,25 @@ export const getAllItems = async (req: Request, res: Response) => {
       id: doc.id,
       ...(doc.data() as ItemInsert),
     }));
-    res.status(200).json(items);
+    res.status(200).json(successJson(items));
   } catch (error) {
-    res.status(500).json({ message: "Error fetching items", error });
+    res.status(500).json(errorJson("Error fetching items"));
   }
 };
 
 export const getItemById = async (req: Request, res: Response) => {
   try {
-    const { id } = req.query;
+    const { id } = req.params;
 
-    if (!id) {
-      return res.status(400).json({ error: "Missing ID" });
-    }
-
-    const doc = await db
-      .collection("items")
-      .doc(id as string)
-      .get();
+    const doc = await db.collection("items").doc(id).get();
 
     if (!doc.exists) {
-      return res.status(404).json({ error: "Item not found" });
+      return res.status(404).json(errorJson("Item not found"));
     }
 
-    res.status(200).json({ docId: doc.id, ...doc.data() });
+    res.status(200).json(successJson({ id: doc.id, ...doc.data() }));
   } catch {
-    res.status(500).json({ error: "Error retrieving item" });
+    res.status(500).json(errorJson("Error retrieving item"));
   }
 };
 
@@ -50,73 +43,60 @@ export const addItem = async (
 
     if (
       !newItem.name ||
-      !newItem.category ||
-      !newItem.description ||
-      !newItem.image ||
       !newItem.sku ||
-      !newItem.qrcode ||
+      !newItem.breed ||
+      !newItem.grade ||
+      !newItem.color ||
+      newItem.weight === undefined ||
+      !newItem.status ||
+      !newItem.image ||
+      !newItem.qrCode ||
       newItem.isActive === undefined ||
       !newItem.createdAt
     ) {
-      return res.status(400).json({ error: "Missing required fields" });
+      return res.status(400).json(errorJson("Missing required fields"));
     }
 
-    await db.collection("items").add(newItem);
-    res.status(201).json({ message: "Item added" });
+    const ref = await db.collection("items").add(newItem);
+    res.status(201).json(successJson({ id: ref.id }));
   } catch {
-    res.status(500).json({ error: "Error adding item" });
+    res.status(500).json(errorJson("Error adding item"));
   }
 };
 
 export const updateItem = async (
-  req: Request<{}, {}, ItemUpdate>,
+  req: Request<{ id: string }, {}, ItemUpdate>,
   res: Response
 ) => {
   try {
-    const { id } = req.query;
+    const { id } = req.params;
 
-    if (!id) {
-      return res.status(400).json({ error: "Missing ID" });
-    }
-
-    const doc = await db
-      .collection("items")
-      .doc(id as string)
-      .get();
+    const doc = await db.collection("items").doc(id).get();
 
     if (!doc.exists) {
-      return res.status(404).json({ error: "Item not found" });
+      return res.status(404).json(errorJson("Item not found"));
     }
 
-    const ref = doc.ref;
-    await ref.update(req.body);
-    res.status(200).json({ message: "Item updated" });
+    await doc.ref.update(req.body);
+    res.status(200).json(successJson({ id }));
   } catch {
-    res.status(500).json({ error: "Update failed" });
+    res.status(500).json(errorJson("Update failed"));
   }
 };
 
-export const deleteItem = async (req: Request, res: Response) => {
+export const deleteItem = async (req: Request<{ id: string }>, res: Response) => {
   try {
-    const { id } = req.query;
+    const { id } = req.params;
 
-    if (!id) {
-      return res.status(400).json({ error: "Missing ID" });
-    }
-
-    const doc = await db
-      .collection("items")
-      .doc(id as string)
-      .get();
+    const doc = await db.collection("items").doc(id).get();
 
     if (!doc.exists) {
-      return res.status(404).json({ error: "Item not found" });
+      return res.status(404).json(errorJson("Item not found"));
     }
 
-    const ref = doc.ref;
-    await ref.delete();
-    res.status(200).json({ message: "Item deleted" });
+    await doc.ref.delete();
+    res.status(200).json(successJson({ id }));
   } catch {
-    res.status(500).json({ error: "Update failed" });
+    res.status(500).json(errorJson("Delete failed"));
   }
 };
