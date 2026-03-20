@@ -17,7 +17,7 @@ export default function LoginPage() {
 
     try {
       await logIn(email, password)
-      router.push("/auth/success")
+      router.push("/success")
     } catch(err: unknown) {
       if (err instanceof Error) {
         setError(err.message)
@@ -58,7 +58,7 @@ export default function LoginPage() {
         </form>
         <p className="text-center text-sm">
           Don&apos;t have an account?{" "}
-          <Link href="/auth/signup" className="text-blue-600 hover:underline">
+          <Link href="/signup" className="text-blue-600 hover:underline">
             Sign Up
           </Link>
         </p>
