@@ -1,7 +1,7 @@
 import { getDb } from '../config/firebase';
 import { Request, Response } from 'express';
 import { successJson, errorJson } from '../utils/jsonResponses';
-import { InventoryFields } from '../models/inventory';
+import { InventoryFields,InventoryInsert,InventoryUpdate } from '../models/inventory';
 
 const db = getDb();
 
@@ -76,7 +76,7 @@ export const getInventoryByItemId = async (req: Request, res: Response): Promise
 
 
 export const addInventory = async (
-  req: Request,
+  req: Request<{}, {}, InventoryInsert>,
   res: Response
 ): Promise<void> => {
   try {
@@ -155,7 +155,7 @@ export const addInventory = async (
 };
 
 export const updateInventory = async (
-  req: Request,
+  req: Request<{}, {}, InventoryUpdate>,
   res: Response
 ): Promise<void> => {
   try {

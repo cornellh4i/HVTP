@@ -1,6 +1,6 @@
 import express from "express";
 import { Request, Response } from "express";
-import { ItemFields, ItemInsert, ItemUpdate } from "../models/item";
+import { ItemInsert, ItemUpdate } from "../models/item";
 import { getDb } from "../config/firebase";
 // This is is where you would write the code for the User controllers
 const db = getDb();
@@ -8,7 +8,10 @@ const db = getDb();
 export const getAllItems = async (req: Request, res: Response) => {
   try {
     const snapshot = await db.collection("items").get();
-    const items = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    const items = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...(doc.data() as ItemInsert),
+    }));
     res.status(200).json(items);
   } catch (error) {
     res.status(500).json({ message: "Error fetching items", error });
@@ -28,7 +31,7 @@ export const getItemById = async (req: Request, res: Response) => {
       .doc(id as string)
       .get();
 
-    if (!doc) {
+    if (!doc.exists) {
       return res.status(404).json({ error: "Item not found" });
     }
 
@@ -38,7 +41,10 @@ export const getItemById = async (req: Request, res: Response) => {
   }
 };
 
-export const addItem = async (req: Request, res: Response) => {
+export const addItem = async (
+  req: Request<{}, {}, ItemInsert>,
+  res: Response
+) => {
   try {
     const newItem = req.body;
 
@@ -62,7 +68,10 @@ export const addItem = async (req: Request, res: Response) => {
   }
 };
 
-export const updateItem = async (req: Request, res: Response) => {
+export const updateItem = async (
+  req: Request<{}, {}, ItemUpdate>,
+  res: Response
+) => {
   try {
     const { id } = req.query;
 
@@ -75,7 +84,7 @@ export const updateItem = async (req: Request, res: Response) => {
       .doc(id as string)
       .get();
 
-    if (!doc) {
+    if (!doc.exists) {
       return res.status(404).json({ error: "Item not found" });
     }
 
@@ -100,7 +109,7 @@ export const deleteItem = async (req: Request, res: Response) => {
       .doc(id as string)
       .get();
 
-    if (!doc) {
+    if (!doc.exists) {
       return res.status(404).json({ error: "Item not found" });
     }
 
