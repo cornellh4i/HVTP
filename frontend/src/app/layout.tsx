@@ -1,4 +1,5 @@
 import LayoutWrapper from '@/components/layout-wrapper';
+import { AuthProvider } from '@/utils/AuthContext';
 import type { Metadata } from "next";
 import "./globals.css";
 
@@ -15,9 +16,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <LayoutWrapper>
-          {children}
-        </LayoutWrapper>
+        <AuthProvider>
+          <LayoutWrapper>
+            {children}
+          </LayoutWrapper>
+        </AuthProvider>
       </body>
     </html>
   );
