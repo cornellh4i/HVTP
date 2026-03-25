@@ -40,7 +40,6 @@ export default function AppSidebar() {
     <Sidebar
       variant="floating"
       collapsible="icon"
-      className="border-r"
       onMouseEnter={() => {
         if (!isMobile) {
           setSidebarState(true);
@@ -54,8 +53,8 @@ export default function AppSidebar() {
     >
       <SidebarHeader className="bg-gray-100 border-b">
         <div className="flex items-center gap-2 px-3 py-4 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-2">
-          <div className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
-            <h1 className="text-lg font-bold leading-tight tracking-tight text-gray-800">
+          <div className="min-w-0 flex-1 overflow-hidden group-data-[collapsible=icon]:hidden">
+            <h1 className="text-lg font-bold leading-tight tracking-tight whitespace-nowrap text-gray-800">
               The Wool Road
             </h1>
           </div>
