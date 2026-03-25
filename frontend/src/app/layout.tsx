@@ -1,3 +1,4 @@
+import LayoutWrapper from '@/components/layout-wrapper';
 import type { Metadata } from "next";
 import "./globals.css";
 
@@ -13,7 +14,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <LayoutWrapper>
+          {children}
+        </LayoutWrapper>
+      </body>
     </html>
   );
 }
