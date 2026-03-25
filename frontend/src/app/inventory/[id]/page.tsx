@@ -25,7 +25,7 @@ export default function ItemPage({ params }: { params: { id: string } }) {
   const item = PLACEHOLDER_ITEM;
 
   return (
-    <main className="min-h-screen p-8 max-w-5xl mx-auto">
+    <main className="min-h-screen p-8">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <Link
