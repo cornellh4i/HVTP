@@ -10,6 +10,7 @@ import { apiRequest } from "./APIWrapper";
 export const signUp = async (name: string, email: string, password: string) => {
   const credential = await createUserWithEmailAndPassword(auth, email, password);
   const token = await credential.user.getIdToken();
+  document.cookie = `session=${token}; path=/; max-age=3600; SameSite=Strict`;
   return apiRequest("/addUser", {
     method: "POST",
     body: { id: credential.user.uid, name, email },
@@ -20,6 +21,8 @@ export const signUp = async (name: string, email: string, password: string) => {
 // Log in an existing user
 export const logIn = async (email: string, password: string) => {
   const credential = await signInWithEmailAndPassword(auth, email, password);
+  const token = await credential.user.getIdToken();
+  document.cookie = `session=${token}; path=/; max-age=3600; SameSite=Strict`;
   return credential.user;
 };
 
