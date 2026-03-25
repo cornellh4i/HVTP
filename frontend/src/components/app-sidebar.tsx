@@ -3,15 +3,20 @@ import { Clock4, BarChart3, Home } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarTrigger,
+  useSidebar,
 } from './ui/sidebar';
 import { usePathname } from 'next/navigation';
 
 export default function AppSidebar() {
   const pathname = usePathname();
+  const { isMobile, setSidebarState } = useSidebar();
 
   const items = [
     {
@@ -32,36 +37,57 @@ export default function AppSidebar() {
   ];
 
   return (
-    <Sidebar className="border-r">
+    <Sidebar
+      variant="floating"
+      collapsible="icon"
+      className="border-r"
+      onMouseEnter={() => {
+        if (!isMobile) {
+          setSidebarState(true);
+        }
+      }}
+      onMouseLeave={() => {
+        if (!isMobile) {
+          setSidebarState(false);
+        }
+      }}
+    >
       <SidebarHeader className="bg-gray-100 border-b">
-        <div className="px-4 py-4">
-          <h1 className="text-sm font-semibold text-gray-800">The Wool Road</h1>
+        <div className="flex items-center gap-2 px-3 py-4 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-2">
+          <div className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
+            <h1 className="text-lg font-bold leading-tight tracking-tight text-gray-800">
+              The Wool Road
+            </h1>
+          </div>
+          <SidebarTrigger />
         </div>
       </SidebarHeader>
 
       <SidebarContent>
-        <SidebarMenu>
-          {items.map((item) => {
-            const isActive = pathname === item.url || pathname?.startsWith(item.url + '/');
-            return (
-              <SidebarMenuItem key={item.url}>
-                <SidebarMenuButton 
-                  asChild 
-                  className={`${
-                    isActive 
-                      ? 'bg-blue-50 border-l-4 border-l-blue-500 text-blue-600' 
-                      : 'hover:bg-gray-50'
-                  }`}
-                >
-                  <Link href={item.url} className="flex items-center gap-3">
-                    <span className="text-lg">{item.icon}</span>
-                    <span>{item.title}</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            );
-          })}
-        </SidebarMenu>
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {items.map((item) => {
+                const isActive = pathname === item.url || pathname?.startsWith(item.url + '/');
+                return (
+                  <SidebarMenuItem key={item.url}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={isActive}
+                      tooltip={item.title}
+                      className={isActive ? 'bg-blue-50 text-blue-600' : 'hover:bg-gray-50'}
+                    >
+                      <Link href={item.url} className="flex items-center gap-3">
+                        <span className="text-lg">{item.icon}</span>
+                        <span>{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
       </SidebarContent>
     </Sidebar>
   );

@@ -2,7 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import AppSidebar from './app-sidebar';
-import { SidebarProvider } from './ui/sidebar';
+import { SidebarInset, SidebarProvider } from './ui/sidebar';
 
 type LayoutWrapperProps = {
   children: React.ReactNode;
@@ -23,12 +23,8 @@ export default function LayoutWrapper({ children }: LayoutWrapperProps) {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen">
-        <AppSidebar />
-        <main className="md:ml-[16rem]">
-          {children}
-        </main>
-      </div>
+      <AppSidebar />
+      <SidebarInset>{children}</SidebarInset>
     </SidebarProvider>
   );
 }
