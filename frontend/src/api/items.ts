@@ -27,7 +27,7 @@ export const getAllItems = async () => {
 
 // Fetch a single item by ID
 export const getItemById = async (id: string) => {
-  return apiRequest<Item>(`/getItemById/${encodeURIComponent(id)}`, {
+  return apiRequest<Item>(`/api/middleware/getItemById/${encodeURIComponent(id)}`, {
     method: "GET",
   });
 };

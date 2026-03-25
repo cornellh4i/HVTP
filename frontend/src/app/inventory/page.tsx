@@ -7,7 +7,7 @@ export default function InventoryPage() {
   // To get this information you would have to use item and
   // farmers information and possible add >more fields
   const TEST_ITEM = {
-    id: "test-item-001",
+    id: "1WRYkfhkyuPNu40lBt5L",
     sku: "R9pL2bN5kW",
     breed: "Merino",
     grade: "A",
