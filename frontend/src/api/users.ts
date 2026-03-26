@@ -28,6 +28,7 @@ export const logIn = async (email: string, password: string) => {
 
 // Log out the current user
 export const logOut = async () => {
+  document.cookie = "session=; path=/; max-age=0";
   await signOut(auth);
 };
 

@@ -15,7 +15,11 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!loading && user) {
-      router.replace("/dashboard");
+      // Refresh the session cookie (it may have expired) before redirecting
+      user.getIdToken().then((token) => {
+        document.cookie = `session=${token}; path=/; max-age=3600; SameSite=Strict`;
+        router.replace("/dashboard");
+      });
     }
   }, [user, loading, router]);
 
@@ -35,15 +39,13 @@ export default function LoginPage() {
     }
   };
 
-  if (loading) {
+  if (loading || user) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <p className="text-gray-500">Loading...</p>
       </div>
     );
   }
-
-  if (user) return null;
 
   return (
     <main className="flex min-h-screen items-center justify-center">
