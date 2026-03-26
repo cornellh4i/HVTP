@@ -1,16 +1,33 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createRemoteJWKSet, jwtVerify } from "jose";
 
-export function middleware(request: NextRequest) {
-  const session = request.cookies.get("session")?.value;
+const JWKS = createRemoteJWKSet(
+  new URL(
+    "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com"
+  )
+);
 
-  if (!session) {
-    const loginUrl = new URL("/login", request.url);
-    return NextResponse.redirect(loginUrl);
+export async function middleware(request: NextRequest) {
+  const token = request.cookies.get("session")?.value;
+
+  if (!token) {
+    return NextResponse.redirect(new URL("/login", request.url));
+  }
+
+  const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+
+  try {
+    await jwtVerify(token, JWKS, {
+      audience: projectId,
+      issuer: `https://securetoken.google.com/${projectId}`,
+    });
+  } catch {
+    return NextResponse.redirect(new URL("/login", request.url));
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/inventory/:path*"],
+  matcher: ["/dashboard/:path*", "/inventory/:path*", "/archive/:path*", "/analytics/:path*"],
 };
