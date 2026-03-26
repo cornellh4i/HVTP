@@ -1,31 +1,51 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { logIn } from "@/api/users";
+import { useAuth } from "@/utils/AuthContext";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { user, loading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (!loading && user) {
+      // Refresh the session cookie (it may have expired) before redirecting
+      user.getIdToken().then((token) => {
+        document.cookie = `session=${token}; path=/; max-age=3600; SameSite=Strict`;
+        router.replace("/dashboard");
+      });
+    }
+  }, [user, loading, router]);
 
   const handleSubmit = async (e: React.SyntheticEvent) => {
     e.preventDefault();
     setError("");
 
     try {
-      await logIn(email, password)
-      router.push("/success")
-    } catch(err: unknown) {
+      await logIn(email, password);
+      router.push("/success");
+    } catch (err: unknown) {
       if (err instanceof Error) {
-        setError(err.message)
+        setError(err.message);
       } else {
-        setError("unexpected Error occurred")
+        setError("An unexpected error occurred.");
       }
     }
   };
+
+  if (loading || user) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <p className="text-gray-500">Loading...</p>
+      </div>
+    );
+  }
 
   return (
     <main className="flex min-h-screen items-center justify-center">
