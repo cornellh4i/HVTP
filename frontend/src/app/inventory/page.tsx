@@ -13,7 +13,6 @@ export default function InventoryPage() {
   return (
     <main>
       <h1 className="text-2xl font-bold p-8">Inventory</h1>
-
       <div className="flex items-center justify-end px-8 pt-8">
         <div className="flex items-center rounded-full border border-gray-200 bg-gray-100 p-1 gap-1">
           <button
