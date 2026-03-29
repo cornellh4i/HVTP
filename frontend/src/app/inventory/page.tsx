@@ -1,37 +1,44 @@
-import Link from "next/link";
-import { ItemCard } from "@/components/ui/itemCard";
-// To get this information you would have to use item and
-// farmers information and possible add more fields
+"use client";
+
+import { useState } from "react";
+import { LayoutGrid, AlignJustify } from "lucide-react";
+import ViewTable from "@/components/Admin/Inventory/Table/View-Table";
+import EditTable from "@/components/Admin/Inventory/Table/Edit-Table";
+
+type ViewMode = "view" | "edit";
 
 export default function InventoryPage() {
-  // To get this information you would have to use item and
-  // farmers information and possible add >more fields
-  const TEST_ITEM = {
-    id: "1WRYkfhkyuPNu40lBt5L",
-    sku: "R9pL2bN5kW",
-    breed: "Merino",
-    grade: "A",
-    color: "White",
-    weight: 12,
-    status: "Processing",
-    state: "NY",
-  };
+  const [mode, setMode] = useState<ViewMode>("view");
 
   return (
-    <main className="min-h-screen p-8">
-      <h1 className="text-2xl font-bold mb-6">Inventory</h1>
-      <div className="flex flex-col items-center justify-centergrid grid-cols-1 gap-4">
-        {/* Test item card — replace with real data in implementation ticket */}
-        <ItemCard
-          sku={TEST_ITEM.sku}
-          description={TEST_ITEM.grade + " " + TEST_ITEM.color}
-          breed={TEST_ITEM.breed}
-          quantity={`${TEST_ITEM.weight} lbs`}
-          status={TEST_ITEM.status}
-          state={TEST_ITEM.state}
-          href={`/inventory/${TEST_ITEM.id}`}
-        />
+    <main>
+      <h1 className="text-2xl font-bold p-8">Inventory</h1>
+
+      <div className="flex items-center justify-end px-8 pt-8">
+        <div className="flex items-center rounded-full border border-gray-200 bg-gray-100 p-1 gap-1">
+          <button
+            onClick={() => setMode("view")}
+            className={`rounded-full p-1.5 transition-colors ${
+              mode === "view"
+                ? "bg-gray-700 text-white"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            <LayoutGrid size={16} />
+          </button>
+          <button
+            onClick={() => setMode("edit")}
+            className={`rounded-full p-1.5 transition-colors ${
+              mode === "edit"
+                ? "bg-gray-700 text-white"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            <AlignJustify size={16} />
+          </button>
+        </div>
       </div>
+      {mode === "view" ? <ViewTable /> : <EditTable />}
     </main>
   );
 }
