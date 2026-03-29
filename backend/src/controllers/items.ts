@@ -5,7 +5,7 @@ import { successJson, errorJson } from "../utils/jsonResponses";
 
 const db = getDb();
 
-export const getAllItems = async (req: Request, res: Response) => {
+export const getAllItems = async (_req: Request, res: Response) => {
   try {
     const snapshot = await db.collection("items").get();
     const items = snapshot.docs.map((doc) => ({
@@ -81,6 +81,36 @@ export const updateItem = async (
     res.status(200).json(successJson({ id }));
   } catch {
     res.status(500).json(errorJson("Update failed"));
+  }
+};
+
+export const getPublicItems = async (_req: Request, res: Response) => {
+  try {
+    const snapshot = await db.collection("items").where("isPublic", "==", true).get();
+    const items = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...(doc.data() as ItemInsert),
+    }));
+    res.status(200).json(successJson(items));
+  } catch {
+    res.status(500).json(errorJson("Error fetching public items"));
+  }
+};
+
+export const togglePublish = async (req: Request<{ id: string }>, res: Response) => {
+  try {
+    const { id } = req.params;
+    const doc = await db.collection("items").doc(id).get();
+
+    if (!doc.exists) {
+      return res.status(404).json(errorJson("Item not found"));
+    }
+
+    const current = (doc.data() as ItemInsert).isPublic ?? false;
+    await doc.ref.update({ isPublic: !current });
+    res.status(200).json(successJson({ id, isPublic: !current }));
+  } catch {
+    res.status(500).json(errorJson("Error toggling publish state"));
   }
 };
 

@@ -11,7 +11,7 @@ export const signUp = async (name: string, email: string, password: string) => {
   const credential = await createUserWithEmailAndPassword(auth, email, password);
   const token = await credential.user.getIdToken();
   document.cookie = `session=${token}; path=/; max-age=3600; SameSite=Strict`;
-  return apiRequest("/addUser", {
+  return apiRequest("/api/addUser", {
     method: "POST",
     body: { id: credential.user.uid, name, email },
     token,
@@ -34,17 +34,17 @@ export const logOut = async () => {
 
 // Fetch all users
 export const getAllUsers = async () => {
-  return apiRequest("/getAllUsers", { method: "GET" });
+  return apiRequest("/api/getAllUsers", { method: "GET" });
 };
 
 // Fetch a single user by ID
 export const getUserById = async (id: string) => {
-  return apiRequest(`/getUserById/${encodeURIComponent(id)}`, { method: "GET" });
+  return apiRequest(`/api/getUserById/${encodeURIComponent(id)}`, { method: "GET" });
 };
 
 // Update a user
 export const updateUser = async (id: string, data: object) => {
-  return apiRequest(`/updateUser/${encodeURIComponent(id)}`, {
+  return apiRequest(`/api/updateUser/${encodeURIComponent(id)}`, {
     method: "PATCH",
     body: data as Record<string, unknown>,
   });
@@ -52,5 +52,5 @@ export const updateUser = async (id: string, data: object) => {
 
 // Delete a user
 export const deleteUser = async (id: string) => {
-  return apiRequest(`/deleteUser/${encodeURIComponent(id)}`, { method: "DELETE" });
+  return apiRequest(`/api/deleteUser/${encodeURIComponent(id)}`, { method: "DELETE" });
 };

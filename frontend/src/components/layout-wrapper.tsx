@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import AppSidebar from './app-sidebar';
+import AppSidebar from './Navbar/Desktop-Navbar/app-sidebar';
 import { SidebarInset, SidebarProvider } from './ui/sidebar';
 
 type LayoutWrapperProps = {

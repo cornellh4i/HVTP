@@ -9,6 +9,7 @@ export interface ItemFields {
   image: string;
   qrCode: string;
   isActive: boolean;
+  isPublic: boolean;
   createdAt: FirebaseFirestore.Timestamp;
 }
 

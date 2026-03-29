@@ -2,8 +2,6 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
 import { NextFunction, Request, Response } from "express";
-// import userRouter from './users/views';
-import customerRouter from "./customers/views";
 import swaggerUI from "swagger-ui-express";
 import spec from "../api-spec.json";
 import { dbConnect } from "./database";
@@ -13,6 +11,7 @@ import locationRoutes from "./routes/locations";
 import inventoryRoutes from "./routes/inventory";
 import auditLogRoutes from "./routes/auditLogs";
 import farmerRoutes from "./routes/farmers";
+import salesRoutes from "./routes/sales";
 
 const app = express();
 
@@ -25,14 +24,13 @@ app.use("/api-docs", swaggerUI.serve, swaggerUI.setup(spec));
  * Sub-routers for our main router, we should have one sub-router per 'entity' in the application
  */
 // app.use('/users', userRouter);
-app.use("/customers", customerRouter);
-app.use("/api/middleware", itemRoutes);
-app.use("/api/middleware", userRouter);
-app.use("/api/middleware", inventoryRoutes);
-app.use("/api/middleware", locationRoutes);
+app.use("/api", itemRoutes);
+app.use("/api", userRouter);
+app.use("/api", locationRoutes);
 app.use("/api/", auditLogRoutes);
-app.use("/api/", farmerRoutes);
+app.use("/api", farmerRoutes);
 app.use("/api", inventoryRoutes);
+app.use("/api", salesRoutes);
 
 /**
  * Some dummy routes to illustrate express syntax

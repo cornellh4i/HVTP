@@ -18,23 +18,24 @@ export type Item = {
   shearDate?: string;
   image?: string;
   imageUrl?: string;
+  isPublic?: boolean;
 };
 
 // Fetch all users
 export const getAllItems = async () => {
-  return apiRequest<Item[]>("/getAllItems", { method: "GET" });
+  return apiRequest<Item[]>("/api/getAllItems", { method: "GET" });
 };
 
 // Fetch a single item by ID
 export const getItemById = async (id: string) => {
-  return apiRequest<Item>(`/api/middleware/getItemById/${encodeURIComponent(id)}`, {
+  return apiRequest<Item>(`/api/getItemById/${encodeURIComponent(id)}`, {
     method: "GET",
   });
 };
 
 // Add an item
 export const addItem = async (data: object) => {
-  return apiRequest<Item>("/addItem", {
+  return apiRequest<Item>("/api/addItem", {
     method: "POST",
     body: data as Record<string, unknown>,
   });
@@ -42,7 +43,7 @@ export const addItem = async (data: object) => {
 
 // Update an item
 export const updateItem = async (id: string, data: object) => {
-  return apiRequest<Item>(`/updateItem/${encodeURIComponent(id)}`, {
+  return apiRequest<Item>(`/api/updateItem/${encodeURIComponent(id)}`, {
     method: "PATCH",
     body: data as Record<string, unknown>,
   });
@@ -50,7 +51,14 @@ export const updateItem = async (id: string, data: object) => {
 
 // Delete an item
 export const deleteItem = async (id: string) => {
-  return apiRequest<void>(`/deleteItem/${encodeURIComponent(id)}`, {
+  return apiRequest<void>(`/api/deleteItem/${encodeURIComponent(id)}`, {
     method: "DELETE",
   });
 };
+
+// Toggle public visibility of an item (admin only)
+// Fuunction Here
+
+// Fetch all publicly visible items (no auth required)
+// Function Here
+

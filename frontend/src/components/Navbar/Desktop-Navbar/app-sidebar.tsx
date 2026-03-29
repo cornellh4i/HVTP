@@ -12,7 +12,7 @@ import {
   SidebarMenuItem,
   SidebarTrigger,
   useSidebar,
-} from './ui/sidebar';
+} from '@/components/ui/sidebar';
 import { usePathname } from 'next/navigation';
 
 export default function AppSidebar() {
