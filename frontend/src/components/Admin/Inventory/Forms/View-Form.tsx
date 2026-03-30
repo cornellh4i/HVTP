@@ -39,7 +39,7 @@ function ImageSlot({ src, iconClass }: { src?: string; iconClass?: string }) {
   );
 }
 
-export default function ViewForm () {
+export default function ViewForm() {
   const [item, setItem] = useState<Item | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

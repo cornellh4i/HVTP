@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { LayoutGrid, AlignJustify } from "lucide-react";
-import ViewTable from "@/components/Admin/Inventory/Table/View-Table";
-import EditTable from "@/components/Admin/Inventory/Table/Edit-Table";
+import CardTable from "@/components/Admin/Inventory/Table/Card-Table";
+import SheetTable from "@/components/Admin/Inventory/Table/Sheet-Table";
 
 type ViewMode = "view" | "edit";
 
@@ -37,7 +37,7 @@ export default function InventoryPage() {
           </button>
         </div>
       </div>
-      {mode === "view" ? <ViewTable /> : <EditTable />}
+      {mode === "view" ? <CardTable /> : <SheetTable />}
     </main>
   );
 }

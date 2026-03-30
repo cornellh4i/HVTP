@@ -3,7 +3,7 @@ import { ItemCard } from "@/components/ui/itemCard";
 // To get this information you would have to use item and
 // farmers information and possible add more fields
 
-export default function ViewTable() {
+export default function CardTable() {
   // To get this information you would have to use item and
   // farmers information and possible add >more fields
   const TEST_ITEM = {
