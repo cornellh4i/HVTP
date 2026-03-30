@@ -6,7 +6,7 @@ export interface ItemFields {
   color: string;
   weight: number;
   status: string;
-  image: string;
+  images: string[];
   qrCode: string;
   isActive: boolean;
   isPublic: boolean;

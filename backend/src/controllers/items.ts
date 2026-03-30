@@ -49,7 +49,7 @@ export const addItem = async (
       !newItem.color ||
       newItem.weight === undefined ||
       !newItem.status ||
-      !newItem.image ||
+      !newItem.images || !Array.isArray(newItem.images) || newItem.images.length === 0 ||
       !newItem.qrCode ||
       newItem.isActive === undefined ||
       !newItem.createdAt

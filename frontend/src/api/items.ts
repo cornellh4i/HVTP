@@ -16,7 +16,7 @@ export type Item = {
   farmerState?: string;
   purchasePrice?: number | string;
   shearDate?: string;
-  image?: string;
+  images?: string[];
   imageUrl?: string;
   isPublic?: boolean;
 };
