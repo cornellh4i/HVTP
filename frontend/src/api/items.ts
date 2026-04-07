@@ -17,6 +17,7 @@ export type Item = {
   purchasePrice?: number | string;
   shearDate?: string;
   images?: string[];
+  coverImage?: string;
   imageUrl?: string;
   isPublic?: boolean;
 };

@@ -7,6 +7,7 @@ export interface ItemFields {
   weight: number;
   status: string;
   images: string[];
+  coverImage: string;
   qrCode: string;
   isActive: boolean;
   isPublic: boolean;

@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { ItemInsert, ItemUpdate } from "../models/item";
 import { getDb } from "../config/firebase";
 import { successJson, errorJson } from "../utils/jsonResponses";
+import { isAsyncFunction } from "util/types";
 
 const db = getDb();
 
@@ -50,6 +51,7 @@ export const addItem = async (
       newItem.weight === undefined ||
       !newItem.status ||
       !newItem.images || !Array.isArray(newItem.images) || newItem.images.length === 0 ||
+      !newItem.coverImage ||
       !newItem.qrCode ||
       newItem.isActive === undefined ||
       !newItem.createdAt
@@ -113,6 +115,53 @@ export const togglePublish = async (req: Request<{ id: string }>, res: Response)
     res.status(500).json(errorJson("Error toggling publish state"));
   }
 };
+
+export const getActiveItems = async(_req: Request, res: Response) => { 
+  try { 
+    const snapshot = await db.collection("items").where("isActive", "==", true).get();
+    const items = snapshot.docs.map((doc) => ({ 
+      id : doc.id,
+      ...(doc.data() as ItemInsert),
+    }));
+
+    res.status(200).json(successJson(items));
+
+  } catch { 
+    res.status(500).json(errorJson("Error fetching active items"))
+  }
+}
+
+export const getInactiveItems = async(_req: Request, res: Response) => { 
+  try { 
+    const snapshot = await db.collection("items").where("isActive", "==", false).get();
+    const items = snapshot.docs.map((doc) => ({ 
+      id : doc.id, 
+      ...(doc.data() as ItemInsert),
+    }));
+    res.status(200).json(successJson(items))
+
+
+  } catch { 
+    res.status(500).json(errorJson("Error fetching in active items"))
+  }
+}
+
+export const toggleActive = async (req: Request<{id: string }> , res: Response) => { 
+  try { 
+    const { id } = req.params; 
+    const doc = await db.collection("items").doc(id).get(); 
+
+    if (!doc.exists) { 
+      return res.status(404).json(errorJson("Item not found"))
+    }
+
+    const current = (doc.data() as ItemInsert).isActive ?? false;
+    await doc.ref.update({ isActive: !current});
+    res.status(200).json(successJson({ id, isActive: !current}))
+  } catch { 
+    res.status(500).json(errorJson("Error toggling active state"))
+  }
+}
 
 export const deleteItem = async (req: Request<{ id: string }>, res: Response) => {
   try {
