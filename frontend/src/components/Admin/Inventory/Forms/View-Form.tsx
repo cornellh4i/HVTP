@@ -149,6 +149,12 @@ export default function ViewForm() {
         </div>
       </div>
 
+      {/* Page heading */}
+      <div className="mb-8">
+        <p className="text-sm text-gray-500 mb-1">SKU</p>
+        <h1 className="text-3xl font-bold">{item.sku}</h1>
+      </div>
+
       {/* Two-column layout */}
       <div className="grid grid-cols-[400px_1fr] gap-10">
         {/* LEFT */}
@@ -187,6 +193,9 @@ export default function ViewForm() {
           <section>
             <h2 className="text-xl font-bold mb-5">General Information</h2>
             <div className="grid grid-cols-2 gap-x-6 gap-y-5">
+              <Field label="SKU">
+                <EditableField isEditing={false} value={formData.sku ?? ""} placeholder="SKU" onChange={() => {}} />
+              </Field>
               <Field label="Breed">
                 <EditableField isEditing={true} value={formData.breed ?? ""} placeholder="Breed" onChange={set("breed")} />
               </Field>
