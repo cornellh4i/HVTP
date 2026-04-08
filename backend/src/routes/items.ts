@@ -7,6 +7,8 @@ import {
   addItem,
   updateItem,
   deleteItem,
+  togglePublish,
+  getPublicItems,
 } from "../controllers/items";
 
 const router = express.Router();
@@ -16,5 +18,8 @@ router.get("/itemById", getItemById);
 router.post("/addItem", addItem);
 router.patch("/updateItem", updateItem);
 router.delete("/deleteItem", deleteItem);
+
+router.patch("/togglePublish/:id", togglePublish);
+router.get("/public/items", getPublicItems);
 
 export default router;

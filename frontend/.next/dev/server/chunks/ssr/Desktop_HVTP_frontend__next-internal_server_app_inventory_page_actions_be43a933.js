@@ -1,0 +1,7 @@
+module.exports = [
+"[project]/Desktop/HVTP/frontend/.next-internal/server/app/inventory/page/actions.js [app-rsc] (server actions loader, ecmascript)", ((__turbopack_context__, module, exports) => {
+
+}),
+];
+
+//# sourceMappingURL=Desktop_HVTP_frontend__next-internal_server_app_inventory_page_actions_be43a933.js.map

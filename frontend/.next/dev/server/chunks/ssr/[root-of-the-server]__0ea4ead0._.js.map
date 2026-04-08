@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 14, "column": 0}, "map": {"version":3,"sources":["file:///Users/rexpeter/Desktop/HVTP/frontend/src/app/page.tsx"],"sourcesContent":["import Link from \"next/link\";\n\nexport default function Home() {\n  return (\n    <main className=\"flex min-h-screen items-center justify-center\">\n      <div className=\"flex flex-col items-center space-x-4\">\n        <h1 className=\"text-2xl font-bold\">HVTP</h1>\n        <p>\n          Go to the <Link  className=\"text-blue-300 \" href=\"/auth/login\">Login</Link> page.\n        </p>\n      </div>\n    </main>\n  );\n}\n"],"names":[],"mappings":";;;;;AAAA;;;AAEe,SAAS;IACtB,qBACE,6QAAC;QAAK,WAAU;kBACd,cAAA,6QAAC;YAAI,WAAU;;8BACb,6QAAC;oBAAG,WAAU;8BAAqB;;;;;;8BACnC,6QAAC;;wBAAE;sCACS,6QAAC,yNAAI;4BAAE,WAAU;4BAAiB,MAAK;sCAAc;;;;;;wBAAY;;;;;;;;;;;;;;;;;;AAKrF"}}]
+}

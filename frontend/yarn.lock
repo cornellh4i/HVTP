@@ -1997,10 +1997,12 @@
   resolved "https://registry.npmjs.org/@types/mime/-/mime-3.0.1.tgz"
   integrity sha512-Y4XFY5VJAuw0FgAqPNd6NNoV44jbq9Bz2L7Rh/J6jLTiHBSBJa9fxqQIvkIld4GsoDOcCbvzOUAbLPsSKKg+uA==
 
-"@types/node@*", "@types/node@^18.14.6":
-  version "18.14.6"
-  resolved "https://registry.npmjs.org/@types/node/-/node-18.14.6.tgz"
-  integrity sha512-93+VvleD3mXwlLI/xASjw0FzKcwzl3OdTCzm1LaRfqgS21gfFtK3zDXM5Op9TeeMsJVOaJ2VRDpT9q4Y3d0AvA==
+"@types/node@*", "@types/node@^25.5.2":
+  version "25.5.2"
+  resolved "https://registry.npmjs.org/@types/node/-/node-25.5.2.tgz"
+  integrity sha512-tO4ZIRKNC+MDWV4qKVZe3Ql/woTnmHDr5JD8UI5hn2pwBrHEwOEMZK7WlNb5RKB6EoJ02gwmQS9OrjuFnZYdpg==
+  dependencies:
+    undici-types "~7.18.0"
 
 "@types/parse-json@^4.0.0":
   version "4.0.0"
@@ -8805,6 +8807,11 @@ unbox-primitive@^1.0.2:
     has-bigints "^1.0.2"
     has-symbols "^1.0.3"
     which-boxed-primitive "^1.0.2"
+
+undici-types@~7.18.0:
+  version "7.18.2"
+  resolved "https://registry.npmjs.org/undici-types/-/undici-types-7.18.2.tgz"
+  integrity sha512-AsuCzffGHJybSaRrmr5eHr81mwJU3kjw6M+uprWvCXiNeN9SOGwQ3Jn8jb8m3Z6izVgknn1R0FTCEAP2QrLY/w==
 
 unicode-canonical-property-names-ecmascript@^2.0.0:
   version "2.0.0"
