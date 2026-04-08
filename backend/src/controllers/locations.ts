@@ -1,5 +1,7 @@
 import { Request, Response } from "express";
 import { getDb } from "../config/firebase";
+import { LocationInsert, LocationUpdate } from '../models/locations';
+
 
 const db = getDb();
 
@@ -50,7 +52,7 @@ export const getLocationById = async (req: Request, res: Response) => {
 };
 
 
-export const updateLocation = async (req: Request, res: Response) => {
+export const updateLocation = async (req: Request<{id:string}, {}, LocationUpdate>, res: Response) => {
   try {
     const { id } = req.params; 
     const updates = req.body;
@@ -80,8 +82,7 @@ export const updateLocation = async (req: Request, res: Response) => {
   }
 };
 
-export const addLocation = async (req: Request, res: Response) => {
-  try {
+export const addLocation = async (req: Request<{}, {}, LocationInsert>, res: Response) => {  try {
     const newLocation = req.body;
 
     if (

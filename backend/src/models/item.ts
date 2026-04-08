@@ -1,11 +1,16 @@
 export interface ItemFields {
   name: string;
-  category: string;
-  description: string;
-  image: string;
   sku: string;
-  qrcode: string;
+  breed: string;
+  grade: string;
+  color: string;
+  weight: number;
+  status: string;
+  images: string[];
+  coverImage: string;
+  qrCode: string;
   isActive: boolean;
+  isPublic: boolean;
   createdAt: FirebaseFirestore.Timestamp;
 }
 

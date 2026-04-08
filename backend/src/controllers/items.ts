@@ -1,113 +1,211 @@
-import express from "express";
 import { Request, Response } from "express";
-import { ItemFields, ItemInsert, ItemUpdate } from "../models/item";
+import { ItemInsert, ItemUpdate } from "../models/item";
 import { getDb } from "../config/firebase";
-// This is is where you would write the code for the User controllers
+import { successJson, errorJson } from "../utils/jsonResponses";
+
 const db = getDb();
 
-export const getAllItems = async (req: Request, res: Response) => {
+export const getAllItems = async (_req: Request, res: Response) => {
   try {
     const snapshot = await db.collection("items").get();
-    const items = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-    res.status(200).json(items);
+    const items = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...(doc.data() as ItemInsert),
+    }));
+    res.status(200).json(successJson(items));
   } catch (error) {
-    res.status(500).json({ message: "Error fetching items", error });
+    res.status(500).json(errorJson("Error fetching items"));
   }
 };
 
 export const getItemById = async (req: Request, res: Response) => {
   try {
-    const { id } = req.query;
+    const { id } = req.params;
 
-    if (!id) {
-      return res.status(400).json({ error: "Missing ID" });
+    const doc = await db.collection("items").doc(id).get();
+
+    if (!doc.exists) {
+      return res.status(404).json(errorJson("Item not found"));
     }
 
-    const doc = await db
-      .collection("items")
-      .doc(id as string)
-      .get();
-
-    if (!doc) {
-      return res.status(404).json({ error: "Item not found" });
-    }
-
-    res.status(200).json({ docId: doc.id, ...doc.data() });
+    res.status(200).json(successJson({ id: doc.id, ...doc.data() }));
   } catch {
-    res.status(500).json({ error: "Error retrieving item" });
+    res.status(500).json(errorJson("Error retrieving item"));
   }
 };
 
-export const addItem = async (req: Request, res: Response) => {
+export const addItem = async (
+  req: Request<{}, {}, ItemInsert>,
+  res: Response
+) => {
   try {
     const newItem = req.body;
 
     if (
+      !newItem.farmerId ||
       !newItem.name ||
-      !newItem.category ||
-      !newItem.description ||
-      !newItem.image ||
       !newItem.sku ||
-      !newItem.qrcode ||
+      !newItem.breed ||
+      !newItem.grade ||
+      !newItem.color ||
+      newItem.weight === undefined ||
+      !newItem.status ||
+      !newItem.images || !Array.isArray(newItem.images) || newItem.images.length === 0 ||
+      !newItem.coverImage ||
+      !newItem.qrCode ||
       newItem.isActive === undefined ||
       !newItem.createdAt
     ) {
-      return res.status(400).json({ error: "Missing required fields" });
+      return res.status(400).json(errorJson("Missing required fields"));
     }
 
-    await db.collection("items").add(newItem);
-    res.status(201).json({ message: "Item added" });
+    const ref = await db.collection("items").add(newItem);
+    res.status(201).json(successJson({ id: ref.id }));
   } catch {
-    res.status(500).json({ error: "Error adding item" });
+    res.status(500).json(errorJson("Error adding item"));
   }
 };
 
-export const updateItem = async (req: Request, res: Response) => {
+export const updateItem = async (
+  req: Request<{ id: string }, {}, ItemUpdate>,
+  res: Response
+) => {
   try {
-    const { id } = req.query;
+    const { id } = req.params;
 
-    if (!id) {
-      return res.status(400).json({ error: "Missing ID" });
+    const doc = await db.collection("items").doc(id).get();
+
+    if (!doc.exists) {
+      return res.status(404).json(errorJson("Item not found"));
     }
 
-    const doc = await db
-      .collection("items")
-      .doc(id as string)
-      .get();
-
-    if (!doc) {
-      return res.status(404).json({ error: "Item not found" });
-    }
-
-    const ref = doc.ref;
-    await ref.update(req.body);
-    res.status(200).json({ message: "Item updated" });
+    await doc.ref.update(req.body);
+    res.status(200).json(successJson({ id }));
   } catch {
-    res.status(500).json({ error: "Update failed" });
+    res.status(500).json(errorJson("Update failed"));
   }
 };
 
-export const deleteItem = async (req: Request, res: Response) => {
+export const getPublicItems = async (_req: Request, res: Response) => {
   try {
-    const { id } = req.query;
+    const snapshot = await db.collection("items").where("isPublic", "==", true).get();
+    const items = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...(doc.data() as ItemInsert),
+    }));
+    res.status(200).json(successJson(items));
+  } catch {
+    res.status(500).json(errorJson("Error fetching public items"));
+  }
+};
 
-    if (!id) {
-      return res.status(400).json({ error: "Missing ID" });
+export const togglePublish = async (req: Request<{ id: string }>, res: Response) => {
+  try {
+    const { id } = req.params;
+    const doc = await db.collection("items").doc(id).get();
+
+    if (!doc.exists) {
+      return res.status(404).json(errorJson("Item not found"));
     }
 
-    const doc = await db
-      .collection("items")
-      .doc(id as string)
+    const current = (doc.data() as ItemInsert).isPublic ?? false;
+    await doc.ref.update({ isPublic: !current });
+    res.status(200).json(successJson({ id, isPublic: !current }));
+  } catch {
+    res.status(500).json(errorJson("Error toggling publish state"));
+  }
+};
+
+export const getActiveItems = async(_req: Request, res: Response) => { 
+  try { 
+    const snapshot = await db.collection("items").where("isActive", "==", true).get();
+    const items = snapshot.docs.map((doc) => ({ 
+      id : doc.id,
+      ...(doc.data() as ItemInsert),
+    }));
+
+    res.status(200).json(successJson(items));
+
+  } catch { 
+    res.status(500).json(errorJson("Error fetching active items"))
+  }
+}
+
+export const getInactiveItems = async(_req: Request, res: Response) => { 
+  try { 
+    const snapshot = await db.collection("items").where("isActive", "==", false).get();
+    const items = snapshot.docs.map((doc) => ({ 
+      id : doc.id, 
+      ...(doc.data() as ItemInsert),
+    }));
+    res.status(200).json(successJson(items))
+
+
+  } catch { 
+    res.status(500).json(errorJson("Error fetching in active items"))
+  }
+}
+
+export const toggleActive = async (req: Request<{id: string }> , res: Response) => { 
+  try { 
+    const { id } = req.params; 
+    const doc = await db.collection("items").doc(id).get(); 
+
+    if (!doc.exists) { 
+      return res.status(404).json(errorJson("Item not found"))
+    }
+
+    const current = (doc.data() as ItemInsert).isActive ?? false;
+    await doc.ref.update({ isActive: !current});
+    res.status(200).json(successJson({ id, isActive: !current}))
+  } catch { 
+    res.status(500).json(errorJson("Error toggling active state"))
+  }
+}
+
+export const deleteItem = async (req: Request<{ id: string }>, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const doc = await db.collection("items").doc(id).get();
+
+    if (!doc.exists) {
+      return res.status(404).json(errorJson("Item not found"));
+    }
+
+    await doc.ref.delete();
+    res.status(200).json(successJson({ id }));
+  } catch {
+    res.status(500).json(errorJson("Delete failed"));
+  }
+};
+
+export const getFarmerByItemId = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const doc = await db.collection("items").doc(id).get(); 
+
+    if (!doc.exists) { 
+      return res.status(404).json(errorJson("Item not found"))
+    }
+    const farmerId = doc.data()?.farmerId; 
+
+    if (!farmerId){ 
+      return res.status(404).json(errorJson("Item had no associated farmer"))
+    }
+
+    const snapshot = await db
+      .collection("farmers")
+      .doc(farmerId)
       .get();
 
-    if (!doc) {
-      return res.status(404).json({ error: "Item not found" });
+    if (!snapshot.exists) {
+      return res.status(404).json(errorJson("Farmer not found"));
     }
 
-    const ref = doc.ref;
-    await ref.delete();
-    res.status(200).json({ message: "Item deleted" });
+    res.status(200).json(successJson({ id: snapshot.id, ...snapshot.data() }));
+
   } catch {
-    res.status(500).json({ error: "Update failed" });
+    res.status(500).json(errorJson("Error retrieving farmer"));
   }
 };

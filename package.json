@@ -1,13 +1,20 @@
 {
   "scripts": {
-    "dev": "concurrently \"npm --prefix backend start\" \"npm --prefix frontend start\""
+    "dev": "concurrently \"npm --prefix backend start\" \"npm --prefix frontend run dev\""
   },
   "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/node": "^25.5.0",
     "@types/react": "^19.2.14",
     "concurrently": "^7.0.0",
     "ts-node": "^10.9.2"
   },
   "dependencies": {
+    "@radix-ui/react-dialog": "^1.1.15",
+    "cors": "^2.8.6",
+    "lucide": "^0.577.0",
+    "lucide-react": "^0.577.0",
+    "next": "^16.1.7",
     "react": "^19.2.4"
   }
 }

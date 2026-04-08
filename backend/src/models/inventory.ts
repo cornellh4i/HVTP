@@ -6,3 +6,6 @@ export interface InventoryFields {
     createdAt: FirebaseFirestore.Timestamp;
     updatedAt: FirebaseFirestore.Timestamp;
 }
+
+export type InventoryInsert = InventoryFields;
+export type InventoryUpdate = Partial<InventoryFields>;
