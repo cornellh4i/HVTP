@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { ImageIcon } from "lucide-react";
 import { useState, useEffect } from "react";
-import { getItemById, Item } from "@/api/items";
+import { getItemById, updateItem, Item } from "@/api/items";
 import EditableField from "@/components/ui/EditableField";
 
 function Field({
@@ -43,6 +43,8 @@ export default function ViewForm() {
   const [item, setItem] = useState<Item | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [formData, setFormData] = useState<Partial<Item>>({});
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
 
   const { id: itemId } = useParams<{ id: string }>();
 
@@ -53,6 +55,7 @@ export default function ViewForm() {
         setError(null);
         const data = await getItemById(itemId);
         setItem(data);
+        setFormData(data);
       } catch (err) {
         setError(String(err));
       } finally {
@@ -61,6 +64,21 @@ export default function ViewForm() {
     };
     fetchItem();
   }, [itemId]);
+
+  const handleSave = async () => {
+    try {
+      setSaveStatus("saving");
+      await updateItem(itemId, formData);
+      setSaveStatus("saved");
+      setTimeout(() => setSaveStatus("idle"), 2000);
+    } catch (err) {
+      setSaveStatus("error");
+      setTimeout(() => setSaveStatus("idle"), 2000);
+    }
+  };
+
+  const set = (field: keyof Item) => (val: string) =>
+    setFormData((prev) => ({ ...prev, [field]: val }));
 
   const BackLink = () => (
     <Link
@@ -101,8 +119,7 @@ export default function ViewForm() {
       </main>
     );
 
-  const i = item as any;
-  const images: string[] = i.images ?? [];
+  const images: string[] = formData.images ?? [];
 
   return (
     <main className="min-h-screen p-8 max-w-5xl mx-auto">
@@ -112,6 +129,19 @@ export default function ViewForm() {
         <div className="flex gap-2">
           <button className="rounded border px-4 py-1.5 text-sm hover:bg-gray-50">
             Print Label
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={saveStatus === "saving"}
+            className="rounded bg-blue-600 px-4 py-1.5 text-sm text-white hover:bg-blue-500 disabled:opacity-50"
+          >
+            {saveStatus === "saving"
+              ? "Saving..."
+              : saveStatus === "saved"
+              ? "Saved!"
+              : saveStatus === "error"
+              ? "Error"
+              : "Save Changes"}
           </button>
           <button className="rounded bg-gray-900 px-4 py-1.5 text-sm text-white hover:bg-gray-700">
             Publish
@@ -143,10 +173,11 @@ export default function ViewForm() {
 
           <Field label="Notes">
             <EditableField
-              isEditing={false}
-              value={i.notes ?? ""}
+              isEditing={true}
+              value={formData.notes ?? ""}
               placeholder="Notes"
               multiline
+              onChange={set("notes")}
             />
           </Field>
         </div>
@@ -157,47 +188,23 @@ export default function ViewForm() {
             <h2 className="text-xl font-bold mb-5">General Information</h2>
             <div className="grid grid-cols-2 gap-x-6 gap-y-5">
               <Field label="Breed">
-                <EditableField
-                  isEditing={false}
-                  value={i.breed ?? ""}
-                  placeholder="Breed"
-                />
+                <EditableField isEditing={true} value={formData.breed ?? ""} placeholder="Breed" onChange={set("breed")} />
               </Field>
               <Field label="Grade">
-                <EditableField
-                  isEditing={false}
-                  value={i.grade ?? ""}
-                  placeholder="Grade"
-                />
+                <EditableField isEditing={true} value={formData.grade ?? ""} placeholder="Grade" onChange={set("grade")} />
               </Field>
               <Field label="Color">
-                <EditableField
-                  isEditing={false}
-                  value={i.color ?? ""}
-                  placeholder="Color"
-                />
+                <EditableField isEditing={true} value={formData.color ?? ""} placeholder="Color" onChange={set("color")} />
               </Field>
               <Field label="Weight (lb)">
-                <EditableField
-                  isEditing={false}
-                  value={i.weight ?? ""}
-                  placeholder="Weight"
-                />
+                <EditableField isEditing={true} value={String(formData.weight ?? "")} placeholder="Weight" onChange={set("weight")} />
               </Field>
               <Field label="Location">
-                <EditableField
-                  isEditing={false}
-                  value={i.location ?? ""}
-                  placeholder="Pallet Number"
-                />
+                <EditableField isEditing={true} value={formData.palletNumber ?? ""} placeholder="Pallet Number" onChange={set("palletNumber")} />
               </Field>
               <Field label="Status">
-                <EditableField
-                  isEditing={false}
-                  value={i.status ?? ""}
-                  placeholder="Status"
-                />
-              </Field>
+                <EditableField isEditing={true} value={formData.status ?? ""} placeholder="Status" onChange={set("status")} />
+              </Field>              
             </div>
           </section>
 
@@ -205,46 +212,22 @@ export default function ViewForm() {
             <h2 className="text-xl font-bold mb-5">Purchase Information</h2>
             <div className="grid grid-cols-2 gap-x-6 gap-y-5">
               <Field label="Farmer Name">
-                <EditableField
-                  isEditing={false}
-                  value={i.farmerName ?? ""}
-                  placeholder="Name"
-                />
+                <EditableField isEditing={true} value={formData.farmerName ?? ""} placeholder="Name" onChange={set("farmerName")} />
               </Field>
               <Field label="Farmer Contact">
-                <EditableField
-                  isEditing={false}
-                  value={i.farmerContact ?? ""}
-                  placeholder="Phone number or email"
-                />
+                <EditableField isEditing={true} value={formData.farmerContact ?? ""} placeholder="Phone number or email" onChange={set("farmerContact")} />
               </Field>
               <Field label="Farmer City">
-                <EditableField
-                  isEditing={false}
-                  value={i.farmerCity ?? ""}
-                  placeholder="City"
-                />
+                <EditableField isEditing={true} value={formData.farmerCity ?? ""} placeholder="City" onChange={set("farmerCity")} />
               </Field>
               <Field label="Farmer State">
-                <EditableField
-                  isEditing={false}
-                  value={i.farmerState ?? ""}
-                  placeholder="State"
-                />
+                <EditableField isEditing={true} value={formData.farmerState ?? ""} placeholder="State" onChange={set("farmerState")} />
               </Field>
               <Field label="Purchase Price ($/lb)">
-                <EditableField
-                  isEditing={false}
-                  value={i.purchasePrice ?? ""}
-                  placeholder="Price"
-                />
+                <EditableField isEditing={true} value={String(formData.purchasePrice ?? "")} placeholder="Price" onChange={set("purchasePrice")} />
               </Field>
               <Field label="Shear Date">
-                <EditableField
-                  isEditing={false}
-                  value={i.shearDate ?? ""}
-                  placeholder="MM/DD/YYYY"
-                />
+                <EditableField isEditing={true} value={formData.shearDate ?? ""} placeholder="MM/DD/YYYY" onChange={set("shearDate")} />
               </Field>
             </div>
           </section>
