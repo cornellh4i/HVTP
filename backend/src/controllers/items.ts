@@ -2,7 +2,6 @@ import { Request, Response } from "express";
 import { ItemInsert, ItemUpdate } from "../models/item";
 import { getDb } from "../config/firebase";
 import { successJson, errorJson } from "../utils/jsonResponses";
-import { isAsyncFunction } from "util/types";
 
 const db = getDb();
 
@@ -43,6 +42,7 @@ export const addItem = async (
     const newItem = req.body;
 
     if (
+      !newItem.farmerId ||
       !newItem.name ||
       !newItem.sku ||
       !newItem.breed ||
@@ -177,5 +177,35 @@ export const deleteItem = async (req: Request<{ id: string }>, res: Response) =>
     res.status(200).json(successJson({ id }));
   } catch {
     res.status(500).json(errorJson("Delete failed"));
+  }
+};
+
+export const getFarmerByItemId = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const doc = await db.collection("items").doc(id).get(); 
+
+    if (!doc.exists) { 
+      return res.status(404).json(errorJson("Item not found"))
+    }
+    const farmerId = doc.data()?.farmerId; 
+
+    if (!farmerId){ 
+      return res.status(404).json(errorJson("Item had no associated farmer"))
+    }
+
+    const snapshot = await db
+      .collection("farmers")
+      .doc(farmerId)
+      .get();
+
+    if (!snapshot.exists) {
+      return res.status(404).json(errorJson("Farmer not found"));
+    }
+
+    res.status(200).json(successJson({ id: snapshot.id, ...snapshot.data() }));
+
+  } catch {
+    res.status(500).json(errorJson("Error retrieving farmer"));
   }
 };
