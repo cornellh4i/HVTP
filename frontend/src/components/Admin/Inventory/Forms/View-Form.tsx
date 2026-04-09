@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ImageIcon } from "lucide-react";
-import { useState, useEffect } from "react";
-import { getItemById, Item } from "@/api/items";
+import { useEffect, useState } from "react";
+import { getItemById, Item, updateItem } from "@/api/items";
 import EditableField from "@/components/ui/EditableField";
+import ItemImageUpload from "@/components/Admin/Inventory/Upload-Image/ItemImageUpload";
 
 function Field({
   label,
@@ -22,26 +22,11 @@ function Field({
   );
 }
 
-function ImageSlot({ src, iconClass }: { src?: string; iconClass?: string }) {
-  const [failed, setFailed] = useState(false);
-
-  if (!src || failed) {
-    return <ImageIcon className={iconClass ?? "w-16 h-16 text-gray-300"} />;
-  }
-
-  return (
-    <img
-      src={src}
-      alt=""
-      className="w-full h-full object-cover"
-      onError={() => setFailed(true)}
-    />
-  );
-}
-
 export default function ViewForm() {
   const [item, setItem] = useState<Item | null>(null);
+  const [images, setImages] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const { id: itemId } = useParams<{ id: string }>();
@@ -51,16 +36,45 @@ export default function ViewForm() {
       try {
         setLoading(true);
         setError(null);
+
         const data = await getItemById(itemId);
         setItem(data);
+        setImages(data.images ?? []);
       } catch (err) {
-        setError(String(err));
+        setError(err instanceof Error ? err.message : "Failed to load item.");
       } finally {
         setLoading(false);
       }
     };
+
     fetchItem();
   }, [itemId]);
+
+  async function handlePublish() {
+    if (!item) return;
+
+    try {
+      setSaving(true);
+      setError(null);
+
+      const nextCoverImage = images[0] ?? "";
+
+      await updateItem(item.id, {
+        images,
+        coverImage: nextCoverImage,
+      });
+
+      setItem({
+        ...item,
+        images,
+        coverImage: nextCoverImage,
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to save item.");
+    } finally {
+      setSaving(false);
+    }
+  }
 
   const BackLink = () => (
     <Link
@@ -71,7 +85,7 @@ export default function ViewForm() {
     </Link>
   );
 
-  if (loading)
+  if (loading) {
     return (
       <main className="min-h-screen p-8 max-w-5xl mx-auto">
         <div className="mb-8">
@@ -80,8 +94,9 @@ export default function ViewForm() {
         <h1 className="text-4xl font-bold">Loading...</h1>
       </main>
     );
+  }
 
-  if (error)
+  if (error && !item) {
     return (
       <main className="min-h-screen p-8 max-w-5xl mx-auto">
         <div className="mb-8">
@@ -90,8 +105,9 @@ export default function ViewForm() {
         <h1 className="text-4xl font-bold text-red-600">{error}</h1>
       </main>
     );
+  }
 
-  if (!item)
+  if (!item) {
     return (
       <main className="min-h-screen p-8 max-w-5xl mx-auto">
         <div className="mb-8">
@@ -100,45 +116,36 @@ export default function ViewForm() {
         <h1 className="text-4xl font-bold">Item not found</h1>
       </main>
     );
-
-  const images: string[] = item.images ?? [];
+  }
 
   return (
     <main className="min-h-screen p-8 max-w-5xl mx-auto">
-      {/* Top bar */}
       <div className="flex items-center justify-between mb-8">
         <BackLink />
         <div className="flex gap-2">
           <button className="rounded border px-4 py-1.5 text-sm hover:bg-gray-50">
             Print Label
           </button>
-          <button className="rounded bg-gray-900 px-4 py-1.5 text-sm text-white hover:bg-gray-700">
-            Publish
+          <button
+            type="button"
+            onClick={handlePublish}
+            disabled={saving}
+            className="rounded bg-gray-900 px-4 py-1.5 text-sm text-white hover:bg-gray-700 disabled:opacity-50"
+          >
+            {saving ? "Saving..." : "Publish"}
           </button>
         </div>
       </div>
 
-      {/* Two-column layout */}
-      <div className="grid grid-cols-[400px_1fr] gap-10">
-        {/* LEFT */}
-        <div className="flex flex-col gap-4">
-          <div className="w-full aspect-square rounded-lg border border-gray-200 flex items-center justify-center bg-white overflow-hidden">
-            <ImageSlot src={images[0]} iconClass="w-16 h-16 text-gray-300" />
-          </div>
+      {error ? <p className="mb-4 text-sm text-red-600">{error}</p> : null}
 
-          <div className="grid grid-cols-3 gap-2">
-            {[0, 1, 2].map((idx) => (
-              <div
-                key={idx}
-                className="aspect-square rounded-md border border-gray-200 flex items-center justify-center bg-white overflow-hidden"
-              >
-                <ImageSlot
-                  src={images[idx]}
-                  iconClass="w-6 h-6 text-gray-300"
-                />
-              </div>
-            ))}
-          </div>
+      <div className="grid grid-cols-[400px_1fr] gap-10">
+        <div className="flex flex-col gap-4">
+          <ItemImageUpload
+            sku={item.sku}
+            existingImages={images}
+            onImagesChange={setImages}
+          />
 
           <Field label="Notes">
             <EditableField
@@ -150,7 +157,6 @@ export default function ViewForm() {
           </Field>
         </div>
 
-        {/* RIGHT */}
         <div className="flex flex-col gap-10">
           <section>
             <h2 className="text-xl font-bold mb-5">General Information</h2>
