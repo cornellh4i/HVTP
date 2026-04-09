@@ -92,9 +92,7 @@ export default function ViewForm() {
   if (loading)
     return (
       <main className="min-h-screen p-8 max-w-5xl mx-auto">
-        <div className="mb-8">
-          <BackLink />
-        </div>
+        <div className="mb-8"><BackLink /></div>
         <h1 className="text-4xl font-bold">Loading...</h1>
       </main>
     );
@@ -102,9 +100,7 @@ export default function ViewForm() {
   if (error)
     return (
       <main className="min-h-screen p-8 max-w-5xl mx-auto">
-        <div className="mb-8">
-          <BackLink />
-        </div>
+        <div className="mb-8"><BackLink /></div>
         <h1 className="text-4xl font-bold text-red-600">{error}</h1>
       </main>
     );
@@ -112,9 +108,7 @@ export default function ViewForm() {
   if (!item)
     return (
       <main className="min-h-screen p-8 max-w-5xl mx-auto">
-        <div className="mb-8">
-          <BackLink />
-        </div>
+        <div className="mb-8"><BackLink /></div>
         <h1 className="text-4xl font-bold">Item not found</h1>
       </main>
     );
@@ -122,7 +116,7 @@ export default function ViewForm() {
   const images: string[] = formData.images ?? [];
 
   return (
-    <main className="min-h-screen p-8 max-w-5xl mx-auto">
+    <main className="min-h-screen p-8 max-w-[1440px] mx-auto pr-[86px]">
       {/* Top bar */}
       <div className="flex items-center justify-between mb-8">
         <BackLink />
@@ -149,15 +143,58 @@ export default function ViewForm() {
         </div>
       </div>
 
-      {/* Page heading */}
-      <div className="mb-8">
-        <p className="text-sm text-gray-500 mb-1">SKU</p>
-        <h1 className="text-3xl font-bold">{item.sku}</h1>
-      </div>
+      <div className="grid grid-cols-[713px_1fr] gap-[126px]">
 
-      {/* Two-column layout */}
-      <div className="grid grid-cols-[400px_1fr] gap-10">
-        {/* LEFT */}
+        {/*LEFT*/}
+        <div className="flex flex-col gap-10">
+          <section>
+            <h2 className="text-xl font-bold mb-1">General Information</h2>
+            <p className="text-sm text-gray-500 mb-5">SKU: {formData.sku ?? ""}</p>
+            <div className="grid grid-cols-2 gap-x-6 gap-y-5">
+              <Field label="Breed">
+                <EditableField isEditing={true} value={formData.breed ?? ""} placeholder="Breed" onChange={set("breed")} />
+              </Field>
+              <Field label="Grade">
+                <EditableField isEditing={true} value={formData.grade ?? ""} placeholder="Grade" onChange={set("grade")} />
+              </Field>
+              <Field label="Color">
+                <EditableField isEditing={true} value={formData.color ?? ""} placeholder="Color" onChange={set("color")} />
+              </Field>
+              <Field label="Weight (lb)">
+                <EditableField isEditing={true} value={String(formData.weight ?? "")} placeholder="Weight" onChange={set("weight")} />
+              </Field>
+              <Field label="Pallet Location">
+                <EditableField isEditing={true} value={formData.palletNumber ?? ""} placeholder="Pallet Number" onChange={set("palletNumber")} />
+              </Field>
+              <Field label="Status">
+                <EditableField isEditing={true} value={formData.status ?? ""} placeholder="Status" onChange={set("status")} />
+              </Field>
+            </div>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-bold mb-5">Purchase Information</h2>
+            <div className="grid grid-cols-2 gap-x-6 gap-y-5">
+              <Field label="Farmer Name">
+                <EditableField isEditing={true} value={formData.farmerName ?? ""} placeholder="Name" onChange={set("farmerName")} />
+              </Field>
+              <Field label="Shear Date">
+                <EditableField isEditing={true} value={formData.shearDate ?? ""} placeholder="MM/DD/YYYY" onChange={set("shearDate")} />
+              </Field>
+              <Field label="Farmer City">
+                <EditableField isEditing={true} value={formData.farmerCity ?? ""} placeholder="City" onChange={set("farmerCity")} />
+              </Field>
+              <Field label="Farmer State">
+                <EditableField isEditing={true} value={formData.farmerState ?? ""} placeholder="State" onChange={set("farmerState")} />
+              </Field>
+              <Field label="Purchase Price ($/lb)">
+                <EditableField isEditing={true} value={String(formData.purchasePrice ?? "")} placeholder="Price" onChange={set("purchasePrice")} />
+              </Field>
+            </div>
+          </section>
+        </div>
+
+        {/*RIGHT*/}
         <div className="flex flex-col gap-4">
           <div className="w-full aspect-square rounded-lg border border-gray-200 flex items-center justify-center bg-white overflow-hidden">
             <ImageSlot src={images[0]} iconClass="w-16 h-16 text-gray-300" />
@@ -169,10 +206,7 @@ export default function ViewForm() {
                 key={idx}
                 className="aspect-square rounded-md border border-gray-200 flex items-center justify-center bg-white overflow-hidden"
               >
-                <ImageSlot
-                  src={images[idx]}
-                  iconClass="w-6 h-6 text-gray-300"
-                />
+                <ImageSlot src={images[idx]} iconClass="w-6 h-6 text-gray-300" />
               </div>
             ))}
           </div>
@@ -188,59 +222,6 @@ export default function ViewForm() {
           </Field>
         </div>
 
-        {/* RIGHT */}
-        <div className="flex flex-col gap-10">
-          <section>
-            <h2 className="text-xl font-bold mb-5">General Information</h2>
-            <div className="grid grid-cols-2 gap-x-6 gap-y-5">
-              <Field label="SKU">
-                <EditableField isEditing={false} value={formData.sku ?? ""} placeholder="SKU" onChange={() => {}} />
-              </Field>
-              <Field label="Breed">
-                <EditableField isEditing={true} value={formData.breed ?? ""} placeholder="Breed" onChange={set("breed")} />
-              </Field>
-              <Field label="Grade">
-                <EditableField isEditing={true} value={formData.grade ?? ""} placeholder="Grade" onChange={set("grade")} />
-              </Field>
-              <Field label="Color">
-                <EditableField isEditing={true} value={formData.color ?? ""} placeholder="Color" onChange={set("color")} />
-              </Field>
-              <Field label="Weight (lb)">
-                <EditableField isEditing={true} value={String(formData.weight ?? "")} placeholder="Weight" onChange={set("weight")} />
-              </Field>
-              <Field label="Location">
-                <EditableField isEditing={true} value={formData.palletNumber ?? ""} placeholder="Pallet Number" onChange={set("palletNumber")} />
-              </Field>
-              <Field label="Status">
-                <EditableField isEditing={true} value={formData.status ?? ""} placeholder="Status" onChange={set("status")} />
-              </Field>              
-            </div>
-          </section>
-
-          <section>
-            <h2 className="text-xl font-bold mb-5">Purchase Information</h2>
-            <div className="grid grid-cols-2 gap-x-6 gap-y-5">
-              <Field label="Farmer Name">
-                <EditableField isEditing={true} value={formData.farmerName ?? ""} placeholder="Name" onChange={set("farmerName")} />
-              </Field>
-              <Field label="Farmer Contact">
-                <EditableField isEditing={true} value={formData.farmerContact ?? ""} placeholder="Phone number or email" onChange={set("farmerContact")} />
-              </Field>
-              <Field label="Farmer City">
-                <EditableField isEditing={true} value={formData.farmerCity ?? ""} placeholder="City" onChange={set("farmerCity")} />
-              </Field>
-              <Field label="Farmer State">
-                <EditableField isEditing={true} value={formData.farmerState ?? ""} placeholder="State" onChange={set("farmerState")} />
-              </Field>
-              <Field label="Purchase Price ($/lb)">
-                <EditableField isEditing={true} value={String(formData.purchasePrice ?? "")} placeholder="Price" onChange={set("purchasePrice")} />
-              </Field>
-              <Field label="Shear Date">
-                <EditableField isEditing={true} value={formData.shearDate ?? ""} placeholder="MM/DD/YYYY" onChange={set("shearDate")} />
-              </Field>
-            </div>
-          </section>
-        </div>
       </div>
     </main>
   );
