@@ -27,7 +27,13 @@ export const getItemById = async (req: Request, res: Response) => {
     if (!doc.exists) {
       return res.status(404).json(errorJson("Item not found"));
     }
-
+    // TODO: Join farmer data before returning.
+    // 1. Cast doc.data() to ItemInsert and read item.farmerId
+    // 2. Fetch db.collection("farmers").doc(item.farmerId).get()
+    // 3. Spread farmer fields (name, contact, city, state) into the response
+    //    as farmerName, farmerContact, farmerCity, farmerState
+    // 4. Check View-Form.tsx — it already reads these fields, so no changes
+    //    should be needed there once the response includes them.
     res.status(200).json(successJson({ ...doc.data(), id: doc.id }));
   } catch {
     res.status(500).json(errorJson("Error retrieving item"));
