@@ -43,6 +43,7 @@ export const addItem = async (
 
     if (
       !newItem.name ||
+      !newItem.farmerId || 
       !newItem.sku ||
       !newItem.breed ||
       !newItem.grade ||
@@ -53,6 +54,11 @@ export const addItem = async (
       !newItem.coverImage || 
       !newItem.qrCode ||
       newItem.isActive === undefined ||
+      newItem.isPublic === undefined ||
+      !newItem.notes ||
+      !newItem.palletLocation ||
+      !newItem.shearDate ||
+      !newItem.purchasePrice || 
       !newItem.createdAt
     ) {
       return res.status(400).json(errorJson("Missing required fields"));

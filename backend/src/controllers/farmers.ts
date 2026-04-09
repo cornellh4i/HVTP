@@ -18,25 +18,6 @@ export const getAllFarmers = async (req: Request, res: Response) => {
   }
 };
 
-export const getFarmerByItemId = async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-
-    const snapshot = await db
-      .collection("farmers")
-      .where("itemId", "==", id)
-      .get();
-
-    if (snapshot.empty) {
-      return res.status(404).json(errorJson("Farmer not found for this item"));
-    }
-
-    const farmer = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
-    res.status(200).json(successJson(farmer));
-  } catch {
-    res.status(500).json(errorJson("Error retrieving farmer"));
-  }
-};
 
 export const addFarmer = async (
   req: Request<{}, {}, FarmerInsert>,
@@ -46,7 +27,6 @@ export const addFarmer = async (
     const newFarmer = req.body;
 
     if (
-      !newFarmer.itemId ||
       !newFarmer.name ||
       !newFarmer.contact ||
       !newFarmer.city ||
