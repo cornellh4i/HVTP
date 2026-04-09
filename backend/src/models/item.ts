@@ -1,5 +1,6 @@
 export interface ItemFields {
   name: string;
+  farmerId: string;
   sku: string;
   breed: string;
   grade: string;
@@ -11,6 +12,7 @@ export interface ItemFields {
   qrCode: string;
   isActive: boolean;
   isPublic: boolean;
+  notes: string;
   createdAt: FirebaseFirestore.Timestamp;
 }
 

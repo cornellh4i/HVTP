@@ -54,6 +54,8 @@ export const addItem = async (
       !newItem.coverImage ||
       !newItem.qrCode ||
       newItem.isActive === undefined ||
+      newItem.isPublic === undefined ||
+      !newItem.notes ||
       !newItem.createdAt
     ) {
       return res.status(400).json(errorJson("Missing required fields"));

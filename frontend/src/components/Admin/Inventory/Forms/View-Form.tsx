@@ -101,8 +101,7 @@ export default function ViewForm() {
       </main>
     );
 
-  const i = item as any;
-  const images: string[] = i.images ?? [];
+  const images: string[] = item.images ?? [];
 
   return (
     <main className="min-h-screen p-8 max-w-5xl mx-auto">
@@ -144,7 +143,7 @@ export default function ViewForm() {
           <Field label="Notes">
             <EditableField
               isEditing={false}
-              value={i.notes ?? ""}
+              value={item.notes ?? ""}
               placeholder="Notes"
               multiline
             />
@@ -159,42 +158,42 @@ export default function ViewForm() {
               <Field label="Breed">
                 <EditableField
                   isEditing={false}
-                  value={i.breed ?? ""}
+                  value={item.breed ?? ""}
                   placeholder="Breed"
                 />
               </Field>
               <Field label="Grade">
                 <EditableField
                   isEditing={false}
-                  value={i.grade ?? ""}
+                  value={item.grade ?? ""}
                   placeholder="Grade"
                 />
               </Field>
               <Field label="Color">
                 <EditableField
                   isEditing={false}
-                  value={i.color ?? ""}
+                  value={item.color ?? ""}
                   placeholder="Color"
                 />
               </Field>
               <Field label="Weight (lb)">
                 <EditableField
                   isEditing={false}
-                  value={i.weight ?? ""}
+                  value={item.weight != null ? String(item.weight) : ""}
                   placeholder="Weight"
                 />
               </Field>
               <Field label="Location">
                 <EditableField
                   isEditing={false}
-                  value={i.location ?? ""}
+                  value={item.location ?? ""}
                   placeholder="Pallet Number"
                 />
               </Field>
               <Field label="Status">
                 <EditableField
                   isEditing={false}
-                  value={i.status ?? ""}
+                  value={item.status ?? ""}
                   placeholder="Status"
                 />
               </Field>
@@ -207,42 +206,42 @@ export default function ViewForm() {
               <Field label="Farmer Name">
                 <EditableField
                   isEditing={false}
-                  value={i.farmerName ?? ""}
+                  value={item.farmerName ?? ""}
                   placeholder="Name"
                 />
               </Field>
               <Field label="Farmer Contact">
                 <EditableField
                   isEditing={false}
-                  value={i.farmerContact ?? ""}
+                  value={item.farmerContact ?? ""}
                   placeholder="Phone number or email"
                 />
               </Field>
               <Field label="Farmer City">
                 <EditableField
                   isEditing={false}
-                  value={i.farmerCity ?? ""}
+                  value={item.farmerCity ?? ""}
                   placeholder="City"
                 />
               </Field>
               <Field label="Farmer State">
                 <EditableField
                   isEditing={false}
-                  value={i.farmerState ?? ""}
+                  value={item.farmerState ?? ""}
                   placeholder="State"
                 />
               </Field>
               <Field label="Purchase Price ($/lb)">
                 <EditableField
                   isEditing={false}
-                  value={i.purchasePrice ?? ""}
+                  value={item.purchasePrice != null ? String(item.purchasePrice) : ""}
                   placeholder="Price"
                 />
               </Field>
               <Field label="Shear Date">
                 <EditableField
                   isEditing={false}
-                  value={i.shearDate ?? ""}
+                  value={item.shearDate ?? ""}
                   placeholder="MM/DD/YYYY"
                 />
               </Field>

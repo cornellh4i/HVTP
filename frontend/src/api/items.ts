@@ -1,25 +1,32 @@
 import { apiRequest } from "./APIWrapper";
 
 export type Item = {
+  // Core fields (matches backend model)
   id: string;
+  farmerId: string;
+  name: string;
   sku: string;
   breed?: string;
   grade?: string;
   color?: string;
-  weight?: number | string;
-  palletNumber?: string;
+  weight?: number;
   status?: string;
+  images?: string[];
+  coverImage?: string;
+  qrCode?: string;
+  isActive?: boolean;
+  isPublic?: boolean;
   notes?: string;
+  createdAt?: string;
+  // Denormalized from farmer (joined on frontend)
   farmerName?: string;
   farmerContact?: string;
   farmerCity?: string;
   farmerState?: string;
-  purchasePrice?: number | string;
+  // UI fields (not yet in backend model)
+  location?: string;
+  purchasePrice?: number;
   shearDate?: string;
-  images?: string[];
-  coverImage?: string;
-  imageUrl?: string;
-  isPublic?: boolean;
 };
 
 // Fetch all users

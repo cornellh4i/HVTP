@@ -1,5 +1,4 @@
 export interface FarmerFields {
-  itemId: string;
   name: string;
   contact: string;
   city: string;
