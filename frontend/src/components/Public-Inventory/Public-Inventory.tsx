@@ -38,9 +38,9 @@ export default function PublicInventoryPage() {
     <main className="min-h-screen bg-slate-50 px-4 py-8 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
         <header className="mb-8">
-          <h1 className="text-3xl font-bold text-slate-900">Public Inventory</h1>
-          <p className="mt-2 text-sm text-slate-600">
-            Browse public fiber inventory cards. 
+          <h1 className="text-3xl font-bold text-slate-900">NEFX Inventory</h1>
+          <p className="mt-6 text-sm text-slate-600">
+            Ready to order? Download the Purchase Order Form and email the completed copy to hvtextileproject@gmail.com. 
           </p>
         </header>
 
@@ -51,7 +51,7 @@ export default function PublicInventoryPage() {
         ) : items.length === 0 ? (
           <p className="text-slate-500">No public items are available right now.</p>
         ) : (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {items.map((item) => (
               <div key={item.id} className="flex justify-center">
                 <ItemCard item={item} />

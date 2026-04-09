@@ -5,13 +5,8 @@ import {
   addItem,
   updateItem,
   deleteItem,
-<<<<<<< HEAD
   togglePublish,
   getPublicItems,
-=======
-  getPublicItems,
-  togglePublish,
->>>>>>> origin/master
 } from "../controllers/items";
 import { authenticateToken } from "../middleware/middleware";
 
@@ -26,8 +21,6 @@ router.patch("/togglePublish/:id", authenticateToken, togglePublish);
 
 // Public — no auth
 router.get("/public/items", getPublicItems);
-
-router.patch("/togglePublish/:id", togglePublish);
 router.get("/public/items", getPublicItems);
 
 export default router;

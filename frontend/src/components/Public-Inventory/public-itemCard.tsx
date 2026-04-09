@@ -1,9 +1,6 @@
 import React from "react";
 import {
   Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
   CardContent,
 } from "@/components/ui/card";
 import { Item } from "@/api/items";
@@ -13,23 +10,32 @@ interface ItemCardProps {
 }
 
 const ItemCard: React.FC<ItemCardProps> = ({ item }) => {
-  const tags = [item.grade, item.color, item.status].filter(Boolean);
+  const statusTag = item.status?.split(" ")[0] ?? item.status;
+  const tags = [item.grade, item.color, statusTag].filter(Boolean);
+  const suitableForText =
+    item.notes?.trim() ||
+    "Textiles: Rugs, wall hangings, carpets, and mats\nAccessories: Bags and other sturdy items\nCrafts: Felted decorative items, upholstery";
+  const detailRows = [
+    { label: "Breed", value: item.breed ?? "-" },
+    { label: "Quantity", value: item.weight ? `${item.weight} lbs` : "-" },
+    { label: "Status", value: item.status ?? "-" },
+    { label: "State", value: item.farmerState ?? "-" },
+  ];
 
   return (
-    <Card className="w-full max-w-[402px] p-4 sm:p-5">
-
-      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
+    <Card className="w-full max-w-[420px] rounded-[22px] border border-slate-300 bg-[#e7e7e7] p-5 shadow-none sm:p-6">
+      <div className="overflow-hidden rounded-[22px] border border-slate-200 bg-[#f5f5f5]">
         {item.coverImage || item.imageUrl ? (
           <img
             src={item.coverImage ?? item.imageUrl}
             alt={item.sku}
-            className="h-[205px] w-full object-cover"
+            className="h-[225px] w-full object-cover"
           />
         ) : (
-          <div className="flex h-[205px] items-center justify-center text-slate-400">
+          <div className="flex h-[225px] items-center justify-center text-slate-500">
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="h-16 w-16"
+              className="h-14 w-14"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -43,57 +49,49 @@ const ItemCard: React.FC<ItemCardProps> = ({ item }) => {
         )}
       </div>
 
-      <div className="flex flex-col gap-4">
-        <CardHeader className="gap-2 p-0">
-          {tags.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.25em] text-slate-600"
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
-          )}
-
-          <CardTitle className="text-xl leading-tight text-slate-900">
-            SKU: {item.sku}
-          </CardTitle>
-          <CardDescription className="text-sm text-slate-500">
-            {item.grade && item.color
-              ? `${item.grade} · ${item.color}`
-              : item.grade ?? item.color ?? ""}
-          </CardDescription>
-        </CardHeader>
-
-        <CardContent className="grid gap-3 px-0 pb-0 pt-0 text-sm text-slate-700 sm:grid-cols-2">
-          <div>
-            <p className="font-semibold text-slate-900">Breed</p>
-            <p>{item.breed ?? "—"}</p>
-          </div>
-          <div>
-            <p className="font-semibold text-slate-900">Quantity</p>
-            <p>{item.weight ? `${item.weight} lbs` : "—"}</p>
-          </div>
-          <div>
-            <p className="font-semibold text-slate-900">Status</p>
-            <p>{item.status ?? "—"}</p>
-          </div>
-          <div>
-            <p className="font-semibold text-slate-900">State</p>
-            <p>{item.farmerState ?? "—"}</p>
-          </div>
-        </CardContent>
-
-        {item.notes && (
-          <div className="rounded-2xl bg-slate-50 p-4 text-sm text-slate-700">
-            <p className="mb-2 font-semibold text-slate-900">Suitable For</p>
-            <p className="whitespace-pre-line">{item.notes}</p>
+      <CardContent className="flex h-full flex-col px-0 pb-0 pt-6">
+        {tags.length > 0 && (
+          <div
+            className="flex flex-wrap items-center gap-2 uppercase tracking-[0.08em]"
+            style={{
+              color: "#686868",
+              fontFamily: "var(--sds-typography-body-font-family)",
+              fontSize: "var(--sds-typography-body-size-small)",
+              fontStyle: "normal",
+              fontWeight: "var(--sds-typography-body-font-weight-regular)",
+              lineHeight: "140%",
+            }}
+          >
+            {tags.map((tag, index) => (
+              <React.Fragment key={tag}>
+                {index > 0 && <span className="text-[0.95rem] leading-none">•</span>}
+                <span className="text-[0.95rem]">{tag}</span>
+              </React.Fragment>
+            ))}
           </div>
         )}
-      </div>
+
+        <h2
+          className="mt-4 uppercase text-black text-[var(--sds-typography-heading-size-base)] font-[var(--sds-typography-heading-font-weight)] leading-[120%]"
+          style={{ fontFamily: '"Acumin Pro", sans-serif' }}
+        >
+          SKU: {item.sku}
+        </h2>
+
+        <div className="mt-4 grid gap-x-8 gap-y-1 text-[1.1rem] text-slate-700 sm:grid-cols-2">
+          {detailRows.map((detail) => (
+            <p key={detail.label} className="leading-snug">
+              <span className="font-bold text-slate-700">{detail.label}: </span>
+              <span>{detail.value}</span>
+            </p>
+          ))}
+        </div>
+
+        <div className="mt-3 text-[1.1rem] leading-snug text-slate-700">
+          <p className="font-bold text-slate-700">Suitable For:</p>
+          <p className="whitespace-pre-line">{suitableForText}</p>
+        </div>
+      </CardContent>
     </Card>
   );
 };

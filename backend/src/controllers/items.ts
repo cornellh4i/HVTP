@@ -42,7 +42,6 @@ export const addItem = async (
     const newItem = req.body;
 
     if (
-      !newItem.farmerId ||
       !newItem.name ||
       !newItem.sku ||
       !newItem.breed ||
