@@ -17,16 +17,6 @@ export const getAllItems = async (_req: Request, res: Response) => {
     res.status(500).json(errorJson("Error fetching items"));
   }
 };
-
-export const getItemById = async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-
-    const doc = await db.collection("items").doc(id).get();
-
-    if (!doc.exists) {
-      return res.status(404).json(errorJson("Item not found"));
-    }
     // TODO: Join farmer data before returning.
     // 1. Cast doc.data() to ItemInsert and read item.farmerId
     // 2. Fetch db.collection("farmers").doc(item.farmerId).get()
@@ -34,6 +24,34 @@ export const getItemById = async (req: Request, res: Response) => {
     //    as farmerName, farmerContact, farmerCity, farmerState
     // 4. Check View-Form.tsx — it already reads these fields, so no changes
     //    should be needed there once the response includes them.
+
+  export const getItemById = async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+
+      const doc = await db.collection("items").doc(id).get();
+
+      if (!doc.exists) {
+        return res.status(404).json(errorJson("Item not found"));
+      }
+
+      const item = doc.data() as ItemInsert;
+
+      // Join farmer data before returning
+      let farmerFields = {};
+      if (item.farmerId) {
+        const farmerDoc = await db.collection("farmers").doc(item.farmerId).get();
+        if (farmerDoc.exists) {
+          const farmer = farmerDoc.data() as any;
+          farmerFields = {
+            farmerName: farmer.name,
+            farmerContact: farmer.contact,
+            farmerCity: farmer.city,
+            farmerState: farmer.state,
+          };
+        }
+      }
+
     res.status(200).json(successJson({ ...doc.data(), id: doc.id }));
   } catch {
     res.status(500).json(errorJson("Error retrieving item"));
