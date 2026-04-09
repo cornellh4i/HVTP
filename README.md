@@ -6,7 +6,7 @@
     <img src="https://media.licdn.com/dms/image/v2/C560BAQGDbdhpmxRmrg/company-logo_200_200/company-logo_200_200/0/1633548685050/hack4impact_logo?e=2147483647&v=beta&t=Cgni3x2P5I8nwhyAaHkblCo0OP6yx857PLG7O5Zw_W4" alt="Logo" width="120" height="120">
   </a>
 
-<h3>Cornell Internal Member Archive</h3>
+<h3>Cornell Hack4Impact</h3>
 
   <p >
     Hack4Impact is a student-led organization that aims to develop projects to assist nonprofit organizations in the Cornell-Ithaca community and beyond. Hack4Impact mission is to empower engineers, designers, activists, and humanitarians to create lasting and impactful social change, fostering the wider adoption of software as a tool for social good. 
