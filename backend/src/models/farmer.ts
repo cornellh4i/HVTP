@@ -5,5 +5,6 @@ export interface FarmerFields {
   state: string;
 }
 
+
 export type FarmerInsert = FarmerFields;
 export type FarmerUpdate = Partial<FarmerFields>;

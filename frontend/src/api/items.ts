@@ -17,16 +17,15 @@ export type Item = {
   isActive?: boolean;
   isPublic?: boolean;
   notes?: string;
+  palletLocation?: string;
+  shearDate?: string;
+  purchasePrice?: number;
   createdAt?: string;
-  // Denormalized from farmer (joined on frontend)
+  // Denormalized from farmer (joined in getItemById)
   farmerName?: string;
   farmerContact?: string;
   farmerCity?: string;
   farmerState?: string;
-  // UI fields (not yet in backend model)
-  location?: string;
-  purchasePrice?: number;
-  shearDate?: string;
 };
 
 // Fetch all users

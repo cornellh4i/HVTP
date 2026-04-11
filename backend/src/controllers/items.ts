@@ -8,27 +8,51 @@ const db = getDb();
 export const getAllItems = async (_req: Request, res: Response) => {
   try {
     const snapshot = await db.collection("items").get();
-    const items = snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...(doc.data() as ItemInsert),
+    const items = snapshot.docs.map((doc) => ({ 
+      ...(doc.data() as ItemInsert), 
+      id: doc.id 
     }));
     res.status(200).json(successJson(items));
   } catch (error) {
     res.status(500).json(errorJson("Error fetching items"));
   }
 };
+    // TODO: Join farmer data before returning.
+    // 1. Cast doc.data() to ItemInsert and read item.farmerId
+    // 2. Fetch db.collection("farmers").doc(item.farmerId).get()
+    // 3. Spread farmer fields (name, contact, city, state) into the response
+    //    as farmerName, farmerContact, farmerCity, farmerState
+    // 4. Check View-Form.tsx — it already reads these fields, so no changes
+    //    should be needed there once the response includes them.
 
-export const getItemById = async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
+  export const getItemById = async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
 
-    const doc = await db.collection("items").doc(id).get();
+      const doc = await db.collection("items").doc(id).get();
 
-    if (!doc.exists) {
-      return res.status(404).json(errorJson("Item not found"));
-    }
+      if (!doc.exists) {
+        return res.status(404).json(errorJson("Item not found"));
+      }
 
-    res.status(200).json(successJson({ id: doc.id, ...doc.data() }));
+      const item = doc.data() as ItemInsert;
+
+      // Join farmer data before returning
+      let farmerFields = {};
+      if (item.farmerId) {
+        const farmerDoc = await db.collection("farmers").doc(item.farmerId).get();
+        if (farmerDoc.exists) {
+          const farmer = farmerDoc.data() as any;
+          farmerFields = {
+            farmerName: farmer.name,
+            farmerContact: farmer.contact,
+            farmerCity: farmer.city,
+            farmerState: farmer.state,
+          };
+        }
+      }
+
+    res.status(200).json(successJson({ ...doc.data(), id: doc.id }));
   } catch {
     res.status(500).json(errorJson("Error retrieving item"));
   }
@@ -44,6 +68,7 @@ export const addItem = async (
     if (
       !newItem.farmerId ||
       !newItem.name ||
+      !newItem.farmerId || 
       !newItem.sku ||
       !newItem.breed ||
       !newItem.grade ||
@@ -51,11 +76,14 @@ export const addItem = async (
       newItem.weight === undefined ||
       !newItem.status ||
       !newItem.images || !Array.isArray(newItem.images) || newItem.images.length === 0 ||
-      !newItem.coverImage ||
+      !newItem.coverImage || 
       !newItem.qrCode ||
       newItem.isActive === undefined ||
       newItem.isPublic === undefined ||
       !newItem.notes ||
+      !newItem.palletLocation ||
+      !newItem.shearDate ||
+      !newItem.purchasePrice || 
       !newItem.createdAt
     ) {
       return res.status(400).json(errorJson("Missing required fields"));
@@ -92,8 +120,8 @@ export const getPublicItems = async (_req: Request, res: Response) => {
   try {
     const snapshot = await db.collection("items").where("isPublic", "==", true).get();
     const items = snapshot.docs.map((doc) => ({
-      id: doc.id,
       ...(doc.data() as ItemInsert),
+      id: doc.id,
     }));
     res.status(200).json(successJson(items));
   } catch {

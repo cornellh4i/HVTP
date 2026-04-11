@@ -1,35 +1,51 @@
 import Link from "next/link";
 import { ItemCard } from "@/components/ui/itemCard";
+import SearchBar from "@/components/ui/searchBar";
+import { getAllItems, Item } from "@/api/items";
+import { useState, useEffect } from "react";
 // To get this information you would have to use item and
 // farmers information and possible add more fields
 
 export default function CardTable() {
-  // To get this information you would have to use item and
-  // farmers information and possible add >more fields
-  const TEST_ITEM = {
-    id: "1WRYkfhkyuPNu40lBt5L",
-    sku: "R9pL2bN5kW",
-    breed: "Merino",
-    grade: "A",
-    color: "White",
-    weight: 12,
-    status: "Processing",
-    state: "NY",
-  };
+  const [items, setItems] = useState<Item[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchItems = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await getAllItems();
+        setItems(data);
+      } catch (err) {
+        setError(String(err));
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchItems();
+  }, []);
+
+  if (loading) return <main className="min-h-screen p-8">Loading...</main>;
+  if (error) return <main className="min-h-screen p-8">Error: {error}</main>;
 
   return (
     <main className="min-h-screen p-8">
+      <SearchBar className="mb-6" placeholder="Search for lot" />
       <div className="flex flex-col items-center justify-centergrid grid-cols-1 gap-4">
-        {/* Test item card — replace with real data in implementation ticket */}
-        <ItemCard
-          sku={TEST_ITEM.sku}
-          description={TEST_ITEM.grade + " " + TEST_ITEM.color}
-          breed={TEST_ITEM.breed}
-          quantity={`${TEST_ITEM.weight} lbs`}
-          status={TEST_ITEM.status}
-          state={TEST_ITEM.state}
-          href={`/inventory/${TEST_ITEM.id}`}
-        />
+        {items.map((item) => (
+          <ItemCard
+            key={item.id}
+            sku={item.sku}
+            description={item.grade + " " + item.color}
+            breed={item.breed ?? ""}
+            quantity={`${item.weight} lbs`}
+            status={item.status ?? ""}
+            state={item.farmerState ?? ""}
+            href={`/inventory/${item.id}`}
+          />
+        ))}
       </div>
     </main>
   );

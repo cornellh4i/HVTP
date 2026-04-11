@@ -46,16 +46,16 @@ export default function AppSidebar() {
     <Sidebar
       variant="floating"
       collapsible="icon"
-      onMouseEnter={() => {
-        if (!isMobile) {
-          setSidebarState(true);
-        }
-      }}
-      onMouseLeave={() => {
-        if (!isMobile) {
-          setSidebarState(false);
-        }
-      }}
+      // onMouseEnter={() => {
+      //   if (!isMobile) {
+      //     setSidebarState(true);
+      //   }
+      // }}
+      // onMouseLeave={() => {
+      //   if (!isMobile) {
+      //     setSidebarState(false);
+      //   }
+      // }}
     >
       <SidebarHeader className="bg-gray-100 border-b">
         <div className="flex items-center gap-2 px-3 py-4 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-2">

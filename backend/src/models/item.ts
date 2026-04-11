@@ -13,6 +13,9 @@ export interface ItemFields {
   isActive: boolean;
   isPublic: boolean;
   notes: string;
+  palletLocation: string;
+  shearDate: string;
+  purchasePrice: number;
   createdAt: FirebaseFirestore.Timestamp;
 }
 
