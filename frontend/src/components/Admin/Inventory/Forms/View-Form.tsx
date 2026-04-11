@@ -157,7 +157,7 @@ export default function ViewForm() {
                 <EditableField isEditing={true} value={String(formData.weight ?? "")} placeholder="Weight" onChange={set("weight")} />
               </Field>
               <Field label="Pallet Location">
-                <EditableField isEditing={true} value={formData.palletLocation ?? ""} placeholder="Pallet Number" onChange={set("palletNumber")} />
+                <EditableField isEditing={true} value={formData.palletLocation ?? ""} placeholder="Pallet Number" onChange={set("palletLocation")} />
               </Field>
               <Field label="Status">
                 <EditableField isEditing={true} value={formData.status ?? ""} placeholder="Status" onChange={set("status")} />
