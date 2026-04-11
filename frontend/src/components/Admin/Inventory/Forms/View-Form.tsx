@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ImageIcon } from "lucide-react";
 import { useState, useEffect } from "react";
 import { getItemById, updateItem, Item } from "@/api/items";
 import EditableField from "@/components/ui/EditableField";
+import ItemImageUpload from "@/components/Admin/Inventory/Upload-Image/ItemImageUpload";
 
 function Field({
   label,
@@ -22,25 +22,9 @@ function Field({
   );
 }
 
-function ImageSlot({ src, iconClass }: { src?: string; iconClass?: string }) {
-  const [failed, setFailed] = useState(false);
-
-  if (!src || failed) {
-    return <ImageIcon className={iconClass ?? "w-16 h-16 text-gray-300"} />;
-  }
-
-  return (
-    <img
-      src={src}
-      alt=""
-      className="w-full h-full object-cover"
-      onError={() => setFailed(true)}
-    />
-  );
-}
-
 export default function ViewForm() {
   const [item, setItem] = useState<Item | null>(null);
+  const [images, setImages] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState<Partial<Item>>({});
@@ -53,22 +37,29 @@ export default function ViewForm() {
       try {
         setLoading(true);
         setError(null);
+
         const data = await getItemById(itemId);
         setItem(data);
         setFormData(data);
+        setImages(data.images ?? []);
       } catch (err) {
-        setError(String(err));
+        setError(err instanceof Error ? err.message : "Failed to load item.");
       } finally {
         setLoading(false);
       }
     };
+
     fetchItem();
   }, [itemId]);
 
   const handleSave = async () => {
     try {
       setSaveStatus("saving");
-      await updateItem(itemId, formData);
+      await updateItem(itemId, {
+        ...formData,
+        images,
+        coverImage: images[0] ?? "",
+      });
       setSaveStatus("saved");
       setTimeout(() => setSaveStatus("idle"), 2000);
     } catch (err) {
@@ -89,35 +80,35 @@ export default function ViewForm() {
     </Link>
   );
 
-  if (loading)
+  if (loading) {
     return (
       <main className="min-h-screen p-8 max-w-5xl mx-auto">
         <div className="mb-8"><BackLink /></div>
         <h1 className="text-4xl font-bold">Loading...</h1>
       </main>
     );
+  }
 
-  if (error)
+  if (error && !item) {
     return (
       <main className="min-h-screen p-8 max-w-5xl mx-auto">
         <div className="mb-8"><BackLink /></div>
         <h1 className="text-4xl font-bold text-red-600">{error}</h1>
       </main>
     );
+  }
 
-  if (!item)
+  if (!item) {
     return (
       <main className="min-h-screen p-8 max-w-5xl mx-auto">
         <div className="mb-8"><BackLink /></div>
         <h1 className="text-4xl font-bold">Item not found</h1>
       </main>
     );
-
-  const images: string[] = item.images ?? [];
+  }
 
   return (
     <main className="min-h-screen p-8 max-w-[1440px] mx-auto pr-[86px]">
-      {/* Top bar */}
       <div className="flex items-center justify-between mb-8">
         <BackLink />
         <div className="flex gap-2">
@@ -142,6 +133,8 @@ export default function ViewForm() {
           </button>
         </div>
       </div>
+
+      {error ? <p className="mb-4 text-sm text-red-600">{error}</p> : null}
 
       <div className="grid grid-cols-[713px_1fr] gap-[126px]">
 
@@ -196,20 +189,11 @@ export default function ViewForm() {
 
         {/*RIGHT*/}
         <div className="flex flex-col gap-4">
-          <div className="w-full aspect-square rounded-lg border border-gray-200 flex items-center justify-center bg-white overflow-hidden">
-            <ImageSlot src={images[0]} iconClass="w-16 h-16 text-gray-300" />
-          </div>
-
-          <div className="grid grid-cols-3 gap-2">
-            {[0, 1, 2].map((idx) => (
-              <div
-                key={idx}
-                className="aspect-square rounded-md border border-gray-200 flex items-center justify-center bg-white overflow-hidden"
-              >
-                <ImageSlot src={images[idx]} iconClass="w-6 h-6 text-gray-300" />
-              </div>
-            ))}
-          </div>
+          <ItemImageUpload
+            sku={item.sku}
+            existingImages={images}
+            onImagesChange={setImages}
+          />
 
           <Field label="Notes">
             <EditableField
