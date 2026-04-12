@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 14, "column": 0}, "map": {"version":3,"sources":["file:///Users/rexpeter/Desktop/HVTP/frontend/src/app/auth/success/page.tsx"],"sourcesContent":["export default function SuccessPage() {\n  return (\n    <main className=\"flex min-h-screen items-center justify-center\">\n      <h1 className=\"text-2xl font-bold\">Success</h1>\n    </main>\n  );\n}\n"],"names":[],"mappings":";;;;;;AAAe,SAAS;IACtB,qBACE,6QAAC;QAAK,WAAU;kBACd,cAAA,6QAAC;YAAG,WAAU;sBAAqB;;;;;;;;;;;AAGzC"}}]
-}

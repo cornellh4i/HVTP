@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 14, "column": 0}, "map": {"version":3,"sources":["file:///Users/rexpeter/Desktop/HVTP/frontend/src/app/%28auth-pages%29/success/page.tsx"],"sourcesContent":["import { redirect } from \"next/navigation\";\n\nexport default function SuccessPage() {\n  redirect(\"/dashboard\");\n}"],"names":[],"mappings":";;;;AAAA;AAAA;;AAEe,SAAS;IACtB,IAAA,gOAAQ,EAAC;AACX"}}]
-}
