@@ -21,18 +21,22 @@ export async function apiRequest<T = unknown>(
   options: {
     method?: "GET" | "POST" | "PATCH" | "DELETE";
     body?: Record<string, unknown>;
-    token?: string;
+    token?: string | null;
   } = {}
 ): Promise<T> {
   const { method = "GET", body, token } = options;
-  const authToken = token ?? (await getAuthToken());
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+
+  if (token !== null) {
+    const authToken = token ?? (await getAuthToken());
+    headers.Authorization = `Bearer ${authToken}`;
+  }
 
   const res = await fetch(`${API_BASE}${endpoint}`, {
     method,
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${authToken}`,
-    },
+    headers,
     body: body ? JSON.stringify(body) : undefined,
   });
 

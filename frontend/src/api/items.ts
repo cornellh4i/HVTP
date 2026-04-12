@@ -64,8 +64,13 @@ export const deleteItem = async (id: string) => {
 };
 
 // Toggle public visibility of an item (admin only)
-// Fuunction Here
+export const togglePublish = async (id: string) => {
+  return apiRequest<Item>(`/api/togglePublish/${encodeURIComponent(id)}`, {
+    method: "PATCH",
+  });
+};
 
 // Fetch all publicly visible items (no auth required)
-// Function Here
-
+export const getPublicItems = async () => {
+  return apiRequest<Item[]>("/api/public/items", { method: "GET", token: null });
+};

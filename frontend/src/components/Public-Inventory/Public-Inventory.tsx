@@ -1,8 +1,65 @@
 "use client";
 
+import React, { useEffect, useState } from "react";
+import { getPublicItems, Item } from "@/api/items";
+import ItemCard from "./public-itemCard";
+
 export default function PublicInventoryPage() {
-  return ( <div className="min-h-screen p-8">
-    <h1 className="text-2xl font-bold mb-6">Inventory</h1>
-    <p className="text-gray-500">Loading...</p>
-  </div> )
+  const [items, setItems] = useState<Item[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    getPublicItems()
+      .then((data) => {
+        if (!cancelled) {
+          setItems(data ?? []);
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setError(err?.message ?? "Failed to load public inventory.");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  return (
+    <main className="min-h-screen bg-slate-50 px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl">
+        <header className="mb-8">
+          <h1 className="text-3xl font-bold text-slate-900">NEFX Inventory</h1>
+          <p className="mt-6 text-sm text-slate-600">
+            Ready to order? Download the Purchase Order Form and email the completed copy to hvtextileproject@gmail.com. 
+          </p>
+        </header>
+
+        {loading ? (
+          <p className="text-slate-500">Loading public inventory...</p>
+        ) : error ? (
+          <p className="text-red-500">Error: {error}</p>
+        ) : items.length === 0 ? (
+          <p className="text-slate-500">No public items are available right now.</p>
+        ) : (
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {items.map((item) => (
+              <div key={item.id} className="flex justify-center">
+                <ItemCard item={item} />
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </main>
+  );
 }

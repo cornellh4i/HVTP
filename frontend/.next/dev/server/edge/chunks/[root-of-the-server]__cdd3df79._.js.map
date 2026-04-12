@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 16, "column": 0}, "map": {"version":3,"sources":["turbopack:///[project]/Desktop/HVTP/frontend/src/middleware.ts"],"sourcesContent":["import { NextRequest, NextResponse } from \"next/server\";\n\nexport function middleware(request: NextRequest) {\n  const session = request.cookies.get(\"session\")?.value;\n\n  if (!session) {\n    const loginUrl = new URL(\"/login\", request.url);\n    return NextResponse.redirect(loginUrl);\n  }\n\n  return NextResponse.next();\n}\n\nexport const config = {\n  matcher: [\"/dashboard/:path*\", \"/inventory/:path*\"],\n};"],"names":[],"mappings":";;;;;;AAAA;AAAA;;AAEO,SAAS,WAAW,OAAoB;IAC7C,MAAM,UAAU,QAAQ,OAAO,CAAC,GAAG,CAAC,YAAY;IAEhD,IAAI,CAAC,SAAS;QACZ,MAAM,WAAW,IAAI,IAAI,UAAU,QAAQ,GAAG;QAC9C,OAAO,+NAAY,CAAC,QAAQ,CAAC;IAC/B;IAEA,OAAO,+NAAY,CAAC,IAAI;AAC1B;AAEO,MAAM,SAAS;IACpB,SAAS;QAAC;QAAqB;KAAoB;AACrD"}}]
+}
