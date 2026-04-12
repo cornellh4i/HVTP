@@ -1,15 +1,9 @@
 import * as React from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { Pencil } from "lucide-react";
 
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-  CardFooter,
-} from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
 interface ItemCardProps {
@@ -21,6 +15,7 @@ interface ItemCardProps {
   state: string;
   href: string;
   imgSrc?: string;
+  lastUpdated?: string;
 }
 
 const PlaceholderImage = () => (
@@ -28,7 +23,7 @@ const PlaceholderImage = () => (
     viewBox="0 0 24 24"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
-    className="h-12 w-12 text-slate-400 sm:h-16 sm:w-16 lg:h-18.5 lg:w-18.5"
+    className="h-8 w-8 text-slate-400 sm:h-12 sm:w-12 lg:h-16 lg:w-16"
     aria-hidden="true"
   >
     <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="1" />
@@ -43,59 +38,65 @@ const PlaceholderImage = () => (
 );
 
 const ItemCard = React.forwardRef<HTMLDivElement, ItemCardProps>(
-  ({ sku, description, breed, quantity, status, state, href, imgSrc }, ref) => (
-    <Card ref={ref} className="w-full max-w-4xl p-3 sm:p-4 lg:p-5">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4 lg:gap-6">
+  ({ sku, description, breed, quantity, status, state, href, imgSrc, lastUpdated }, ref) => (
+    <Card ref={ref} className="relative w-full max-w-5xl rounded-xl p-2 sm:p-3 lg:p-4">
+      {/* Mobile: pen icon top right */}
+      <Link href={href} className="absolute right-3 top-3 text-slate-400 sm:hidden">
+        <Pencil size={16} />
+      </Link>
+      <div className="flex flex-row items-center gap-3 sm:gap-4 lg:gap-6">
 
-        {/* Image area */}
-        <div className="flex h-22.5 w-full shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 sm:h-27.5 sm:w-50 lg:h-32.5 lg:w-60">
+        {/* Image — small square on mobile, larger on desktop */}
+        <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 sm:h-32 sm:w-32 lg:h-44 lg:w-60 lg:rounded-2xl">
           {imgSrc ? (
             <Image
               src={imgSrc}
               alt={sku}
               width={240}
-              height={130}
-              className="h-full w-full rounded-2xl object-cover"
+              height={176}
+              className="h-full w-full rounded-xl object-cover lg:rounded-2xl"
             />
           ) : (
             <PlaceholderImage />
           )}
         </div>
 
-        {/* Content area */}
-        <div className="flex w-full min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        {/* Content */}
+        <div className="flex min-w-0 flex-1 flex-col gap-0.5 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
           <div className="min-w-0 flex-1">
-            <CardHeader className="gap-1 p-0">
-              <CardDescription className="text-xs sm:text-sm">
-                {description}
-              </CardDescription>
-              <CardTitle className="truncate text-base sm:text-lg lg:text-xl">
-                {sku}
-              </CardTitle>
-            </CardHeader>
+            {/* Grade • Color */}
+            <p className="text-[10px] uppercase tracking-wide text-slate-500 sm:text-xs">
+              {description}
+            </p>
 
-            <CardContent className="grid grid-cols-1 gap-x-6 gap-y-1 px-0 pb-0 pt-2 text-sm sm:grid-cols-2 sm:pt-3 lg:text-base">
-              <p>
-                <span className="font-semibold">Breed:</span> {breed}
-              </p>
-              <p>
-                <span className="font-semibold">Quantity Available:</span> {quantity}
-              </p>
-              <p>
-                <span className="font-semibold">Status:</span> {status}
-              </p>
-              <p>
-                <span className="font-semibold">State:</span> {state}
-              </p>
-            </CardContent>
+            {/* SKU */}
+            <p className="truncate text-sm font-bold sm:text-lg lg:text-xl">{sku}</p>
+
+            {/* Mobile: single condensed line */}
+            <p className="mt-0.5 truncate text-xs text-slate-600 sm:hidden">
+              {breed} / {status} / {quantity} / {state}
+            </p>
+
+            {/* Desktop: grid of fields */}
+            <div className="mt-2 hidden grid-cols-2 gap-x-6 gap-y-1 text-sm sm:grid lg:text-base">
+              <p><span className="font-semibold">Breed:</span> {breed}</p>
+              <p><span className="font-semibold">Quantity Available:</span> {quantity}</p>
+              <p><span className="font-semibold">Status:</span> {status}</p>
+              <p><span className="font-semibold">State:</span> {state}</p>
+            </div>
+
+            {lastUpdated && (
+              <p className="mt-1 hidden text-xs text-slate-400 sm:block">Last Updated: {lastUpdated}</p>
+            )}
           </div>
 
-          <CardFooter className="shrink-0 px-0 py-0 sm:self-center">
-            <Button asChild className="w-full sm:w-auto">
-              <Link href={href}>View Fiber</Link>
-            </Button>
-          </CardFooter>
+
+          {/* Desktop: full button */}
+          <Button asChild className="hidden shrink-0 sm:block">
+            <Link href={href}>View Lot</Link>
+          </Button>
         </div>
+
       </div>
     </Card>
   )

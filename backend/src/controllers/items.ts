@@ -52,7 +52,7 @@ export const getAllItems = async (_req: Request, res: Response) => {
         }
       }
 
-    res.status(200).json(successJson({ ...doc.data(), id: doc.id }));
+    res.status(200).json(successJson({ ...doc.data(), id: doc.id, ...farmerFields }));
   } catch {
     res.status(500).json(errorJson("Error retrieving item"));
   }
@@ -77,7 +77,7 @@ export const addItem = async (
       !newItem.status ||
       !newItem.images || !Array.isArray(newItem.images) || newItem.images.length === 0 ||
       !newItem.coverImage || 
-      !newItem.qrCode ||
+
       newItem.isActive === undefined ||
       newItem.isPublic === undefined ||
       !newItem.notes ||
@@ -90,6 +90,7 @@ export const addItem = async (
     }
 
     const ref = await db.collection("items").add(newItem);
+    await ref.update({ qrCode: ref.id });
     res.status(201).json(successJson({ id: ref.id }));
   } catch {
     res.status(500).json(errorJson("Error adding item"));

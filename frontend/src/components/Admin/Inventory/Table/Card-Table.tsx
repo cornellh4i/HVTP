@@ -6,6 +6,14 @@ import { useState, useEffect } from "react";
 // To get this information you would have to use item and
 // farmers information and possible add more fields
 
+function formatDate(createdAt: unknown): string | undefined {
+  if (!createdAt) return undefined;
+  const ts = createdAt as { _seconds?: number };
+  const ms = ts._seconds ? ts._seconds * 1000 : Number(createdAt);
+  const date = new Date(ms);
+  return isNaN(date.getTime()) ? undefined : date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
 export default function CardTable() {
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
@@ -38,12 +46,13 @@ export default function CardTable() {
           <ItemCard
             key={item.id}
             sku={item.sku}
-            description={item.grade + " " + item.color}
+            description={`${item.grade ?? ""} • ${item.color ?? ""}`}
             breed={item.breed ?? ""}
             quantity={`${item.weight} lbs`}
             status={item.status ?? ""}
             state={item.farmerState ?? ""}
             href={`/inventory/${item.id}`}
+            lastUpdated={formatDate(item.createdAt)}
           />
         ))}
       </div>
