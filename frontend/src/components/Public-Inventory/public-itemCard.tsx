@@ -10,7 +10,7 @@ interface ItemCardProps {
 
 const ItemCard: React.FC<ItemCardProps> = ({ item }) => {
   const statusTag = item.status?.split(" ")[0] ?? item.status;
-  const hasImage = Boolean(item.coverImage || item.imageUrl);
+  const hasImage = Boolean(item.coverImage);
   const tags = [item.grade, item.color, statusTag].filter(Boolean);
   const suitableForText =
     item.notes?.trim() ||
@@ -18,7 +18,7 @@ const ItemCard: React.FC<ItemCardProps> = ({ item }) => {
   const detailRows = [
     { label: "Breed", value: item.breed ?? "-" },
     { label: "Quantity", value: item.weight ? `${item.weight} lbs` : "-" },
-    { label: "Price (per lb)", value: item.price ? `$${item.price}` : "-" },
+    { label: "Price (per lb)", value: item.purchasePrice ? `$${item.purchasePrice}` : "-" },
     { label: "State", value: item.farmerState ?? "NY" },
   ];
 
@@ -28,7 +28,7 @@ const ItemCard: React.FC<ItemCardProps> = ({ item }) => {
         <div className="h-[205.2px] w-full overflow-hidden rounded-[15px] bg-[#f5f5f5]">
           {hasImage ? (
             <img
-              src={item.coverImage ?? item.imageUrl}
+              src={item.coverImage}
               alt={item.sku}
               className="h-[205.2px] w-full rounded-[15px] object-cover"
             />
