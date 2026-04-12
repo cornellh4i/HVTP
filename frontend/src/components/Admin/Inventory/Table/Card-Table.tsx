@@ -1,6 +1,4 @@
-import Link from "next/link";
 import { ItemCard } from "@/components/ui/itemCard";
-import SearchBar from "@/components/ui/searchBar";
 import { getAllItems, Item } from "@/api/items";
 import { useState, useEffect } from "react";
 // To get this information you would have to use item and
@@ -14,7 +12,7 @@ function formatDate(createdAt: unknown): string | undefined {
   return isNaN(date.getTime()) ? undefined : date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
-export default function CardTable() {
+export default function CardTable({ searchQuery = "" }: { searchQuery?: string }) {
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -38,11 +36,18 @@ export default function CardTable() {
   if (loading) return <main className="min-h-screen p-8">Loading...</main>;
   if (error) return <main className="min-h-screen p-8">Error: {error}</main>;
 
+  const filtered = searchQuery
+    ? items.filter(
+        (item) =>
+          item.sku?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          item.breed?.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : items;
+
   return (
     <main className="min-h-screen p-8">
-      <SearchBar className="mb-6" placeholder="Search for lot" />
       <div className="flex flex-col items-center justify-centergrid grid-cols-1 gap-4">
-        {items.map((item) => (
+        {filtered.map((item) => (
           <ItemCard
             key={item.id}
             sku={item.sku}

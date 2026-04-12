@@ -1,4 +1,4 @@
-import React, { forwardRef, InputHTMLAttributes } from "react";
+import { forwardRef, InputHTMLAttributes } from "react";
 import { Search } from "lucide-react";
 
 
@@ -7,18 +7,10 @@ type SearchBarProps = InputHTMLAttributes<HTMLInputElement> & {
 };
 
 const SearchBar = forwardRef<HTMLInputElement, SearchBarProps>(
-  ({ className = "", placeholder = "search for item", ...props }, ref) => {
+  ({ className = "w-4/5", placeholder = "search for item", ...props }, ref) => {
     return (
       <div
-        className={`
-          w-4/5
-          flex items-center
-          border border-gray-300
-          rounded-lg
-          bg-white
-          px-4 py-3
-          ${className}
-        `}
+        className={`flex items-center border border-gray-300 rounded-lg bg-white px-4 py-3 ${className}`}
       >
         <input
           ref={ref}
