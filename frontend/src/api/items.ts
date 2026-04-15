@@ -7,6 +7,7 @@ export type Item = {
   grade?: string;
   color?: string;
   weight?: number | string;
+  price?: number | string;
   palletNumber?: string;
   status?: string;
   notes?: string;
@@ -61,5 +62,20 @@ export const deleteItem = async (id: string) => {
 // Fuunction Here
 
 // Fetch all publicly visible items (no auth required)
-// Function Here
+export const getPublicItems = async () => {
+  const response = await fetch("http://localhost:8000/api/public/items", {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  const json = await response.json();
+
+  if (!response.ok || !json.success) {
+    throw new Error(json.error || "Failed to fetch public items");
+  }
+
+  return json.data as Item[];
+};
 

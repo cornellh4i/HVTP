@@ -1,11 +1,11 @@
 import express from "express";
 import {
   getAllFarmers,
-  getFarmerByItemId,
   addFarmer,
   updateFarmer,
   deleteFarmer,
 } from "../controllers/farmers";
+import { getFarmerByItemId } from "../controllers/items";
 
 const router = express.Router();
 
