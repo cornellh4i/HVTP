@@ -94,7 +94,8 @@ export const getPublicItems = async (_req: Request, res: Response) => {
       ...(doc.data() as ItemInsert),
     }));
     res.status(200).json(successJson(items));
-  } catch {
+  } catch(err) {
+    console.error("getPublicItems failed:", err);
     res.status(500).json(errorJson("Error fetching public items"));
   }
 };
