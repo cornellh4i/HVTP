@@ -16,6 +16,14 @@ interface ItemCardProps {
   href: string;
   imgSrc?: string;
   lastUpdated?: string;
+  title?: string;
+  subtitle?: string;
+  mobileSummary?: string;
+  desktopDetails?: Array<{
+    label: string;
+    value: string;
+  }>;
+  actionLabel?: string;
 }
 
 const PlaceholderImage = () => (
@@ -38,7 +46,33 @@ const PlaceholderImage = () => (
 );
 
 const ItemCard = React.forwardRef<HTMLDivElement, ItemCardProps>(
-  ({ sku, description, breed, quantity, status, state, href, imgSrc, lastUpdated }, ref) => (
+  (
+    {
+      sku,
+      description,
+      breed,
+      quantity,
+      status,
+      state,
+      href,
+      imgSrc,
+      lastUpdated,
+      title,
+      subtitle,
+      mobileSummary,
+      desktopDetails,
+      actionLabel,
+    },
+    ref
+  ) => {
+    const details = desktopDetails ?? [
+      { label: "Breed", value: breed },
+      { label: "Quantity Available", value: quantity },
+      { label: "Status", value: status },
+      { label: "State", value: state },
+    ];
+
+    return (
     <Card ref={ref} className="relative w-full max-w-5xl rounded-xl p-2 sm:p-3 lg:p-4">
       {/* Mobile: pen icon top right */}
       <Link href={href} className="absolute right-3 top-3 text-slate-400 sm:hidden">
@@ -70,19 +104,24 @@ const ItemCard = React.forwardRef<HTMLDivElement, ItemCardProps>(
             </p>
 
             {/* SKU */}
-            <p className="truncate text-sm font-bold sm:text-lg lg:text-xl">{sku}</p>
+            <p className="truncate text-sm font-bold sm:text-lg lg:text-xl">{title ?? sku}</p>
+
+            {subtitle ? (
+              <p className="mt-0.5 truncate text-xs text-slate-600 sm:text-sm">{subtitle}</p>
+            ) : null}
 
             {/* Mobile: single condensed line */}
             <p className="mt-0.5 truncate text-xs text-slate-600 sm:hidden">
-              {breed} / {status} / {quantity} / {state}
+              {mobileSummary ?? `${breed} / ${status} / ${quantity} / ${state}`}
             </p>
 
             {/* Desktop: grid of fields */}
             <div className="mt-2 hidden grid-cols-2 gap-x-6 gap-y-1 text-sm sm:grid lg:text-base">
-              <p><span className="font-semibold">Breed:</span> {breed}</p>
-              <p><span className="font-semibold">Quantity Available:</span> {quantity}</p>
-              <p><span className="font-semibold">Status:</span> {status}</p>
-              <p><span className="font-semibold">State:</span> {state}</p>
+              {details.map((detail) => (
+                <p key={detail.label}>
+                  <span className="font-semibold">{detail.label}:</span> {detail.value}
+                </p>
+              ))}
             </div>
 
             {lastUpdated && (
@@ -93,13 +132,14 @@ const ItemCard = React.forwardRef<HTMLDivElement, ItemCardProps>(
 
           {/* Desktop: full button */}
           <Button asChild className="hidden shrink-0 sm:block">
-            <Link href={href}>View Lot</Link>
+            <Link href={href}>{actionLabel ?? "View Lot"}</Link>
           </Button>
         </div>
 
       </div>
     </Card>
   )
+}
 );
 ItemCard.displayName = "ItemCard";
 

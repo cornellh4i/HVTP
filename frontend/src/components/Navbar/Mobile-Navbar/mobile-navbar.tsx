@@ -12,7 +12,7 @@ const navItems = [
   },
   {
     title: "Scan",
-    href: "#",
+    href: "/scan",
     icon: ScanLine,
   },
   {

@@ -1,11 +1,14 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import { getItemById, updateItem, Item } from "@/api/items";
 import EditableField from "@/components/ui/EditableField";
 import ItemImageUpload from "@/components/Admin/Inventory/Upload-Image/ItemImageUpload";
+
+const QRCode = dynamic(() => import("react-qr-code"), { ssr: false });
 
 function Field({
   label,
@@ -31,6 +34,7 @@ export default function ViewForm() {
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
 
   const { id: itemId } = useParams<{ id: string }>();
+  const qrValue = formData.qrCode ?? item?.qrCode ?? itemId;
 
   useEffect(() => {
     const fetchItem = async () => {
@@ -52,6 +56,15 @@ export default function ViewForm() {
     fetchItem();
   }, [itemId]);
 
+  useEffect(() => {
+    const clearPrintMode = () => document.body.classList.remove("printing-label");
+    window.addEventListener("afterprint", clearPrintMode);
+    return () => {
+      clearPrintMode();
+      window.removeEventListener("afterprint", clearPrintMode);
+    };
+  }, []);
+
   const handleSave = async () => {
     try {
       setSaveStatus("saving");
@@ -70,6 +83,11 @@ export default function ViewForm() {
 
   const set = (field: keyof Item) => (val: string) =>
     setFormData((prev) => ({ ...prev, [field]: val }));
+
+  const handlePrint = () => {
+    document.body.classList.add("printing-label");
+    window.print();
+  };
 
   const BackLink = () => (
     <Link
@@ -112,7 +130,11 @@ export default function ViewForm() {
       <div className="flex items-center justify-between mb-8">
         <BackLink />
         <div className="flex gap-2">
-          <button className="rounded border px-4 py-1.5 text-sm hover:bg-gray-50">
+          <button
+            type="button"
+            onClick={handlePrint}
+            className="rounded border px-4 py-1.5 text-sm hover:bg-gray-50"
+          >
             Print Label
           </button>
           <button
@@ -189,6 +211,33 @@ export default function ViewForm() {
 
         {/*RIGHT*/}
         <div className="flex flex-col gap-4">
+          <section
+            data-print-label
+            className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+          >
+            <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
+              <div className="space-y-2">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                  QR Label
+                </p>
+                <h2 className="text-2xl font-semibold text-slate-900">
+                  {formData.name ?? item.name}
+                </h2>
+                <div className="space-y-1 text-sm text-slate-600">
+                  <p><span className="font-medium text-slate-900">SKU:</span> {formData.sku ?? item.sku}</p>
+                  <p><span className="font-medium text-slate-900">Breed:</span> {formData.breed ?? item.breed ?? "-"}</p>
+                  <p><span className="font-medium text-slate-900">Grade:</span> {formData.grade ?? item.grade ?? "-"}</p>
+                  <p><span className="font-medium text-slate-900">Status:</span> {formData.status ?? item.status ?? "-"}</p>
+                  <p><span className="font-medium text-slate-900">Pallet Location:</span> {formData.palletLocation ?? item.palletLocation ?? "-"}</p>
+                </div>
+              </div>
+              <div className="flex flex-col items-center gap-3 self-center rounded-2xl bg-slate-50 p-4">
+                <QRCode value={qrValue} size={148} />
+                <p className="max-w-[180px] break-all text-center text-xs text-slate-500">{qrValue}</p>
+              </div>
+            </div>
+          </section>
+
           <ItemImageUpload
             sku={item.sku}
             existingImages={images}

@@ -11,6 +11,17 @@ type LayoutWrapperProps = {
 
 export default function LayoutWrapper({ children }: LayoutWrapperProps) {
   const pathname = usePathname();
+
+  if (pathname?.startsWith('/scan')) {
+    return (
+      <div className="pb-24 md:pb-0">
+        {children}
+        <div className="md:hidden">
+          <MobileNavbar />
+        </div>
+      </div>
+    );
+  }
   
   // Show sidebar only on dashboard, inventory, and analytics routes
   const showSidebar =
