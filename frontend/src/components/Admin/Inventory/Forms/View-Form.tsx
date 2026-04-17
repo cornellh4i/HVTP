@@ -73,7 +73,7 @@ export default function ViewForm() {
 
   if (loading)
     return (
-      <main className="min-h-screen p-8 max-w-5xl mx-auto">
+      <main className="min-h-screen p-4 md:p-8 max-w-5xl mx-auto">
         <div className="mb-8">
           <BackLink />
         </div>
@@ -83,7 +83,7 @@ export default function ViewForm() {
 
   if (error)
     return (
-      <main className="min-h-screen p-8 max-w-5xl mx-auto">
+      <main className="min-h-screen p-4 md:p-8 max-w-5xl mx-auto">
         <div className="mb-8">
           <BackLink />
         </div>
@@ -93,7 +93,7 @@ export default function ViewForm() {
 
   if (!item)
     return (
-      <main className="min-h-screen p-8 max-w-5xl mx-auto">
+      <main className="min-h-screen p-4 md:p-8 max-w-5xl mx-auto">
         <div className="mb-8">
           <BackLink />
         </div>
@@ -105,11 +105,11 @@ export default function ViewForm() {
   const images: string[] = i.images ?? [];
 
   return (
-    <main className="min-h-screen p-8 max-w-5xl mx-auto">
+    <main className="min-h-screen p-4 md:p-8 max-w-5xl mx-auto">
       {/* Top bar */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-6 md:mb-8">
         <BackLink />
-        <div className="flex gap-2">
+        <div className="hidden md:flex gap-2">
           <button className="rounded border px-4 py-1.5 text-sm hover:bg-gray-50">
             Print Label
           </button>
@@ -119,10 +119,12 @@ export default function ViewForm() {
         </div>
       </div>
 
-      {/* Two-column layout */}
-      <div className="grid grid-cols-[400px_1fr] gap-10">
-        {/* LEFT */}
-        <div className="flex flex-col gap-4">
+      <h1 className="text-lg font-bold mb-4 md:hidden">
+        SKU: {i.sku ?? i._id ?? itemId}
+      </h1>
+
+      <div className="grid grid-cols-1 md:grid-cols-[400px_1fr] gap-6 md:gap-10">
+        <div className="hidden md:flex flex-col gap-4">
           <div className="w-full aspect-square rounded-lg border border-gray-200 flex items-center justify-center bg-white overflow-hidden">
             <ImageSlot src={images[0]} iconClass="w-16 h-16 text-gray-300" />
           </div>
@@ -151,11 +153,10 @@ export default function ViewForm() {
           </Field>
         </div>
 
-        {/* RIGHT */}
-        <div className="flex flex-col gap-10">
+        <div className="flex flex-col gap-6 md:gap-10">
           <section>
-            <h2 className="text-xl font-bold mb-5">General Information</h2>
-            <div className="grid grid-cols-2 gap-x-6 gap-y-5">
+            <h2 className="text-xl font-bold mb-4 md:mb-5">General Information</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 md:gap-y-5">
               <Field label="Breed">
                 <EditableField
                   isEditing={false}
@@ -184,7 +185,7 @@ export default function ViewForm() {
                   placeholder="Weight"
                 />
               </Field>
-              <Field label="Location">
+              <Field label="Pallet Location">
                 <EditableField
                   isEditing={false}
                   value={i.location ?? ""}
@@ -201,9 +202,20 @@ export default function ViewForm() {
             </div>
           </section>
 
+          <div className="md:hidden">
+            <Field label="Notes">
+              <EditableField
+                isEditing={false}
+                value={i.notes ?? ""}
+                placeholder="Notes"
+                multiline
+              />
+            </Field>
+          </div>
+
           <section>
-            <h2 className="text-xl font-bold mb-5">Purchase Information</h2>
-            <div className="grid grid-cols-2 gap-x-6 gap-y-5">
+            <h2 className="text-xl font-bold mb-4 md:mb-5">Purchase Information</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 md:gap-y-5">
               <Field label="Farmer Name">
                 <EditableField
                   isEditing={false}
@@ -248,6 +260,32 @@ export default function ViewForm() {
               </Field>
             </div>
           </section>
+
+          <div className="md:hidden">
+            <h2 className="text-sm text-gray-600 mb-2">Photos</h2>
+            <div className="flex gap-2 overflow-x-auto">
+              {[0, 1, 2].map((idx) => (
+                <div
+                  key={idx}
+                  className="w-16 h-16 flex-shrink-0 rounded-md border border-gray-200 flex items-center justify-center bg-white overflow-hidden"
+                >
+                  <ImageSlot
+                    src={images[idx]}
+                    iconClass="w-6 h-6 text-gray-300"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-3 md:hidden">
+            <button className="w-full rounded px-4 py-2.5 text-sm text-white hover:bg-gray-700 bg-[#9F9E97]">
+              Publish
+            </button>
+            <button className="w-full rounded border px-4 py-2.5 text-sm text-white text-white bg-[#2C2C2C] hover:bg-[#1A1A1A]">
+              Save
+            </button>
+          </div>
         </div>
       </div>
     </main>
