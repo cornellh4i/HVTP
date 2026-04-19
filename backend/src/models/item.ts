@@ -1,4 +1,5 @@
 export interface ItemFields {
+  farmerId: string;
   name: string;
   farmerId: string;
   sku: string;

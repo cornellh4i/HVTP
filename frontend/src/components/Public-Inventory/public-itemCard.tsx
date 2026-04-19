@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import {
   Card,
@@ -23,7 +25,7 @@ const ItemCard: React.FC<ItemCardProps> = ({ item }) => {
   ];
 
   return (
-    <Card className="box-border flex flex-col overflow-hidden rounded-[15px] border-none shadow-none hover:shadow-none" style={{ width: "392px", height: "483.2px", backgroundColor: "#E7E7E7" }}>
+    <Card className="box-border flex flex-col overflow-hidden rounded-[15px] border-none shadow-none hover:shadow-none" style={{ width: "402px", height: "483.2px", backgroundColor: "#E7E7E7" }}>
       <div className="flex h-full flex-col px-[30px] py-[20px]">
         <div className="h-[205.2px] w-full overflow-hidden rounded-[15px] bg-[#f5f5f5]">
           {hasImage ? (

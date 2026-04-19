@@ -1,6 +1,7 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import AppSidebar from './Navbar/Desktop-Navbar/app-sidebar';
 import MobileNavbar from './Navbar/Mobile-Navbar/mobile-navbar';
 import { SidebarInset, SidebarProvider } from './ui/sidebar';
@@ -11,13 +12,19 @@ type LayoutWrapperProps = {
 
 export default function LayoutWrapper({ children }: LayoutWrapperProps) {
   const pathname = usePathname();
-  
-  // Show sidebar only on dashboard, inventory, and analytics routes
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const showSidebar =
-    pathname?.startsWith('/dashboard') ||
-    pathname?.startsWith('/inventory') ||
-    pathname?.startsWith('/analytics') || 
-    pathname?.startsWith('/archive');
+    mounted && (
+      pathname?.startsWith('/dashboard') ||
+      pathname?.startsWith('/inventory') ||
+      pathname?.startsWith('/analytics') ||
+      pathname?.startsWith('/archive')
+    );
 
   if (!showSidebar) {
     return <>{children}</>;
