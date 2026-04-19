@@ -25,6 +25,12 @@ const STATUS_OPTIONS: SelectOption[] = [
   { label: "Out of Stock", value: "Out of Stock" },
 ];
 
+const TYPE_OPTIONS: SelectOption[] = [
+  { label: "Grease Wool", value: "Grease Wool" },
+  { label: "Scoured Wool", value: "Scoured Wool" },
+  { label: "Carded Wool", value: "Carded Wool" },
+];
+
 const COLOR_OPTIONS: SelectOption[] = [
   { label: "White", value: "White" },
   { label: "Natural Color", value: "Natural Color" },
@@ -71,13 +77,12 @@ export default function ViewForm() {
         setItem(data);
         setFormData(data);
         setImages(data.images ?? []);
-      } catch (err) {
+      } catch {
         setError("Failed to load item.");
       } finally {
         setLoading(false);
       }
     };
-
     fetchItem();
   }, [itemId]);
 
@@ -87,107 +92,122 @@ export default function ViewForm() {
   const handleSave = async () => {
     try {
       setSaving(true);
-
       await updateItem(itemId, {
         ...formData,
         images,
         coverImage: images[0] ?? "",
       });
-
-      alert("Saved!");
     } catch {
-      alert("Error saving");
+      setError("Failed to save.");
     } finally {
       setSaving(false);
     }
   };
 
   if (loading) return <div className="p-8">Loading...</div>;
-  if (!item) return <div className="p-8">Item not found</div>;
+  if (!item) return <div className="p-8 text-red-600">{error ?? "Item not found"}</div>;
 
   return (
-    <main className="min-h-screen p-8 max-w-[1440px] mx-auto">
+    <main className="min-h-screen bg-white p-8">
 
-      {/* HEADER */}
-      <div className="flex justify-between mb-8">
-        <Link href="/inventory">← Back</Link>
-
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          className="bg-blue-600 text-white px-4 py-2 rounded"
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <Link
+          href="/inventory"
+          className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900"
         >
-          {saving ? "Saving..." : "Save Changes"}
-        </button>
+          ← Back to Inventory
+        </Link>
+        <div className="flex gap-2">
+          <button className="rounded border border-gray-300 px-4 py-1.5 text-sm hover:bg-gray-50">
+            Print Label
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="rounded bg-blue-600 px-4 py-1.5 text-sm text-white hover:bg-blue-500 disabled:opacity-50"
+          >
+            {saving ? "Saving..." : "Save Changes"}
+          </button>
+          <button className="rounded bg-gray-900 px-4 py-1.5 text-sm text-white hover:bg-gray-700">
+            Publish
+          </button>
+        </div>
       </div>
 
-      <p className="text-gray-500 mb-6">SKU: {formData.sku}</p>
-
-      <div className="grid grid-cols-2 gap-10">
+      {/* SKU */}
+      <div className="mb-6">
+        <p className="text-base font-semibold text-gray-900">SKU: {formData.sku ?? ""}</p>
+      </div>
+      
+      <div className="grid grid-cols-[1fr_380px] gap-12 items-start">
 
         {/* LEFT */}
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-10">
 
-          <Field label="Breed">
-            <EditableField
-              isEditing
-              value={formData.breed ?? ""}
-              onChange={set("breed")}
-            />
-          </Field>
+          {/* General Information */}
+          <section>
+            <h2 className="text-2xl font-bold mb-5">General Information</h2>
+            <div className="grid grid-cols-2 gap-x-6 gap-y-5">
+              <Field label="Breed">
+                <EditableField isEditing value={formData.breed ?? ""} placeholder="Breed" onChange={set("breed")} />
+              </Field>
+              <Field label="Grade">
+                <SelectField value={formData.grade ?? ""} onChange={set("grade")} options={GRADE_OPTIONS} placeholder="Grade" />
+              </Field>
+              <Field label="Color">
+                <SelectField value={formData.color ?? ""} onChange={set("color")} options={COLOR_OPTIONS} placeholder="Color" />
+              </Field>
+              <Field label="Quantity (lb)">
+                <EditableField isEditing value={String(formData.weight ?? "")} placeholder="Weight" onChange={set("weight")} />
+              </Field>
+              <Field label="Status">
+                <SelectField value={formData.status ?? ""} onChange={set("status")} options={STATUS_OPTIONS} placeholder="Status" />
+              </Field>
+              <Field label="Type">
+                <SelectField
+                  value={(formData as any).type ?? ""}
+                  onChange={(v) => setFormData((p) => ({ ...p, type: v }))}
+                  options={TYPE_OPTIONS}
+                  placeholder="Type"
+                />
+              </Field>
+              <Field label="Pallet Location">
+                <EditableField isEditing value={formData.palletLocation ?? ""} placeholder="Pallet Number" onChange={set("palletLocation")} />
+              </Field>
+            </div>
+          </section>
 
-          <Field label="Grade">
-            <SelectField
-              value={formData.grade ?? ""}
-              onChange={set("grade")}
-              options={GRADE_OPTIONS}
-            />
-          </Field>
-
-          <Field label="Color">
-            <SelectField
-              value={formData.color ?? ""}
-              onChange={set("color")}
-              options={COLOR_OPTIONS}
-            />
-          </Field>
-
-          <Field label="Weight">
-            <EditableField
-              isEditing
-              value={String(formData.weight ?? "")}
-              onChange={set("weight")}
-            />
-          </Field>
-
-          <Field label="Status">
-            <SelectField
-              value={formData.status ?? ""}
-              onChange={set("status")}
-              options={STATUS_OPTIONS}
-            />
-          </Field>
-
+          {/* Purchase Information */}
+          <section>
+            <h2 className="text-2xl font-bold mb-5">Purchase Information</h2>
+            <div className="grid grid-cols-2 gap-x-6 gap-y-5">
+              <Field label="Farmer Name">
+                <EditableField isEditing={false} value={formData.farmerName ?? ""} placeholder="Name" />
+              </Field>
+              <Field label="Shear Date">
+                <EditableField isEditing value={formData.shearDate ?? ""} placeholder="MM/DD/YYYY" onChange={set("shearDate")} />
+              </Field>
+              <Field label="Farmer City">
+                <EditableField isEditing={false} value={formData.farmerCity ?? ""} placeholder="City" />
+              </Field>
+              <Field label="Farmer State">
+                <SelectField value={formData.farmerState ?? ""} onChange={() => {}} options={STATE_OPTIONS} placeholder="State" disabled />
+              </Field>
+              <Field label="Intake Price ($/lb)">
+                <EditableField isEditing value={String(formData.purchasePrice ?? "")} placeholder="Price" onChange={set("purchasePrice")} />
+              </Field>
+            </div>
+          </section>
         </div>
 
         {/* RIGHT */}
         <div className="flex flex-col gap-4">
-          <ItemImageUpload
-            sku={item.sku}
-            existingImages={images}
-            onImagesChange={setImages}
-          />
-
+          <ItemImageUpload sku={item.sku} existingImages={images} onImagesChange={setImages} />
           <Field label="Notes">
-            <EditableField
-              isEditing
-              value={formData.notes ?? ""}
-              multiline
-              onChange={set("notes")}
-            />
+            <EditableField isEditing value={formData.notes ?? ""} placeholder="Notes" multiline onChange={set("notes")} />
           </Field>
         </div>
-
       </div>
     </main>
   );
