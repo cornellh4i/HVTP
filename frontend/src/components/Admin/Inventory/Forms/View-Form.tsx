@@ -104,21 +104,21 @@ export default function ViewForm() {
     }
   };
 
-  if (loading) return <div className="p-8">Loading...</div>;
-  if (!item) return <div className="p-8 text-red-600">{error ?? "Item not found"}</div>;
+  if (loading) return <div className="p-4 md:p-8">Loading...</div>;
+  if (!item) return <div className="p-4 md:p-8 text-red-600">{error ?? "Item not found"}</div>;
 
   return (
-    <main className="min-h-screen bg-white p-8">
+    <main className="min-h-screen bg-white p-4 md:p-8">
 
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-6 md:mb-8">
         <Link
           href="/inventory"
           className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900"
         >
           ← Back to Inventory
         </Link>
-        <div className="flex gap-2">
+        <div className="hidden md:flex gap-2">
           <button className="rounded border border-gray-300 px-4 py-1.5 text-sm hover:bg-gray-50">
             Print Label
           </button>
@@ -136,19 +136,22 @@ export default function ViewForm() {
       </div>
 
       {/* SKU */}
-      <div className="mb-6">
+      <div className="mb-6 hidden md:block">
         <p className="text-base font-semibold text-gray-900">SKU: {formData.sku ?? ""}</p>
       </div>
-      
-      <div className="grid grid-cols-[1fr_380px] gap-12 items-start">
+      <h1 className="text-lg font-bold mb-4 md:hidden">
+        SKU: {formData.sku ?? itemId}
+      </h1>
+
+      <div className="grid grid-cols-1 md:grid-cols-[1fr_380px] gap-6 md:gap-12 items-start">
 
         {/* LEFT */}
-        <div className="flex flex-col gap-10">
+        <div className="flex flex-col gap-6 md:gap-10">
 
           {/* General Information */}
           <section>
-            <h2 className="text-2xl font-bold mb-5">General Information</h2>
-            <div className="grid grid-cols-2 gap-x-6 gap-y-5">
+            <h2 className="text-xl font-bold mb-4 md:mb-5">General Information</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 md:gap-y-5">
               <Field label="Breed">
                 <EditableField isEditing value={formData.breed ?? ""} placeholder="Breed" onChange={set("breed")} />
               </Field>
@@ -180,8 +183,8 @@ export default function ViewForm() {
 
           {/* Purchase Information */}
           <section>
-            <h2 className="text-2xl font-bold mb-5">Purchase Information</h2>
-            <div className="grid grid-cols-2 gap-x-6 gap-y-5">
+            <h2 className="text-xl font-bold mb-4 md:mb-5">Purchase Information</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 md:gap-y-5">
               <Field label="Farmer Name">
                 <EditableField isEditing={false} value={formData.farmerName ?? ""} placeholder="Name" />
               </Field>
@@ -207,6 +210,18 @@ export default function ViewForm() {
           <Field label="Notes">
             <EditableField isEditing value={formData.notes ?? ""} placeholder="Notes" multiline onChange={set("notes")} />
           </Field>
+          <div className="flex flex-col gap-3 md:hidden">
+            <button className="w-full rounded px-4 py-2.5 text-sm text-white bg-gray-900 hover:bg-gray-700">
+              Publish
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="w-full rounded border px-4 py-2.5 text-sm text-white bg-[#2C2C2C] hover:bg-[#1A1A1A] disabled:opacity-50"
+            >
+              {saving ? "Saving..." : "Save Changes"}
+            </button>
+          </div>
         </div>
       </div>
     </main>
