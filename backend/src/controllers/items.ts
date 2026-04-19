@@ -68,14 +68,12 @@ export const addItem = async (
     if (
       !newItem.name ||
       !newItem.farmerId || 
-      !newItem.sku ||
       !newItem.breed ||
       !newItem.grade ||
       !newItem.color ||
       newItem.weight === undefined ||
       !newItem.status ||
-      !newItem.images || !Array.isArray(newItem.images) || newItem.images.length === 0 ||
-      !newItem.coverImage || 
+
 
       newItem.isActive === undefined ||
       newItem.isPublic === undefined ||
@@ -89,7 +87,7 @@ export const addItem = async (
     }
 
     const ref = await db.collection("items").add(newItem);
-    await ref.update({ qrCode: ref.id });
+    await ref.update({ qrCode: ref.id, sku: `SKU-${ref.id}` });
     res.status(201).json(successJson({ id: ref.id }));
   } catch {
     res.status(500).json(errorJson("Error adding item"));
