@@ -2,7 +2,6 @@ import { apiRequest } from "./APIWrapper";
  
 export interface FarmerFields {
   name: string;
-  contact: string;
   city: string;
   state: string;
 }

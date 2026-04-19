@@ -75,7 +75,6 @@ type ItemFields = {
 
 type FarmerFormFields = {
   name: string;
-  contact: string;
   city: string;
   state: string;
 };
@@ -104,7 +103,6 @@ export default function AddForm() {
 
   const [farmerFormFields, setFarmerFormFields] = useState<FarmerFormFields>({
     name: "",
-    contact: "",
     city: "",
     state: "",
   });

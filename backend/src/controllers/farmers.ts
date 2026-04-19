@@ -28,7 +28,6 @@ export const addFarmer = async (
 
     if (
       !newFarmer.name ||
-      !newFarmer.contact ||
       !newFarmer.city ||
       !newFarmer.state
     ) {
