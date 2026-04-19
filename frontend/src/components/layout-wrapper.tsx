@@ -22,8 +22,7 @@ export default function LayoutWrapper({ children }: LayoutWrapperProps) {
     mounted && (
       pathname?.startsWith('/dashboard') ||
       pathname?.startsWith('/inventory') ||
-      pathname?.startsWith('/analytics') ||
-      pathname?.startsWith('/archive')
+      pathname?.startsWith('/transactions') 
     );
 
   if (!showSidebar) {

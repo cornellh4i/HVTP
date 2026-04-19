@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Clock4, BarChart3, Home, ArchiveX} from 'lucide-react';
+import { Clock4, ArrowLeftRight, Home, ArchiveX} from 'lucide-react';
 
 import {
   Sidebar,
@@ -26,19 +26,15 @@ export default function AppSidebar() {
       icon: <Clock4 className="h-4 w-4" />,
     },
     {
-      title: 'Analytics',
-      url: '/analytics',
-      icon: <BarChart3 className="h-4 w-4" />,
-    },
-    {
       title: 'Inventory',
       url: '/inventory',
       icon: <Home className="h-4 w-4" />,
     }, 
     { 
-      title: 'Archive',
-      url: '/archive',
-      icon: <ArchiveX className='h-4 w-4' />
+      title: 'Transactions',
+      url: '/transactions',
+
+      icon: <ArrowLeftRight className='h-4 w-4' />
     }
   ];
 
