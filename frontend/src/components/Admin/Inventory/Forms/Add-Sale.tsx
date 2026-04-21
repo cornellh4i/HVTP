@@ -20,6 +20,7 @@ export default function SaleModal({
   const [weightSold, setWeightSold] = useState("");
   const [pricePerWeight, setPricePerWeight] = useState("");
   const [buyerName, setBuyerName] = useState("");
+  const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -90,15 +91,16 @@ export default function SaleModal({
     try {
       const payload: SaleInput = {
         itemId,
-        locationsId: itemId,
-        inventoryId: itemId,
         weightSold: parseFloat(weightSold),
         weightUnit: "lb",
         pricePerWeight: parseFloat(pricePerWeight),
-        costPerWeight,
+        totalPrice: parseFloat(totalPrice!),
+        costPerWeight: Number(costPerWeight),
         soldAt: new Date().toISOString(),
-        buyerName,
+        buyerName: buyerName?.trim() || "Unknown",
+        notes: notes?.trim() || "",
       };
+      console.log("SALE PAYLOAD:", payload);
       const result = await addSale(payload);
       onSaleRecorded?.(result.id, result.totalPrice);
       onClose();
@@ -160,7 +162,6 @@ export default function SaleModal({
 
         {/* Body */}
         <div className="px-6 pb-6 pt-4 flex flex-col gap-4">
-          {/* Row: Quantity + Sale Price */}
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
               <label className="text-sm text-gray-600">
@@ -191,6 +192,16 @@ export default function SaleModal({
               value={buyerName}
               placeholder="Name"
               onChange={setBuyerName}
+            />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm text-gray-600">Notes</label>
+            <textarea
+              value={notes}
+              placeholder="Notes"
+              onChange={(e) => setNotes(e.target.value)}
+              className="w-full min-h-[80px] resize-y border rounded px-2 py-1 text-sm"
             />
           </div>
 

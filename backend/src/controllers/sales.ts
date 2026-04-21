@@ -36,7 +36,10 @@ export const getSaleById = async (req: Request, res: Response) => {
 export const getSalesByItemId = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const snapshot = await db.collection("sales").where("itemId", "==", id).get();
+    const snapshot = await db
+      .collection("sales")
+      .where("itemId", "==", id)
+      .get();
 
     const sales = snapshot.docs.map((doc) => ({
       id: doc.id,
@@ -58,8 +61,6 @@ export const addSale = async (
 
     if (
       !body.itemId ||
-      !body.locationsId ||
-      !body.inventoryId ||
       body.weightSold === undefined ||
       !body.weightUnit ||
       body.pricePerWeight === undefined ||
@@ -74,8 +75,16 @@ export const addSale = async (
       return res.status(400).json(errorJson("weightUnit must be 'kg' or 'lb'"));
     }
 
-    if (body.weightSold <= 0 || body.pricePerWeight < 0 || body.costPerWeight < 0) {
-      return res.status(400).json(errorJson("weightSold must be positive; prices must be non-negative"));
+    if (
+      body.weightSold <= 0 ||
+      body.pricePerWeight < 0 ||
+      body.costPerWeight < 0
+    ) {
+      return res
+        .status(400)
+        .json(
+          errorJson("weightSold must be positive; prices must be non-negative")
+        );
     }
 
     const totalPrice = body.weightSold * body.pricePerWeight;
@@ -105,7 +114,10 @@ export const updateSale = async (
     const existing = doc.data() as SaleInsert;
     const weightSold = updates.weightSold ?? existing.weightSold;
     const pricePerWeight = updates.pricePerWeight ?? existing.pricePerWeight;
-    const payload: SaleUpdate = { ...updates, totalPrice: weightSold * pricePerWeight };
+    const payload: SaleUpdate = {
+      ...updates,
+      totalPrice: weightSold * pricePerWeight,
+    };
 
     await doc.ref.update(payload);
     res.status(200).json(successJson({ id }));
@@ -114,7 +126,10 @@ export const updateSale = async (
   }
 };
 
-export const deleteSale = async (req: Request<{ id: string }>, res: Response) => {
+export const deleteSale = async (
+  req: Request<{ id: string }>,
+  res: Response
+) => {
   try {
     const { id } = req.params;
     const doc = await db.collection("sales").doc(id).get();
