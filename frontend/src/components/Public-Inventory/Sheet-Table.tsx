@@ -24,9 +24,9 @@ export default function SheetTable({ items }: SheetTableProps) {
           >
             <div className="flex h-full flex-col gap-4 lg:flex-row lg:items-center lg:gap-6">
               <div className="relative min-h-[220px] w-full overflow-hidden rounded-2xl bg-white lg:w-[260px] lg:flex-none">
-                {item.coverImage || item.imageUrl ? (
+                {item.coverImage ? (
                   <Image
-                    src={item.coverImage ?? item.imageUrl ?? ""}
+                    src={item.coverImage ?? ""}
                     alt={item.sku}
                     fill
                     className="object-cover"
@@ -113,7 +113,7 @@ export default function SheetTable({ items }: SheetTableProps) {
                       }}
                     >
                       <span className="font-semibold">Price (per lb):</span>{" "}
-                      {item.price !== undefined && item.price !== null ? `$${item.price}` : "-"}
+                      {item.purchasePrice !== undefined && item.purchasePrice !== null ? `$${item.purchasePrice}` : "-"}
                     </p>
                     <p
                       style={{
