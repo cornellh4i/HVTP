@@ -58,14 +58,12 @@ export const addSale = async (
 
     if (
       !body.itemId ||
-      !body.locationsId ||
-      !body.inventoryId ||
       body.weightSold === undefined ||
       !body.weightUnit ||
       body.pricePerWeight === undefined ||
-      body.costPerWeight === undefined ||
       !body.soldAt ||
-      !body.buyerName
+      !body.buyerName || 
+      !body.notes
     ) {
       return res.status(400).json(errorJson("Missing required fields"));
     }
@@ -74,7 +72,7 @@ export const addSale = async (
       return res.status(400).json(errorJson("weightUnit must be 'kg' or 'lb'"));
     }
 
-    if (body.weightSold <= 0 || body.pricePerWeight < 0 || body.costPerWeight < 0) {
+    if (body.weightSold <= 0 || body.pricePerWeight < 0) {
       return res.status(400).json(errorJson("weightSold must be positive; prices must be non-negative"));
     }
 

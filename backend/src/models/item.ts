@@ -1,7 +1,6 @@
 export interface ItemFields {
   farmerId: string;
   name: string;
-  farmerId: string;
   sku: string;
   breed: string;
   grade: string;
