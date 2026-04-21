@@ -25,38 +25,77 @@ export const getAllItems = async (_req: Request, res: Response) => {
     // 4. Check View-Form.tsx — it already reads these fields, so no changes
     //    should be needed there once the response includes them.
 
-  export const getItemById = async (req: Request, res: Response) => {
-    try {
-      const { id } = req.params;
+export const getItemById = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
 
-      const doc = await db.collection("items").doc(id).get();
+    const doc = await db.collection("items").doc(id).get();
 
-      if (!doc.exists) {
-        return res.status(404).json(errorJson("Item not found"));
+    if (!doc.exists) {
+      return res.status(404).json(errorJson("Item not found"));
+    }
+
+    const item = doc.data() as ItemInsert;
+
+    // Join farmer data before returning
+    let farmerFields = {};
+    if (item.farmerId) {
+      const farmerDoc = await db.collection("farmers").doc(item.farmerId).get();
+      if (farmerDoc.exists) {
+        const farmer = farmerDoc.data() as any;
+        farmerFields = {
+          farmerName: farmer.name,
+          farmerContact: farmer.contact,
+          farmerCity: farmer.city,
+          farmerState: farmer.state,
+        };
       }
-
-      const item = doc.data() as ItemInsert;
-
-      // Join farmer data before returning
-      let farmerFields = {};
-      if (item.farmerId) {
-        const farmerDoc = await db.collection("farmers").doc(item.farmerId).get();
-        if (farmerDoc.exists) {
-          const farmer = farmerDoc.data() as any;
-          farmerFields = {
-            farmerName: farmer.name,
-            farmerContact: farmer.contact,
-            farmerCity: farmer.city,
-            farmerState: farmer.state,
-          };
-        }
-      }
+    }
 
     res.status(200).json(successJson({ ...doc.data(), id: doc.id, ...farmerFields }));
   } catch {
     res.status(500).json(errorJson("Error retrieving item"));
   }
 };
+
+const GRADE_MAP: Record<string, string> = {
+  "Fine": "F",
+  "Medium": "M",
+  "Long": "L",
+  "Rug": "R",
+  "Alpaca": "A",
+};
+
+const COLOR_MAP: Record<string, string> = {
+  "White": "W",
+  "Natural Color": "N",
+  "Black": "B",
+  "Grey": "G",
+  "Brown": "BR",
+};
+
+async function generateSku(
+  farmerId: string,
+  breed: string,
+  grade: string,
+  color: string
+): Promise<string> {
+
+  const farmerDoc = await db.collection("farmers").doc(farmerId).get();
+  const farmerState = farmerDoc.exists
+    ? ((farmerDoc.data() as any).state ?? "XX").toUpperCase().slice(0, 2)
+    : "XX";
+
+  const gradeLetter = GRADE_MAP[grade] ?? "X";
+  const colorLetter = COLOR_MAP[color] ?? "X";
+  const breedCode = breed.slice(0, 3).toUpperCase();
+
+  const snapshot = await db.collection("items").get();
+  const lotNumber = String(snapshot.size + 1).padStart(3, "0");
+
+  return `${farmerState}-${gradeLetter}-${colorLetter}-${breedCode}-${lotNumber}`;
+}
+
 
 export const addItem = async (
   req: Request<{}, {}, ItemInsert>,
@@ -66,29 +105,40 @@ export const addItem = async (
     const newItem = req.body;
 
     if (
-      !newItem.name ||
-      !newItem.farmerId || 
+      !newItem.farmerId ||
       !newItem.breed ||
       !newItem.grade ||
       !newItem.color ||
       newItem.weight === undefined ||
       !newItem.status ||
-
-
       newItem.isActive === undefined ||
       newItem.isPublic === undefined ||
       !newItem.notes ||
       !newItem.palletLocation ||
       !newItem.shearDate ||
-      !newItem.purchasePrice || 
+      !newItem.purchasePrice ||
       !newItem.createdAt
     ) {
       return res.status(400).json(errorJson("Missing required fields"));
     }
 
-    const ref = await db.collection("items").add(newItem);
-    await ref.update({ qrCode: ref.id, sku: `SKU-${ref.id}` });
-    res.status(201).json(successJson({ id: ref.id }));
+    const sku = await generateSku(
+      newItem.farmerId,
+      newItem.breed,
+      newItem.grade,
+      newItem.color
+    );
+
+    const itemToInsert: ItemInsert = {
+      ...newItem,
+      sku,
+      name: newItem.breed,
+    };
+
+    const ref = await db.collection("items").add(itemToInsert);
+    await ref.update({ qrCode: ref.id });
+
+    res.status(201).json(successJson({ id: ref.id, sku }));
   } catch {
     res.status(500).json(errorJson("Error adding item"));
   }
@@ -122,7 +172,7 @@ export const getPublicItems = async (_req: Request, res: Response) => {
       id: doc.id,
     }));
     res.status(200).json(successJson(items));
-  } catch(err) {
+  } catch (err) {
     console.error("getPublicItems failed:", err);
     res.status(500).json(errorJson("Error fetching public items"));
   }
@@ -145,52 +195,48 @@ export const togglePublish = async (req: Request<{ id: string }>, res: Response)
   }
 };
 
-export const getActiveItems = async(_req: Request, res: Response) => { 
-  try { 
+export const getActiveItems = async (_req: Request, res: Response) => {
+  try {
     const snapshot = await db.collection("items").where("isActive", "==", true).get();
-    const items = snapshot.docs.map((doc) => ({ 
-      id : doc.id,
+    const items = snapshot.docs.map((doc) => ({
+      id: doc.id,
       ...(doc.data() as ItemInsert),
     }));
-
     res.status(200).json(successJson(items));
-
-  } catch { 
-    res.status(500).json(errorJson("Error fetching active items"))
+  } catch {
+    res.status(500).json(errorJson("Error fetching active items"));
   }
-}
+};
 
-export const getInactiveItems = async(_req: Request, res: Response) => { 
-  try { 
+export const getInactiveItems = async (_req: Request, res: Response) => {
+  try {
     const snapshot = await db.collection("items").where("isActive", "==", false).get();
-    const items = snapshot.docs.map((doc) => ({ 
-      id : doc.id, 
+    const items = snapshot.docs.map((doc) => ({
+      id: doc.id,
       ...(doc.data() as ItemInsert),
     }));
-    res.status(200).json(successJson(items))
-
-
-  } catch { 
-    res.status(500).json(errorJson("Error fetching in active items"))
+    res.status(200).json(successJson(items));
+  } catch {
+    res.status(500).json(errorJson("Error fetching in active items"));
   }
-}
+};
 
-export const toggleActive = async (req: Request<{id: string }> , res: Response) => { 
-  try { 
-    const { id } = req.params; 
-    const doc = await db.collection("items").doc(id).get(); 
+export const toggleActive = async (req: Request<{ id: string }>, res: Response) => {
+  try {
+    const { id } = req.params;
+    const doc = await db.collection("items").doc(id).get();
 
-    if (!doc.exists) { 
-      return res.status(404).json(errorJson("Item not found"))
+    if (!doc.exists) {
+      return res.status(404).json(errorJson("Item not found"));
     }
 
     const current = (doc.data() as ItemInsert).isActive ?? false;
-    await doc.ref.update({ isActive: !current});
-    res.status(200).json(successJson({ id, isActive: !current}))
-  } catch { 
-    res.status(500).json(errorJson("Error toggling active state"))
+    await doc.ref.update({ isActive: !current });
+    res.status(200).json(successJson({ id, isActive: !current }));
+  } catch {
+    res.status(500).json(errorJson("Error toggling active state"));
   }
-}
+};
 
 export const deleteItem = async (req: Request<{ id: string }>, res: Response) => {
   try {
@@ -212,28 +258,24 @@ export const deleteItem = async (req: Request<{ id: string }>, res: Response) =>
 export const getFarmerByItemId = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const doc = await db.collection("items").doc(id).get(); 
+    const doc = await db.collection("items").doc(id).get();
 
-    if (!doc.exists) { 
-      return res.status(404).json(errorJson("Item not found"))
+    if (!doc.exists) {
+      return res.status(404).json(errorJson("Item not found"));
     }
-    const farmerId = doc.data()?.farmerId; 
+    const farmerId = doc.data()?.farmerId;
 
-    if (!farmerId){ 
-      return res.status(404).json(errorJson("Item had no associated farmer"))
+    if (!farmerId) {
+      return res.status(404).json(errorJson("Item had no associated farmer"));
     }
 
-    const snapshot = await db
-      .collection("farmers")
-      .doc(farmerId)
-      .get();
+    const snapshot = await db.collection("farmers").doc(farmerId).get();
 
     if (!snapshot.exists) {
       return res.status(404).json(errorJson("Farmer not found"));
     }
 
     res.status(200).json(successJson({ id: snapshot.id, ...snapshot.data() }));
-
   } catch {
     res.status(500).json(errorJson("Error retrieving farmer"));
   }

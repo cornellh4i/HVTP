@@ -7,6 +7,7 @@ import { getItemById, updateItem, Item } from "@/api/items";
 import EditableField from "@/components/ui/EditableField";
 import SelectField, { SelectOption } from "@/components/ui/selectField";
 import ItemImageUpload from "@/components/Admin/Inventory/Upload-Image/ItemImageUpload";
+import SetCoverPhotoModal from "@/components/Admin/Inventory/SetCoverPhotoModal";
 
 // OPTIONS
 
@@ -67,6 +68,7 @@ export default function ViewForm() {
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState<Partial<Item>>({});
   const [saving, setSaving] = useState(false);
+  const [showCoverModal, setShowCoverModal] = useState(false);
 
   const { id: itemId } = useParams<{ id: string }>();
 
@@ -148,7 +150,6 @@ export default function ViewForm() {
         {/* LEFT */}
         <div className="flex flex-col gap-6 md:gap-10">
 
-          {/* General Information */}
           <section>
             <h2 className="text-xl font-bold mb-4 md:mb-5">General Information</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 md:gap-y-5">
@@ -181,7 +182,6 @@ export default function ViewForm() {
             </div>
           </section>
 
-          {/* Purchase Information */}
           <section>
             <h2 className="text-xl font-bold mb-4 md:mb-5">Purchase Information</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 md:gap-y-5">
@@ -207,9 +207,23 @@ export default function ViewForm() {
         {/* RIGHT */}
         <div className="flex flex-col gap-4">
           <ItemImageUpload sku={item.sku} existingImages={images} onImagesChange={setImages} />
+
+          {/* Set cover photo — only shown when images exist */}
+          {images.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setShowCoverModal(true)}
+              className="inline-flex items-center gap-2 rounded border px-4 py-2 text-sm hover:bg-gray-50 w-fit"
+            >
+              Set cover photo
+            </button>
+          )}
+
           <Field label="Notes">
             <EditableField isEditing value={formData.notes ?? ""} placeholder="Notes" multiline onChange={set("notes")} />
           </Field>
+
+          {/* Mobile save/publish buttons */}
           <div className="flex flex-col gap-3 md:hidden">
             <button className="w-full rounded px-4 py-2.5 text-sm text-white bg-gray-900 hover:bg-gray-700">
               Publish
@@ -224,6 +238,17 @@ export default function ViewForm() {
           </div>
         </div>
       </div>
+
+      {/* Set Cover Photo Modal */}
+      {showCoverModal && (
+        <SetCoverPhotoModal
+          itemId={itemId}
+          images={images}
+          currentCover={formData.coverImage ?? images[0] ?? ""}
+          onClose={() => setShowCoverModal(false)}
+          onSave={(newCover) => setFormData((p) => ({ ...p, coverImage: newCover }))}
+        />
+      )}
     </main>
   );
 }
