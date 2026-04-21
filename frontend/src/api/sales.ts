@@ -6,6 +6,7 @@ export type Sale = {
   weightUnit: "kg" | "lb";
   pricePerWeight: number;
   totalPrice: number;
+  costPerWeight: number;
   soldAt: Date | string;
   buyerName: string;
   notes: string;

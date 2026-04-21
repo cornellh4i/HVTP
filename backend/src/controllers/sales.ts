@@ -61,6 +61,7 @@ export const addSale = async (
       body.weightSold === undefined ||
       !body.weightUnit ||
       body.pricePerWeight === undefined ||
+      body.costPerWeight === undefined ||
       !body.soldAt ||
       !body.buyerName || 
       !body.notes

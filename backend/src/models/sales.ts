@@ -6,9 +6,10 @@ export interface SaleFields {
   weightUnit: "kg" | "lb";
   pricePerWeight: number;
   totalPrice: number;
+  costPerWeight: number;
   soldAt: Timestamp;
   buyerName: string;
-  notes: string;
+  notes: string 
 }
 
 export type SaleInsert = SaleFields;
