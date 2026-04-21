@@ -1,19 +1,15 @@
 import { apiRequest } from "./APIWrapper";
 
 export type Sale = {
-  id: string;
   itemId: string;
-  locationsId: string;
-  inventoryId: string;
   weightSold: number;
   weightUnit: "kg" | "lb";
   pricePerWeight: number;
   totalPrice: number;
-  costPerWeight: number;
-  soldAt: string;
+  soldAt: Date | string;
   buyerName: string;
+  notes: string;
 };
-
 export type SaleInput = Omit<Sale, "id" | "totalPrice">;
 
 export const getAllSales = async () => {
