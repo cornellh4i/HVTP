@@ -122,6 +122,9 @@ export default function ViewForm() {
   const [saving, setSaving] = useState(false);
   const [showCoverModal, setShowCoverModal] = useState(false);
   const [showSaleModal, setShowSaleModal] = useState(false);
+  const [toast, setToast] = useState<{ message: string; sub: string } | null>(
+    null,
+  );
 
   const { id: itemId } = useParams<{ id: string }>();
 
@@ -144,6 +147,33 @@ export default function ViewForm() {
   const set = (field: keyof Item) => (val: string) =>
     setFormData((prev) => ({ ...prev, [field]: val }));
 
+  const showToast = (message: string, sub: string) => {
+    setToast({ message, sub });
+    setTimeout(() => setToast(null), 6000);
+  };
+
+  const handlePublish = async () => {
+    try {
+      if (formData?.isPublic == false) {
+        await updateItem(itemId, { isPublic: true });
+        setFormData((p) => ({ ...p, isPublic: true }));
+        showToast(
+          "Lot successfully published!",
+          "Your changes have been saved and published externally. Change the status to ”Processing” to hide this lot from the public inventory.",
+        );
+      } else {
+        await updateItem(itemId, { isPublic: false });
+        setFormData((p) => ({ ...p, isPublic: false }));
+        showToast(
+          "Lot unpublished.",
+          "This lot is no longer visible in the public inventory.",
+        );
+      }
+    } catch {
+      setError("Failed to publish.");
+    }
+  };
+
   const handleSave = async () => {
     try {
       setSaving(true);
@@ -152,6 +182,10 @@ export default function ViewForm() {
         images,
         coverImage: images[0] ?? "",
       });
+      showToast(
+        "Lot successfully updated!",
+        "Your changes have been saved internally. Change the status to “In Stock” to make this lot available for sale.",
+      );
     } catch {
       setError("Failed to save.");
     } finally {
@@ -185,8 +219,11 @@ export default function ViewForm() {
           >
             Record a sale
           </button>
-          <button className="rounded bg-[#D9D9D9] px-4 py-1.5 text-sm text-black hover:bg-blue-500">
-            Unpublish
+          <button
+            onClick={handlePublish}
+            className="rounded bg-[#D9D9D9] px-4 py-1.5 text-sm text-black hover:bg-blue-500"
+          >
+            {formData.isPublic ? "Unpublish" : "Publish"}
           </button>
           <button
             onClick={handleSave}
@@ -197,7 +234,6 @@ export default function ViewForm() {
           </button>
         </div>
       </div>
-
       {/* SKU */}
       <div className="mb-6 hidden md:block">
         <p className="text-base font-semibold text-gray-900">
@@ -207,7 +243,6 @@ export default function ViewForm() {
       <h1 className="text-lg font-bold mb-4 md:hidden">
         SKU: {formData.sku ?? itemId}
       </h1>
-
       <div className="grid grid-cols-1 md:grid-cols-[1fr_380px] gap-6 md:gap-12 items-start">
         {/* LEFT */}
         <div className="flex flex-col gap-6 md:gap-10">
@@ -354,8 +389,11 @@ export default function ViewForm() {
 
           {/* Mobile save/publish buttons */}
           <div className="flex flex-col gap-3 md:hidden">
-            <button className="w-full rounded px-4 py-2.5 text-sm text-white bg-gray-900 hover:bg-gray-700">
-              Publish
+            <button
+              onClick={handlePublish}
+              className="w-full rounded px-4 py-2.5 text-sm text-white bg-gray-900 hover:bg-gray-700"
+            >
+              {formData.isPublic ? "Unpublish" : "Publish"}
             </button>
             <button
               onClick={handleSave}
@@ -367,7 +405,6 @@ export default function ViewForm() {
           </div>
         </div>
       </div>
-
       {/* Set Cover Photo Modal */}
       {showCoverModal && (
         <SetCoverPhotoModal
@@ -380,7 +417,6 @@ export default function ViewForm() {
           }
         />
       )}
-
       {showSaleModal && (
         <SaleModal
           itemId={itemId}
@@ -388,6 +424,25 @@ export default function ViewForm() {
           onClose={() => setShowSaleModal(false)}
           onSaleRecorded={(id, total) => console.log("Sold!", id, total)}
         />
+      )}{" "}
+      {/* Toast Notification */}
+      {toast && (
+        <div className="fixed bottom-6 right-6 z-50 w-80 rounded-lg border border-gray-200 bg-white p-4 shadow-lg">
+          <div className="flex items-start justify-between gap-2">
+            <div>
+              <p className="font-semibold text-gray-900 text-sm">
+                {toast.message}
+              </p>
+              <p className="mt-1 text-sm text-gray-600">{toast.sub}</p>
+            </div>
+            <button
+              onClick={() => setToast(null)}
+              className="text-gray-400 hover:text-gray-600 mt-0.5 shrink-0"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
       )}
     </main>
   );
