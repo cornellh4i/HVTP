@@ -12,11 +12,12 @@ import {
 
 export type GraphPoint = {
 	label: string;
-	grossIncome: number;
+	value: number;
 };
 
 type GraphProps = {
 	data: GraphPoint[];
+	barLabelFormatter?: (value: number) => string;
 };
 
 const Y_AXIS_STEP = 10000;
@@ -41,8 +42,8 @@ function getYAxisTicks(maxValue: number): number[] {
 	return ticks;
 }
 
-export default function Graph({ data }: GraphProps) {
-	const maxValue = Math.max(...data.map((entry) => entry.grossIncome), 0);
+export default function Graph({ data, barLabelFormatter }: GraphProps) {
+	const maxValue = Math.max(...data.map((entry) => entry.value), 0);
 	const yAxisMax = Math.max(
 		Math.max(MIN_VISIBLE_TICK, Math.ceil(maxValue / Y_AXIS_STEP) * Y_AXIS_STEP),
 		maxValue * 1.1,
@@ -52,7 +53,7 @@ export default function Graph({ data }: GraphProps) {
 	return (
 		<div className="h-[430px] w-full">
 			<ResponsiveContainer width="100%" height="100%">
-				<BarChart data={data} margin={{ top: 24, right: 8, left: 12, bottom: 18 }} barCategoryGap="28%">
+				<BarChart data={data} margin={{ top: 24, right: 8, left: 0, bottom: 18 }} barCategoryGap="28%">
 					<defs>
 						<linearGradient id="gross-income-gradient" x1="0" x2="0" y1="0" y2="1">
 							<stop offset="0%" stopColor="#516a11" />
@@ -74,20 +75,25 @@ export default function Graph({ data }: GraphProps) {
 					<YAxis
 						axisLine={false}
 						tickLine={false}
-						width={52}
+						width={28}
 						domain={[0, yAxisMax]}
 						ticks={yAxisTicks}
 						tickFormatter={formatYAxisTick}
-						tick={{ fill: "#5d5d5d", fontSize: 14 }}
-						tickMargin={10}
+						tick={{ fill: "#5d5d5d", fontSize: 14, textAnchor: "start" }}
+						tickMargin={0}
+						dx={-16}
 					/>
 
-					<Bar dataKey="grossIncome" fill="url(#gross-income-gradient)" barSize={140} radius={0}>
+					<Bar dataKey="value" fill="url(#gross-income-gradient)" barSize={140} radius={0}>
 						<LabelList
-							dataKey="grossIncome"
+							dataKey="value"
 							position="top"
 							formatter={(value) =>
-								typeof value === "number" ? value.toLocaleString("en-US") : `${value ?? ""}`
+								typeof value === "number"
+									? barLabelFormatter
+										? barLabelFormatter(value)
+										: value.toLocaleString("en-US")
+									: `${value ?? ""}`
 							}
 						/>
 					</Bar>
