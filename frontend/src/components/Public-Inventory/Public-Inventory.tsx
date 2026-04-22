@@ -6,7 +6,7 @@ import CardTable from "./Card-Table";
 import SheetTable from "./Sheet-Table";
 import FilterButton from "./Filter";
 
-// ─── Date sort button (dark #686868 pill) ─────────────────────────────────────
+// ─── Date sort button ─────────────────────────────────────────────────────────
 function DateSortButton({
   direction,
   onToggle,
@@ -173,17 +173,18 @@ function CheckboxOption({
 }
 
 // ─── Static option lists ───────────────────────────────────────────────────────
-const GRADE_OPTIONS = ["A", "B", "C", "D"];
-const COLOR_OPTIONS = ["Natural", "White", "Black", "Brown", "Grey"];
-const STATE_OPTIONS = ["Raw", "Washed", "Scoured", "Processed"];
-const STATUS_OPTIONS = ["Available", "Reserved", "Sold"];
+const STATUS_OPTIONS = ["Processing", "On Hold", "Available", "Out of Stock"];
+const WOOL_TYPE_OPTIONS = ["Grease Wool", "Scoured Wool", "Carded Wool"];
+const GRADE_OPTIONS = ["Fine", "Medium", "Premium Long", "Rug"];
+const COLOR_OPTIONS = ["White", "Natural Color"];
 
 // ─── Filter state ──────────────────────────────────────────────────────────────
 interface Filters {
-  grade: string | null;  // → Item.grade
-  colors: string[];      // → Item.color (multi-select)
-  state: string | null;  // → Item.status (processing state values)
-  status: string | null; // → Item.status (availability values)
+  status: string | null;
+  woolTypes: string[];
+  breed: string;
+  grade: string | null;
+  colors: string[];
 }
 
 // ─── Main page ─────────────────────────────────────────────────────────────────
@@ -193,22 +194,23 @@ export default function PublicInventoryPage() {
   const [error, setError] = useState("");
   const [mode, setMode] = useState<"card" | "sheet">("card");
   const [search, setSearch] = useState("");
-  // No createdAt on Item — sort by sku (lexicographic) as a stable fallback
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
 
   // Committed filters
   const [filters, setFilters] = useState<Filters>({
+    status: null,
+    woolTypes: [],
+    breed: "",
     grade: null,
     colors: [],
-    state: null,
-    status: null,
   });
 
   // Pending (inside popup, not yet applied)
+  const [pendingStatus, setPendingStatus] = useState<string | null>(null);
+  const [pendingWoolTypes, setPendingWoolTypes] = useState<string[]>([]);
+  const [pendingBreed, setPendingBreed] = useState<string>("");
   const [pendingGrade, setPendingGrade] = useState<string | null>(null);
   const [pendingColors, setPendingColors] = useState<string[]>([]);
-  const [pendingState, setPendingState] = useState<string | null>(null);
-  const [pendingStatus, setPendingStatus] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -231,7 +233,6 @@ export default function PublicInventoryPage() {
   // ── Filtering + sorting ─────────────────────────────────────────────────────
   const filteredItems = items
     .filter((item) => {
-      // Search across sku, breed, grade, color, status, farmerName, farmerCity, farmerState
       if (search.trim()) {
         const q = search.toLowerCase();
         const haystack = [
@@ -250,10 +251,26 @@ export default function PublicInventoryPage() {
         if (!haystack.includes(q)) return false;
       }
 
-      // Grade — Item.grade
-      if (filters.grade && item.grade !== filters.grade) return false;
+      if (filters.status && (item.status ?? "").toLowerCase() !== filters.status.toLowerCase())
+        return false;
 
-      // Color — Item.color
+      if (
+        filters.woolTypes.length > 0 &&
+        !filters.woolTypes.some(
+          (w) => w.toLowerCase() === (item.breed ?? "").toLowerCase()
+        )
+      )
+        return false;
+
+      if (
+        filters.breed &&
+        !(item.breed ?? "").toLowerCase().includes(filters.breed.toLowerCase())
+      )
+        return false;
+
+      if (filters.grade && (item.grade ?? "").toLowerCase() !== filters.grade.toLowerCase())
+        return false;
+
       if (
         filters.colors.length > 0 &&
         !filters.colors.some(
@@ -262,43 +279,25 @@ export default function PublicInventoryPage() {
       )
         return false;
 
-      // State — Item.status (processing state: Raw, Washed, Scoured…)
-      // NOTE: if you add a dedicated `state` field to Item, swap item.status → item.state here
-      if (
-        filters.state &&
-        (item.status ?? "").toLowerCase() !== filters.state.toLowerCase()
-      )
-        return false;
-
-      // Status — Item.status (availability: Available, Reserved, Sold)
-      if (
-        filters.status &&
-        (item.status ?? "").toLowerCase() !== filters.status.toLowerCase()
-      )
-        return false;
-
       return true;
     })
     .sort((a, b) => {
-      // No createdAt — sort by sku string as a stable proxy
       const sa = a.sku ?? "";
       const sb = b.sku ?? "";
-      return sortDir === "desc"
-        ? sb.localeCompare(sa)
-        : sa.localeCompare(sb);
+      return sortDir === "desc" ? sb.localeCompare(sa) : sa.localeCompare(sb);
     });
 
-  // Total weight — Item.weight may be number | string
   const totalWeight = filteredItems.reduce(
     (sum, i) => sum + (parseFloat(String(i.weight ?? 0)) || 0),
     0
   );
 
-  const gradeActive = !!filters.grade;
-  const colorsActive = filters.colors.length > 0;
-  const stateActive = !!filters.state;
-  const statusActive = !!filters.status;
-  const anyActive = gradeActive || colorsActive || stateActive || statusActive;
+  const anyActive =
+    !!filters.status ||
+    filters.woolTypes.length > 0 ||
+    !!filters.breed ||
+    !!filters.grade ||
+    filters.colors.length > 0;
 
   return (
     <main className="min-h-screen p-8">
@@ -419,19 +418,117 @@ export default function PublicInventoryPage() {
               onToggle={() => setSortDir((d) => (d === "desc" ? "asc" : "desc"))}
             />
 
+            {/* Status */}
+            <FilterButton
+              label="Status"
+              active={!!filters.status}
+              onApply={() => setFilters((f) => ({ ...f, status: pendingStatus }))}
+              onCancel={() => setPendingStatus(filters.status)}
+            >
+              <p style={{ fontSize: "15px", fontWeight: 600, marginBottom: "8px", color: "#000" }}>
+                Status
+              </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                {STATUS_OPTIONS.map((s) => (
+                  <CheckboxOption
+                    key={s}
+                    label={s}
+                    checked={pendingStatus === s}
+                    onChange={() => setPendingStatus(pendingStatus === s ? null : s)}
+                  />
+                ))}
+              </div>
+            </FilterButton>
+
+            {/* Wool Type */}
+            <FilterButton
+              label="Wool Type"
+              active={filters.woolTypes.length > 0}
+              onApply={() => setFilters((f) => ({ ...f, woolTypes: pendingWoolTypes }))}
+              onCancel={() => setPendingWoolTypes(filters.woolTypes)}
+            >
+              <p style={{ fontSize: "15px", fontWeight: 600, marginBottom: "8px", color: "#000" }}>
+                Wool Type
+              </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                {WOOL_TYPE_OPTIONS.map((w) => (
+                  <CheckboxOption
+                    key={w}
+                    label={w}
+                    checked={pendingWoolTypes.includes(w)}
+                    onChange={() =>
+                      setPendingWoolTypes((prev) =>
+                        prev.includes(w) ? prev.filter((x) => x !== w) : [...prev, w]
+                      )
+                    }
+                  />
+                ))}
+              </div>
+            </FilterButton>
+
+            {/* Breed */}
+            <FilterButton
+              label="Breed"
+              active={!!filters.breed}
+              onApply={() => setFilters((f) => ({ ...f, breed: pendingBreed }))}
+              onCancel={() => setPendingBreed(filters.breed)}
+            >
+              <p style={{ fontSize: "15px", fontWeight: 600, marginBottom: "8px", color: "#000" }}>
+                Breed
+              </p>
+              <div style={{ position: "relative" }}>
+                <svg
+                  style={{
+                    position: "absolute",
+                    left: "10px",
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    pointerEvents: "none",
+                  }}
+                  width="14"
+                  height="14"
+                  viewBox="0 0 20 20"
+                  fill="none"
+                >
+                  <path
+                    d="M17.5 17.5L13.875 13.875M15.8333 9.16667C15.8333 12.8486 12.8486 15.8333 9.16667 15.8333C5.48477 15.8333 2.5 12.8486 2.5 9.16667C2.5 5.48477 5.48477 2.5 9.16667 2.5C12.8486 2.5 15.8333 5.48477 15.8333 9.16667Z"
+                    stroke="#888"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                <input
+                  type="text"
+                  placeholder="Search breed..."
+                  value={pendingBreed}
+                  onChange={(e) => setPendingBreed(e.target.value)}
+                  style={{
+                    width: "100%",
+                    height: "36px",
+                    padding: "0 12px 0 32px",
+                    borderRadius: "8px",
+                    border: "1px solid #ccc",
+                    fontSize: "14px",
+                    outline: "none",
+                  }}
+                />
+              </div>
+            </FilterButton>
+
             {/* Grade */}
             <FilterButton
               label="Grade"
-              active={gradeActive}
+              active={!!filters.grade}
               onApply={() => setFilters((f) => ({ ...f, grade: pendingGrade }))}
               onCancel={() => setPendingGrade(filters.grade)}
             >
               <p style={{ fontSize: "15px", fontWeight: 600, marginBottom: "8px", color: "#000" }}>
                 Grade
               </p>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "4px 20px" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
                 {GRADE_OPTIONS.map((g) => (
-                  <RadioOption
+                  <CheckboxOption
                     key={g}
                     label={g}
                     checked={pendingGrade === g}
@@ -444,12 +541,12 @@ export default function PublicInventoryPage() {
             {/* Color */}
             <FilterButton
               label="Color"
-              active={colorsActive}
+              active={filters.colors.length > 0}
               onApply={() => setFilters((f) => ({ ...f, colors: pendingColors }))}
               onCancel={() => setPendingColors(filters.colors)}
             >
               <p style={{ fontSize: "15px", fontWeight: 600, marginBottom: "8px", color: "#000" }}>
-                Colors
+                Color
               </p>
               <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
                 {COLOR_OPTIONS.map((c) => (
@@ -467,55 +564,11 @@ export default function PublicInventoryPage() {
               </div>
             </FilterButton>
 
-            {/* State */}
-            <FilterButton
-              label="State"
-              active={stateActive}
-              onApply={() => setFilters((f) => ({ ...f, state: pendingState }))}
-              onCancel={() => setPendingState(filters.state)}
-            >
-              <p style={{ fontSize: "15px", fontWeight: 600, marginBottom: "8px", color: "#000" }}>
-                State
-              </p>
-              <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-                {STATE_OPTIONS.map((s) => (
-                  <RadioOption
-                    key={s}
-                    label={s}
-                    checked={pendingState === s}
-                    onChange={() => setPendingState(pendingState === s ? null : s)}
-                  />
-                ))}
-              </div>
-            </FilterButton>
-
-            {/* Status */}
-            <FilterButton
-              label="Status"
-              active={statusActive}
-              onApply={() => setFilters((f) => ({ ...f, status: pendingStatus }))}
-              onCancel={() => setPendingStatus(filters.status)}
-            >
-              <p style={{ fontSize: "15px", fontWeight: 600, marginBottom: "8px", color: "#000" }}>
-                Status
-              </p>
-              <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-                {STATUS_OPTIONS.map((s) => (
-                  <RadioOption
-                    key={s}
-                    label={s}
-                    checked={pendingStatus === s}
-                    onChange={() => setPendingStatus(pendingStatus === s ? null : s)}
-                  />
-                ))}
-              </div>
-            </FilterButton>
-
             {anyActive && (
               <button
                 type="button"
                 onClick={() =>
-                  setFilters({ grade: null, colors: [], state: null, status: null })
+                  setFilters({ status: null, woolTypes: [], breed: "", grade: null, colors: [] })
                 }
                 style={{
                   height: "35px",
@@ -535,7 +588,7 @@ export default function PublicInventoryPage() {
             )}
           </div>
 
-          {/* Totals — weight parsed from number | string */}
+          {/* Totals */}
           <p style={{ fontSize: "14px", color: "#555" }}>
             Total Lots: {filteredItems.length}&nbsp;&nbsp;
             Total lbs: {totalWeight.toLocaleString()} lbs
