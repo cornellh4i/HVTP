@@ -19,7 +19,6 @@ export default function SaleModal({
 }: SaleModalProps) {
   const [weightSold, setWeightSold] = useState("");
   const [pricePerWeight, setPricePerWeight] = useState("");
-  const [buyerName, setBuyerName] = useState("");
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -97,7 +96,6 @@ export default function SaleModal({
         totalPrice: parseFloat(totalPrice!),
         costPerWeight: Number(costPerWeight),
         soldAt: new Date().toISOString(),
-        buyerName: buyerName?.trim() || "Unknown",
         notes: notes?.trim() || "",
       };
       console.log("SALE PAYLOAD:", payload);
@@ -183,16 +181,6 @@ export default function SaleModal({
                 onChange={setPricePerWeight}
               />
             </div>
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <label className="text-sm text-gray-600">Buyer Name</label>
-            <EditableField
-              isEditing
-              value={buyerName}
-              placeholder="Name"
-              onChange={setBuyerName}
-            />
           </div>
 
           <div className="flex flex-col gap-1.5">

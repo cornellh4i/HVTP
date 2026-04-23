@@ -65,8 +65,7 @@ export const addSale = async (
       !body.weightUnit ||
       body.pricePerWeight === undefined ||
       body.costPerWeight === undefined ||
-      !body.soldAt ||
-      !body.buyerName
+      !body.soldAt
     ) {
       return res.status(400).json(errorJson("Missing required fields"));
     }

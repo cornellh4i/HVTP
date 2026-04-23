@@ -8,7 +8,7 @@ export type Sale = {
   totalPrice: number;
   costPerWeight: number;
   soldAt: string;
-  buyerName: string;
+  buyerName?: string;
   notes: string;
 };
 
