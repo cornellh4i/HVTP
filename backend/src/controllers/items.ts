@@ -58,44 +58,20 @@ export const getItemById = async (req: Request, res: Response) => {
   }
 };
 
-const GRADE_MAP: Record<string, string> = {
-  "Fine": "F",
-  "Medium": "M",
-  "Long": "L",
-  "Rug": "R",
-  "Alpaca": "A",
-};
+async function generateSku(): Promise<string> {
+  // Use a counter document to get a reliable, race-safe incrementing number
+  const counterRef = db.collection("counters").doc("items");
 
-const COLOR_MAP: Record<string, string> = {
-  "White": "W",
-  "Natural Color": "N",
-  "Black": "B",
-  "Grey": "G",
-  "Brown": "BR",
-};
+  const newCount = await db.runTransaction(async (tx) => {
+    const doc = await tx.get(counterRef);
+    const current = doc.exists ? (doc.data()?.count ?? 0) : 0;
+    const next = current + 1;
+    tx.set(counterRef, { count: next });
+    return next;
+  });
 
-async function generateSku(
-  farmerId: string,
-  breed: string,
-  grade: string,
-  color: string
-): Promise<string> {
-
-  const farmerDoc = await db.collection("farmers").doc(farmerId).get();
-  const farmerState = farmerDoc.exists
-    ? ((farmerDoc.data() as any).state ?? "XX").toUpperCase().slice(0, 2)
-    : "XX";
-
-  const gradeLetter = GRADE_MAP[grade] ?? "X";
-  const colorLetter = COLOR_MAP[color] ?? "X";
-  const breedCode = breed.slice(0, 3).toUpperCase();
-
-  const snapshot = await db.collection("items").get();
-  const lotNumber = String(snapshot.size + 1).padStart(3, "0");
-
-  return `${farmerState}-${gradeLetter}-${colorLetter}-${breedCode}-${lotNumber}`;
+  return String(newCount).padStart(4, "0");
 }
-
 
 export const addItem = async (
   req: Request<{}, {}, ItemInsert>,
@@ -122,17 +98,12 @@ export const addItem = async (
       return res.status(400).json(errorJson("Missing required fields"));
     }
 
-    const sku = await generateSku(
-      newItem.farmerId,
-      newItem.breed,
-      newItem.grade,
-      newItem.color
-    );
+    const sku = await generateSku();
 
     const itemToInsert: ItemInsert = {
       ...newItem,
       sku,
-      name: newItem.breed,
+      name: newItem.breed,  
     };
 
     const ref = await db.collection("items").add(itemToInsert);

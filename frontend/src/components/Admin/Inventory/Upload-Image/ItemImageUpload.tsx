@@ -2,7 +2,7 @@
 
 import { ChangeEvent, useRef, useState } from "react";
 import Image from "next/image";
-import { ImageIcon, Upload, X } from "lucide-react";
+import { ImageIcon, X } from "lucide-react";
 import { uploadItemImage } from "@/lib/uploadImage";
 
 type Props = {
@@ -58,17 +58,25 @@ export default function ItemImageUpload({ sku, existingImages, onImagesChange }:
 
   return (
     <div className="flex flex-col gap-3">
-      {/* Cover / main preview */}
-      <div className="relative w-full aspect-[4/3] rounded-lg border border-gray-200 bg-gray-50 overflow-hidden flex items-center justify-center">
+      {/* Hidden file input */}
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        multiple
+        disabled={isUploading}
+        onChange={handleFileChange}
+        className="hidden"
+      />
+
+      {/* Cover / main preview — clicking opens picker when empty */}
+      <div
+        className="relative w-full aspect-[4/3] rounded-lg border border-dashed border-gray-300 bg-gray-50 overflow-hidden flex items-center justify-center cursor-pointer hover:bg-gray-100 transition-colors"
+        onClick={() => !coverImage && inputRef.current?.click()}
+      >
         {coverImage ? (
           <>
-            <Image
-              src={coverImage}
-              alt="Cover image"
-              fill
-              className="object-cover"
-            />
-            {/* "Cover Photo" label shown on the active/first image */}
+            <Image src={coverImage} alt="Cover image" fill className="object-cover" />
             {activeIndex === 0 && (
               <span className="absolute top-2 left-2 rounded bg-gray-900/70 px-2 py-0.5 text-[11px] text-white">
                 Cover Photo
@@ -90,19 +98,10 @@ export default function ItemImageUpload({ sku, existingImages, onImagesChange }:
             }`}
             onClick={() => setActiveIndex(idx)}
           >
-            <Image
-              src={src}
-              alt={`Thumbnail ${idx + 1}`}
-              fill
-              className="object-cover"
-            />
-            {/* Remove button — always visible */}
+            <Image src={src} alt={`Thumbnail ${idx + 1}`} fill className="object-cover" />
             <button
               type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                removeImage(idx);
-              }}
+              onClick={(e) => { e.stopPropagation(); removeImage(idx); }}
               className="absolute top-0.5 right-0.5 rounded-full bg-white/90 p-0.5 shadow-sm"
               aria-label="Remove image"
             >
@@ -111,36 +110,15 @@ export default function ItemImageUpload({ sku, existingImages, onImagesChange }:
           </div>
         ))}
 
-        {/* Always trail enough empty slots so the strip looks full (min 5 total, then +3 beyond that) */}
-        {Array.from({ length: Math.max(5 - existingImages.length, 3) }).map((_, i) => (
-          <div
-            key={`empty-${i}`}
-            className="flex-shrink-0 w-16 h-16 rounded-md border border-dashed border-gray-200 bg-gray-50 flex items-center justify-center"
-          >
-            <ImageIcon className="w-5 h-5 text-gray-300" />
-          </div>
-        ))}
-      </div>
-
-      {/* Upload button */}
-      <div>
-        <input
-          ref={inputRef}
-          type="file"
-          accept="image/jpeg,image/png,image/webp"
-          multiple
-          disabled={isUploading}
-          onChange={handleFileChange}
-          className="hidden"
-        />
+        {/* + add button — always the last slot */}
         <button
           type="button"
           disabled={isUploading}
           onClick={() => inputRef.current?.click()}
-          className="inline-flex items-center gap-2 rounded border border-gray-200 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-colors"
+          className="flex-shrink-0 w-16 h-16 rounded-md border border-dashed border-gray-300 bg-gray-50 flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-600 disabled:opacity-50 transition-colors text-2xl leading-none"
+          aria-label="Add photos"
         >
-          <Upload className="h-4 w-4" />
-          {isUploading ? "Uploading..." : "Upload photos"}
+          {isUploading ? <span className="text-xs">…</span> : <span className="mb-0.5">+</span>}
         </button>
       </div>
 
