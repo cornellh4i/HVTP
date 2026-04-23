@@ -60,51 +60,56 @@ export default function InventoryPage() {
   const filteredItems = filterInventoryItems(items, search, filters);
 
   return (
-    <main>
-      <h1 className="px-4 pt-8 text-3xl font-bold sm:px-8 sm:text-4xl">Inventory</h1>
-      <div className="flex flex-col gap-3 px-4 pt-4 sm:px-8 lg:flex-row lg:items-center">
-        <SearchBar
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search"
-          className="w-full lg:w-96"
-        />
-        <div className="flex flex-wrap items-center gap-3 lg:ml-auto lg:flex-nowrap">
-          <div className="order-2 lg:order-1">
-            <Filter filters={filters} options={filterOptions} onChange={setFilters} />
-          </div>
-          <Link
-            href="/inventory/add"
-            className="order-3 flex h-11 items-center gap-1 rounded-xl bg-[#556b2f] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#445523] shrink-0 lg:order-2"
-          >
-            <Plus size={16} />
-            Add Lot
-          </Link>
-          <div className="order-1 flex items-center gap-1 rounded-xl border border-gray-200 bg-gray-100 p-1 lg:order-3">
-            <button
-              onClick={() => setMode("view")}
-              className={`rounded-lg p-2 transition-colors ${
-                mode === "view"
-                  ? "bg-[#556b2f] text-white"
-                  : "text-gray-500 hover:text-gray-700"
-              }`}
+    <main className="pb-8">
+      <h1 className="px-4 pt-8 text-4xl font-bold tracking-[-0.03em] sm:px-8 sm:text-6xl">
+        Inventory
+      </h1>
+      <div className="px-4 pt-6 sm:px-8">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <SearchBar
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search"
+            className="w-full lg:w-[520px]"
+          />
+          <div className="flex items-center gap-4 self-start lg:self-auto">
+            <Link
+              href="/inventory/add"
+              className="flex h-11 shrink-0 items-center gap-1 rounded-2xl bg-[#556b2f] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#445523]"
             >
-              <LayoutGrid size={16} />
-            </button>
-            <button
-              onClick={() => setMode("list")}
-              className={`rounded-lg p-2 transition-colors ${
-                mode === "list"
-                  ? "bg-[#556b2f] text-white"
-                  : "text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              <AlignJustify size={16} />
-            </button>
+              <Plus size={16} />
+              Add Lot
+            </Link>
+            <div className="flex items-center gap-1 rounded-2xl border border-[#556b2f] bg-white p-1">
+              <button
+                onClick={() => setMode("view")}
+                className={`rounded-lg p-2 transition-colors ${
+                  mode === "view"
+                    ? "bg-[#556b2f] text-white"
+                    : "text-[#556b2f] hover:bg-[#f4f6ee]"
+                }`}
+              >
+                <LayoutGrid size={16} />
+              </button>
+              <button
+                onClick={() => setMode("list")}
+                className={`rounded-lg p-2 transition-colors ${
+                  mode === "list"
+                    ? "bg-[#556b2f] text-white"
+                    : "text-[#556b2f] hover:bg-[#f4f6ee]"
+                }`}
+              >
+                <AlignJustify size={16} />
+              </button>
+            </div>
           </div>
         </div>
+
+        <div className="mt-6">
+          <Filter filters={filters} options={filterOptions} onChange={setFilters} />
+        </div>
       </div>
-      <div className="px-4 pt-4 text-sm text-slate-500 sm:px-8">
+      <div className="mx-4 mt-6 border-t border-[#d8d5cc] pt-5 text-sm text-slate-500 sm:mx-8">
         {loading
           ? "Loading inventory..."
           : error
