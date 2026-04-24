@@ -7,10 +7,11 @@ export type Sale = {
   pricePerWeight: number;
   totalPrice: number;
   costPerWeight: number;
-  soldAt: Date | string;
-  buyerName: string;
+  soldAt: string;
+  buyerName?: string;
   notes: string;
 };
+
 export type SaleInput = Omit<Sale, "id" | "totalPrice">;
 
 export const getAllSales = async () => {
@@ -24,9 +25,12 @@ export const getSaleById = async (id: string) => {
 };
 
 export const getSalesByItemId = async (itemId: string) => {
-  return apiRequest<Sale[]>(`/api/getSalesByItemId/${encodeURIComponent(itemId)}`, {
-    method: "GET",
-  });
+  return apiRequest<Sale[]>(
+    `/api/getSalesByItemId/${encodeURIComponent(itemId)}`,
+    {
+      method: "GET",
+    },
+  );
 };
 
 export const addSale = async (data: SaleInput) => {
@@ -37,14 +41,20 @@ export const addSale = async (data: SaleInput) => {
 };
 
 export const updateSale = async (id: string, data: Partial<SaleInput>) => {
-  return apiRequest<{ id: string }>(`/api/updateSale/${encodeURIComponent(id)}`, {
-    method: "PATCH",
-    body: data as Record<string, unknown>,
-  });
+  return apiRequest<{ id: string }>(
+    `/api/updateSale/${encodeURIComponent(id)}`,
+    {
+      method: "PATCH",
+      body: data as Record<string, unknown>,
+    },
+  );
 };
 
 export const deleteSale = async (id: string) => {
-  return apiRequest<{ id: string }>(`/api/deleteSale/${encodeURIComponent(id)}`, {
-    method: "DELETE",
-  });
+  return apiRequest<{ id: string }>(
+    `/api/deleteSale/${encodeURIComponent(id)}`,
+    {
+      method: "DELETE",
+    },
+  );
 };
