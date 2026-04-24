@@ -1,9 +1,10 @@
 import Link from 'next/link';
-import { Clock4, ArrowLeftRight, Home, ArchiveX} from 'lucide-react';
+import { Clock4, ArrowLeftRight, Home, ArchiveX, LogOut } from 'lucide-react';
 
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarHeader,
@@ -13,11 +14,18 @@ import {
   SidebarTrigger,
   useSidebar,
 } from '@/components/ui/sidebar';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { logOut } from '@/api/users';
 
 export default function AppSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { isMobile, setSidebarState } = useSidebar();
+
+  const handleSignOut = async () => {
+    await logOut();
+    router.push('/login');
+  };
 
   const items = [
     {
@@ -90,6 +98,21 @@ export default function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+
+      <SidebarFooter className="bg-gray-100 border-t">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              onClick={handleSignOut}
+              tooltip="Sign Out"
+              className="hover:bg-red-50 hover:text-red-600 text-gray-600"
+            >
+              <LogOut className="h-4 w-4" />
+              <span>Sign Out</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
     </Sidebar>
   );
 }

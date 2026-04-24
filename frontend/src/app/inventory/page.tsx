@@ -61,7 +61,7 @@ export default function InventoryPage() {
 
   return (
     <main className="pb-8">
-      <h1 className="px-4 pt-8 text-4xl font-bold tracking-[-0.03em] sm:px-8 sm:text-6xl">
+      <h1 className="px-4 pt-8 text-3xl font-bold tracking-[-0.03em] sm:px-8 sm:text-5xl">
         Inventory
       </h1>
       <div className="px-4 pt-6 sm:px-8">

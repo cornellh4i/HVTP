@@ -1,10 +1,13 @@
 'use client';
 
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import AppSidebar from './Navbar/Desktop-Navbar/app-sidebar';
 import MobileNavbar from './Navbar/Mobile-Navbar/mobile-navbar';
 import { SidebarInset, SidebarProvider } from './ui/sidebar';
+import { useAuth } from '@/utils/AuthContext';
+
+const PROTECTED_PATHS = ['/dashboard', '/inventory', '/transactions'];
 
 type LayoutWrapperProps = {
   children: React.ReactNode;
@@ -12,18 +15,32 @@ type LayoutWrapperProps = {
 
 export default function LayoutWrapper({ children }: LayoutWrapperProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, loading } = useAuth();
   const [mounted, setMounted] = useState(false);
+
+  const isProtected = PROTECTED_PATHS.some((p) => pathname?.startsWith(p));
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  useEffect(() => {
+    if (isProtected && !loading && !user) {
+      router.push('/login');
+    }
+  }, [isProtected, loading, user, router]);
+
   const showSidebar =
     mounted && (
       pathname?.startsWith('/dashboard') ||
       pathname?.startsWith('/inventory') ||
-      pathname?.startsWith('/transactions') 
+      pathname?.startsWith('/transactions')
     );
+
+  if (isProtected && (loading || !user)) {
+    return null;
+  }
 
   if (!showSidebar) {
     return <>{children}</>;

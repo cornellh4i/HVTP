@@ -12,6 +12,8 @@ import {
   getInventoryFilterOptions,
   InventoryFilters,
 } from "@/components/Admin/Inventory/inventory-utils";
+import Link from "next/link";
+import { LayoutGrid, AlignJustify, Plus } from "lucide-react";
 
 export default function PublicInventoryPage() {
   const [items, setItems] = useState<Item[]>([]);
@@ -50,63 +52,54 @@ export default function PublicInventoryPage() {
   return (
     <main className="min-h-screen p-8">
       <div className="mx-auto w-full max-w-[1273px]">
+        <Link
+          href="/"
+          className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900 mb-4"
+        >
+          ← Back to Inventory
+        </Link>
 
-        {/* ── Title + view toggle ─────────────────────────────────────────────── */}
+        {/* ── Title ─────────────────────────────────────────────── */}
         <div className="mb-6 flex items-center justify-between gap-4">
-          <h1 className="text-2xl font-bold">Inventory</h1>
-
-          <div className="flex h-8 w-[124px] items-stretch overflow-hidden rounded-[10px] border border-slate-500 bg-white">
-            <button
-              type="button"
-              onClick={() => setMode("card")}
-              className={`flex h-full flex-1 items-center justify-center border-r border-slate-300 transition-colors ${
-                mode === "card"
-                  ? "bg-[#646D72] text-white"
-                  : "bg-white text-[#646D72] hover:bg-slate-50"
-              }`}
-              aria-label="Card view"
-            >
-              <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-                <path
-                  d="M10 2.5V17.5M2.5 10H17.5M4.16667 2.5H15.8333C16.7538 2.5 17.5 3.24619 17.5 4.16667V15.8333C17.5 16.7538 16.7538 17.5 15.8333 17.5H4.16667C3.24619 17.5 2.5 16.7538 2.5 15.8333V4.16667C2.5 3.24619 3.24619 2.5 4.16667 2.5Z"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </button>
-            <button
-              type="button"
-              onClick={() => setMode("sheet")}
-              className={`flex h-full flex-1 items-center justify-center transition-colors ${
-                mode === "sheet"
-                  ? "bg-[#646D72] text-white"
-                  : "bg-white text-[#646D72] hover:bg-slate-50"
-              }`}
-              aria-label="Sheet view"
-            >
-              <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-                <path
-                  d="M13.3333 4.16663H2.5M13.3333 9.99996H2.5M13.3333 15.8333H2.5M17.5 4.16663H17.5083M17.5 9.99996H17.5083M17.5 15.8333H17.5083"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </button>
-          </div>
+          <h1 className="text-4xl font-bold">Inventory</h1>
         </div>
 
-        {/* ── Search + filter ─────────────────────────────────────────────────── */}
+        {/* ── Toggle Button + Search + filter ─────────────────────────────────────────────────── */}
         <div className="mb-4 flex flex-col gap-4">
-          <SearchBar
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search for item"
-            className="w-full max-w-120"
-          />
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+
+            <SearchBar
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search for item"
+              className="w-full max-w-120"
+            />
+            
+            <div className="flex items-center gap-4 self-start lg:self-auto">
+              <div className="flex items-center gap-1 rounded-2xl border border-[#556b2f] bg-white p-1">
+                <button
+                  onClick={() => setMode("card")}
+                  className={`rounded-lg p-2 transition-colors ${
+                    mode === "card"
+                      ? "bg-[#556b2f] text-white"
+                      : "text-[#556b2f] hover:bg-[#f4f6ee]"
+                  }`}
+                >
+                  <LayoutGrid size={16} />
+                </button>
+                <button
+                  onClick={() => setMode("sheet")}
+                  className={`rounded-lg p-2 transition-colors ${
+                    mode === "sheet"
+                      ? "bg-[#556b2f] text-white"
+                      : "text-[#556b2f] hover:bg-[#f4f6ee]"
+                  }`}
+                >
+                  <AlignJustify size={16} />
+                </button>
+              </div>
+            </div>
+          </div>
           <Filter filters={filters} options={filterOptions} onChange={setFilters} />
         </div>
 
