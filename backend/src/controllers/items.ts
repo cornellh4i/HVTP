@@ -58,11 +58,35 @@ export const getItemById = async (req: Request, res: Response) => {
   }
 };
 
-async function generateSku(): Promise<string> {
-  // Use a counter document to get a reliable, race-safe incrementing number
-  const counterRef = db.collection("counters").doc("items");
+const GRADE_CODE: Record<string, string> = {
+  Fine: "F",
+  Medium: "M",
+  Long: "L",
+  Rug: "R",
+  Alpaca: "A",
+};
 
-  const newCount = await db.runTransaction(async (tx) => {
+const COLOR_CODE: Record<string, string> = {
+  White: "W",
+  "Natural Color": "N",
+  Black: "B",
+  Grey: "G",
+  Brown: "R",
+};
+
+async function generateSku(
+  farmerState: string,
+  grade: string,
+  color: string,
+  breed: string
+): Promise<string> {
+  const stateCode = farmerState.toUpperCase().slice(0, 2).padEnd(2, "X");
+  const gradeCode = GRADE_CODE[grade] ?? grade.charAt(0).toUpperCase();
+  const colorCode = COLOR_CODE[color] ?? color.charAt(0).toUpperCase();
+  const breedCode = breed.toUpperCase().slice(0, 3).padEnd(3, "X");
+
+  const counterRef = db.collection("counters").doc("items");
+  const lotNumber = await db.runTransaction(async (tx) => {
     const doc = await tx.get(counterRef);
     const current = doc.exists ? (doc.data()?.count ?? 0) : 0;
     const next = current + 1;
@@ -70,7 +94,7 @@ async function generateSku(): Promise<string> {
     return next;
   });
 
-  return String(newCount).padStart(4, "0");
+  return `${stateCode}-${gradeCode}-${colorCode}-${breedCode}-${String(lotNumber).padStart(3, "0")}`;
 }
 
 export const addItem = async (
@@ -98,7 +122,15 @@ export const addItem = async (
       return res.status(400).json(errorJson("Missing required fields"));
     }
 
-    const sku = await generateSku();
+    let farmerState = "";
+    if (newItem.farmerId) {
+      const farmerDoc = await db.collection("farmers").doc(newItem.farmerId).get();
+      if (farmerDoc.exists) {
+        farmerState = (farmerDoc.data() as any)?.state ?? "";
+      }
+    }
+
+    const sku = await generateSku(farmerState, newItem.grade ?? "", newItem.color ?? "", newItem.breed ?? "");
 
     const itemToInsert: ItemInsert = {
       ...newItem,
