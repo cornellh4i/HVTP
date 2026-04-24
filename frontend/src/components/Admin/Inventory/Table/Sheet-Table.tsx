@@ -1,45 +1,21 @@
 "use client";
 
-import { getAllItems, Item } from "@/api/items";
-import { useState, useEffect } from "react";
+import { Item } from "@/api/items";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { SquarePen } from "lucide-react";
 
-export default function SheetTable({
-  searchQuery = "",
-}: {
-  searchQuery?: string;
-}) {
-  const [items, setItems] = useState<Item[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchItems = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const data = await getAllItems();
-        setItems(data);
-      } catch (err) {
-        setError(String(err));
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchItems();
-  }, []);
-
-  if (loading) return <main className="min-h-screen p-8">Loading...</main>;
-  if (error) return <main className="min-h-screen p-8">Error: {error}</main>;
-
-  const filtered = searchQuery
-    ? items.filter(
-        (item) =>
-          item.sku?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          item.breed?.toLowerCase().includes(searchQuery.toLowerCase()),
-      )
-    : items;
+export default function SheetTable({ items }: { items: Item[] }) {
+  if (items.length === 0) {
+    return (
+      <main className="min-h-screen p-8">
+        <div className="w-full overflow-x-auto rounded-lg border border-gray-200">
+          <p className="px-4 py-8 text-center text-sm text-gray-500">
+            No inventory items match the current filters.
+          </p>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen p-8">
@@ -71,7 +47,7 @@ export default function SheetTable({
             </tr>
           </thead>
           <tbody>
-            {filtered.map((item, index) => (
+            {items.map((item, index) => (
               <Sheet key={item.id}>
                 <tr
                   className={`${index % 2 === 1 ? "bg-[#ECE7D6]" : "bg-white"}`}

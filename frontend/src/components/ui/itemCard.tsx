@@ -1,7 +1,6 @@
 import * as React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Pencil } from "lucide-react";
 
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,6 +15,7 @@ interface ItemCardProps {
   href: string;
   imgSrc?: string;
   lastUpdated?: string;
+  ctaLabel?: string;
 }
 
 const PlaceholderImage = () => (
@@ -38,12 +38,8 @@ const PlaceholderImage = () => (
 );
 
 const ItemCard = React.forwardRef<HTMLDivElement, ItemCardProps>(
-  ({ sku, description, breed, quantity, status, state, href, imgSrc, lastUpdated }, ref) => (
+  ({ sku, description, breed, quantity, status, state, href, imgSrc, lastUpdated, ctaLabel = "View Lot" }, ref) => (
     <Card ref={ref} className="relative w-full max-w-5xl rounded-xl p-2 sm:p-3 lg:p-4">
-      {/* Mobile: pen icon top right */}
-      <Link href={href} className="absolute right-3 top-3 text-slate-400 sm:hidden">
-        <Pencil size={16} />
-      </Link>
       <div className="flex flex-row items-center gap-3 sm:gap-4 lg:gap-6">
 
         {/* Image — small square on mobile, larger on desktop */}
@@ -88,12 +84,16 @@ const ItemCard = React.forwardRef<HTMLDivElement, ItemCardProps>(
             {lastUpdated && (
               <p className="mt-1 hidden text-xs text-slate-400 sm:block">Last Updated: {lastUpdated}</p>
             )}
+
+            <Button asChild size="sm" className="mt-3 rounded-xl bg-[#556b2f] px-4 sm:hidden">
+              <Link href={href}>{ctaLabel}</Link>
+            </Button>
           </div>
 
 
           {/* Desktop: full button */}
-          <Button asChild className="hidden shrink-0 sm:block">
-            <Link href={href}>View Lot</Link>
+          <Button asChild className="hidden shrink-0 bg-[#556b2f] sm:block">
+            <Link href={href}>{ctaLabel}</Link>
           </Button>
         </div>
 

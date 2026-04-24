@@ -20,7 +20,7 @@ export type Item = {
   palletLocation?: string;
   shearDate?: string;
   purchasePrice?: number;
-  createdAt?: string;
+  createdAt?: unknown;
   // Denormalized from farmer (joined in getItemById)
   farmerName?: string;
   farmerContact?: string;
@@ -72,19 +72,5 @@ export const togglePublish = async (id: string) => {
 
 // Fetch all publicly visible items (no auth required)
 export const getPublicItems = async () => {
-  const response = await fetch("http://localhost:8000/api/public/items", {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
-
-  const json = await response.json();
-
-  if (!response.ok || !json.success) {
-    throw new Error(json.error || "Failed to fetch public items");
-  }
-
-  return json.data as Item[];
+  return apiRequest<Item[]>("/api/public/items", { method: "GET", token: null });
 };
-
