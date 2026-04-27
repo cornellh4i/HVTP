@@ -19,6 +19,7 @@ export default function CardTable({ items }: { items: Item[] }) {
         {items.map((item) => (
           <ItemCard
             key={item.id}
+            imgSrc={item.coverImage ?? item.images?.[0]}
             sku={item.sku}
             description={`${item.grade ?? ""} • ${item.color ?? ""}`}
             breed={item.breed ?? ""}
