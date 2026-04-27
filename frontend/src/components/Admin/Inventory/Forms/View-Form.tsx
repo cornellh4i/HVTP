@@ -1,14 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { getItemById, updateItem, Item } from "@/api/items";
+import { getItemById, updateItem, deleteItem, Item } from "@/api/items";
 import EditableField from "@/components/ui/EditableField";
 import SelectField, { SelectOption } from "@/components/ui/selectField";
 import ItemImageUpload from "@/components/Admin/Inventory/Upload-Image/ItemImageUpload";
 import SetCoverPhotoModal from "@/components/Admin/Inventory/SetCoverPhotoModal";
 import SaleModal from "@/components/Admin/Inventory/Forms/Add-Sale";
+import { Trash } from "lucide-react";
 
 // OPTIONS
 
@@ -127,6 +128,7 @@ export default function ViewForm() {
   );
 
   const { id: itemId } = useParams<{ id: string }>();
+  const router = useRouter();
 
   useEffect(() => {
     const fetchItem = async () => {
@@ -193,6 +195,22 @@ export default function ViewForm() {
     }
   };
 
+  const handleDelete = async () => {
+    if (
+      !confirm(
+        "Are you sure you want to delete this lot? This action cannot be undone.",
+      )
+    ) {
+      return;
+    }
+    try {
+      await deleteItem(itemId);
+      router.push("/inventory");
+    } catch {
+      setError("Failed to delete.");
+    }
+  };
+
   if (loading) return <div className="p-4 md:p-8">Loading...</div>;
   if (!item)
     return (
@@ -212,6 +230,9 @@ export default function ViewForm() {
         <div className="hidden md:flex gap-2">
           <button className="rounded border border-gray-300 px-4 py-1.5 text-sm hover:bg-gray-50">
             Print Label
+          </button>
+          <button onClick={handleDelete}>
+            <Trash size={24} />
           </button>
           <button
             onClick={() => setShowSaleModal(true)}
