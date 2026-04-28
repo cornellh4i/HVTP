@@ -1,14 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { getItemById, updateItem, Item } from "@/api/items";
+import { getItemById, updateItem, deleteItem, Item } from "@/api/items";
 import EditableField from "@/components/ui/EditableField";
 import SelectField, { SelectOption } from "@/components/ui/selectField";
 import ItemImageUpload from "@/components/Admin/Inventory/Upload-Image/ItemImageUpload";
 import SetCoverPhotoModal from "@/components/Admin/Inventory/SetCoverPhotoModal";
 import SaleModal from "@/components/Admin/Inventory/Forms/Add-Sale";
+import { Trash, Printer } from "lucide-react";
 
 // OPTIONS
 
@@ -42,56 +43,11 @@ const COLOR_OPTIONS: SelectOption[] = [
 ];
 
 const STATE_OPTIONS: SelectOption[] = [
-  "AL",
-  "AK",
-  "AZ",
-  "AR",
-  "CA",
-  "CO",
-  "CT",
-  "DE",
-  "FL",
-  "GA",
-  "HI",
-  "ID",
-  "IL",
-  "IN",
-  "IA",
-  "KS",
-  "KY",
-  "LA",
-  "ME",
-  "MD",
-  "MA",
-  "MI",
-  "MN",
-  "MS",
-  "MO",
-  "MT",
-  "NE",
-  "NV",
-  "NH",
-  "NJ",
-  "NM",
-  "NY",
-  "NC",
-  "ND",
-  "OH",
-  "OK",
-  "OR",
-  "PA",
-  "RI",
-  "SC",
-  "SD",
-  "TN",
-  "TX",
-  "UT",
-  "VT",
-  "VA",
-  "WA",
-  "WV",
-  "WI",
-  "WY",
+  "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA",
+  "HI","ID","IL","IN","IA","KS","KY","LA","ME","MD",
+  "MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ",
+  "NM","NY","NC","ND","OH","OK","OR","PA","RI","SC",
+  "SD","TN","TX","UT","VT","VA","WA","WV","WI","WY",
 ].map((s) => ({ label: s, value: s }));
 
 // FIELD WRAPPER
@@ -122,11 +78,10 @@ export default function ViewForm() {
   const [saving, setSaving] = useState(false);
   const [showCoverModal, setShowCoverModal] = useState(false);
   const [showSaleModal, setShowSaleModal] = useState(false);
-  const [toast, setToast] = useState<{ message: string; sub: string } | null>(
-    null,
-  );
+  const [toast, setToast] = useState<{ message: string; sub: string } | null>(null);
 
   const { id: itemId } = useParams<{ id: string }>();
+  const router = useRouter();
 
   useEffect(() => {
     const fetchItem = async () => {
@@ -152,6 +107,33 @@ export default function ViewForm() {
     setTimeout(() => setToast(null), 6000);
   };
 
+  const handleGenerateLabel = () => {
+    const rows = [
+      ["SKU", "Breed", "Grade", "Farmer Name", "QR Code"],
+      [
+        formData.sku ?? "",
+        formData.breed ?? "",
+        formData.grade ?? "",
+        formData.farmerName ?? "",
+        formData.qrCode ?? "",
+      ],
+    ];
+
+    const csv = rows
+      .map((row) =>
+        row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")
+      )
+      .join("\n");
+
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `label-${formData.sku ?? itemId}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   const handlePublish = async () => {
     try {
       if (formData?.isPublic == false) {
@@ -159,7 +141,7 @@ export default function ViewForm() {
         setFormData((p) => ({ ...p, isPublic: true }));
         showToast(
           "Lot successfully published!",
-          "Your changes have been saved and published externally. Change the status to ”Processing” to hide this lot from the public inventory.",
+          "Your changes have been saved and published externally. Change the status to \"Processing\" to hide this lot from the public inventory.",
         );
       } else {
         await updateItem(itemId, { isPublic: false });
@@ -184,12 +166,26 @@ export default function ViewForm() {
       });
       showToast(
         "Lot successfully updated!",
-        "Your changes have been saved internally. Change the status to “In Stock” to make this lot available for sale.",
+        "Your changes have been saved internally. Change the status to \"In Stock\" to make this lot available for sale.",
       );
     } catch {
       setError("Failed to save.");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (
+      !confirm("Are you sure you want to delete this lot? This action cannot be undone.")
+    ) {
+      return;
+    }
+    try {
+      await deleteItem(itemId);
+      router.push("/inventory");
+    } catch {
+      setError("Failed to delete.");
     }
   };
 
@@ -210,8 +206,15 @@ export default function ViewForm() {
           ← Back to Inventory
         </Link>
         <div className="hidden md:flex gap-2">
-          <button className="rounded border border-gray-300 px-4 py-1.5 text-sm hover:bg-gray-50">
-            Print Label
+          <button
+            onClick={handleGenerateLabel}
+            className="hover:bg-gray-50 rounded p-1"
+            aria-label="Print Label"
+          >
+            <Printer size={24} />
+          </button>
+          <button onClick={handleDelete}>
+            <Trash size={24} />
           </button>
           <button
             onClick={() => setShowSaleModal(true)}
@@ -234,6 +237,7 @@ export default function ViewForm() {
           </button>
         </div>
       </div>
+
       {/* SKU */}
       <div className="mb-6 hidden md:block">
         <p className="text-base font-semibold text-gray-900">
@@ -243,53 +247,27 @@ export default function ViewForm() {
       <h1 className="text-lg font-bold mb-4 md:hidden">
         SKU: {formData.sku ?? itemId}
       </h1>
+
       <div className="grid grid-cols-1 md:grid-cols-[1fr_380px] gap-6 md:gap-12 items-start">
         {/* LEFT */}
         <div className="flex flex-col gap-6 md:gap-10">
           <section>
-            <h2 className="text-xl font-bold mb-4 md:mb-5">
-              General Information
-            </h2>
+            <h2 className="text-xl font-bold mb-4 md:mb-5">General Information</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 md:gap-y-5">
               <Field label="Breed">
-                <EditableField
-                  isEditing
-                  value={formData.breed ?? ""}
-                  placeholder="Breed"
-                  onChange={set("breed")}
-                />
+                <EditableField isEditing value={formData.breed ?? ""} placeholder="Breed" onChange={set("breed")} />
               </Field>
               <Field label="Grade">
-                <SelectField
-                  value={formData.grade ?? ""}
-                  onChange={set("grade")}
-                  options={GRADE_OPTIONS}
-                  placeholder="Grade"
-                />
+                <SelectField value={formData.grade ?? ""} onChange={set("grade")} options={GRADE_OPTIONS} placeholder="Grade" />
               </Field>
               <Field label="Color">
-                <SelectField
-                  value={formData.color ?? ""}
-                  onChange={set("color")}
-                  options={COLOR_OPTIONS}
-                  placeholder="Color"
-                />
+                <SelectField value={formData.color ?? ""} onChange={set("color")} options={COLOR_OPTIONS} placeholder="Color" />
               </Field>
               <Field label="Quantity (lb)">
-                <EditableField
-                  isEditing
-                  value={String(formData.weight ?? "")}
-                  placeholder="Weight"
-                  onChange={set("weight")}
-                />
+                <EditableField isEditing value={String(formData.weight ?? "")} placeholder="Weight" onChange={set("weight")} />
               </Field>
               <Field label="Status">
-                <SelectField
-                  value={formData.status ?? ""}
-                  onChange={set("status")}
-                  options={STATUS_OPTIONS}
-                  placeholder="Status"
-                />
+                <SelectField value={formData.status ?? ""} onChange={set("status")} options={STATUS_OPTIONS} placeholder="Status" />
               </Field>
               <Field label="Type">
                 <SelectField
@@ -300,59 +278,28 @@ export default function ViewForm() {
                 />
               </Field>
               <Field label="Pallet Location">
-                <EditableField
-                  isEditing
-                  value={formData.palletLocation ?? ""}
-                  placeholder="Pallet Number"
-                  onChange={set("palletLocation")}
-                />
+                <EditableField isEditing value={formData.palletLocation ?? ""} placeholder="Pallet Number" onChange={set("palletLocation")} />
               </Field>
             </div>
           </section>
 
           <section>
-            <h2 className="text-xl font-bold mb-4 md:mb-5">
-              Purchase Information
-            </h2>
+            <h2 className="text-xl font-bold mb-4 md:mb-5">Purchase Information</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 md:gap-y-5">
               <Field label="Farmer Name">
-                <EditableField
-                  isEditing={false}
-                  value={formData.farmerName ?? ""}
-                  placeholder="Name"
-                />
+                <EditableField isEditing={false} value={formData.farmerName ?? ""} placeholder="Name" />
               </Field>
               <Field label="Shear Date">
-                <EditableField
-                  isEditing
-                  value={formData.shearDate ?? ""}
-                  placeholder="MM/DD/YYYY"
-                  onChange={set("shearDate")}
-                />
+                <EditableField isEditing value={formData.shearDate ?? ""} placeholder="MM/DD/YYYY" onChange={set("shearDate")} />
               </Field>
               <Field label="Farmer City">
-                <EditableField
-                  isEditing={false}
-                  value={formData.farmerCity ?? ""}
-                  placeholder="City"
-                />
+                <EditableField isEditing={false} value={formData.farmerCity ?? ""} placeholder="City" />
               </Field>
               <Field label="Farmer State">
-                <SelectField
-                  value={formData.farmerState ?? ""}
-                  onChange={() => {}}
-                  options={STATE_OPTIONS}
-                  placeholder="State"
-                  disabled
-                />
+                <SelectField value={formData.farmerState ?? ""} onChange={() => {}} options={STATE_OPTIONS} placeholder="State" disabled />
               </Field>
               <Field label="Intake Price ($/lb)">
-                <EditableField
-                  isEditing
-                  value={String(formData.purchasePrice ?? "")}
-                  placeholder="Price"
-                  onChange={set("purchasePrice")}
-                />
+                <EditableField isEditing value={String(formData.purchasePrice ?? "")} placeholder="Price" onChange={set("purchasePrice")} />
               </Field>
             </div>
           </section>
@@ -360,13 +307,8 @@ export default function ViewForm() {
 
         {/* RIGHT */}
         <div className="flex flex-col gap-4">
-          <ItemImageUpload
-            sku={item.sku}
-            existingImages={images}
-            onImagesChange={setImages}
-          />
+          <ItemImageUpload sku={item.sku} existingImages={images} onImagesChange={setImages} />
 
-          {/* Set cover photo — only shown when images exist */}
           {images.length > 0 && (
             <button
               type="button"
@@ -378,33 +320,21 @@ export default function ViewForm() {
           )}
 
           <Field label="Notes">
-            <EditableField
-              isEditing
-              value={formData.notes ?? ""}
-              placeholder="Notes"
-              multiline
-              onChange={set("notes")}
-            />
+            <EditableField isEditing value={formData.notes ?? ""} placeholder="Notes" multiline onChange={set("notes")} />
           </Field>
 
           {/* Mobile save/publish buttons */}
           <div className="flex flex-col gap-3 md:hidden">
-            <button
-              onClick={handlePublish}
-              className="w-full rounded px-4 py-2.5 text-sm text-white bg-gray-900 hover:bg-gray-700"
-            >
+            <button onClick={handlePublish} className="w-full rounded px-4 py-2.5 text-sm text-white bg-gray-900 hover:bg-gray-700">
               {formData.isPublic ? "Unpublish" : "Publish"}
             </button>
-            <button
-              onClick={handleSave}
-              disabled={saving}
-              className="w-full rounded border px-4 py-2.5 text-sm text-white bg-[#2C2C2C] hover:bg-[#1A1A1A] disabled:opacity-50"
-            >
+            <button onClick={handleSave} disabled={saving} className="w-full rounded border px-4 py-2.5 text-sm text-white bg-[#2C2C2C] hover:bg-[#1A1A1A] disabled:opacity-50">
               {saving ? "Saving..." : "Save Changes"}
             </button>
           </div>
         </div>
       </div>
+
       {/* Set Cover Photo Modal */}
       {showCoverModal && (
         <SetCoverPhotoModal
@@ -412,11 +342,10 @@ export default function ViewForm() {
           images={images}
           currentCover={formData.coverImage ?? images[0] ?? ""}
           onClose={() => setShowCoverModal(false)}
-          onSave={(newCover) =>
-            setFormData((p) => ({ ...p, coverImage: newCover }))
-          }
+          onSave={(newCover) => setFormData((p) => ({ ...p, coverImage: newCover }))}
         />
       )}
+
       {showSaleModal && (
         <SaleModal
           itemId={itemId}
@@ -424,21 +353,17 @@ export default function ViewForm() {
           onClose={() => setShowSaleModal(false)}
           onSaleRecorded={(id, total) => console.log("Sold!", id, total)}
         />
-      )}{" "}
+      )}
+
       {/* Toast Notification */}
       {toast && (
         <div className="fixed bottom-6 right-6 z-50 w-80 rounded-lg border border-gray-200 bg-white p-4 shadow-lg">
           <div className="flex items-start justify-between gap-2">
             <div>
-              <p className="font-semibold text-gray-900 text-sm">
-                {toast.message}
-              </p>
+              <p className="font-semibold text-gray-900 text-sm">{toast.message}</p>
               <p className="mt-1 text-sm text-gray-600">{toast.sub}</p>
             </div>
-            <button
-              onClick={() => setToast(null)}
-              className="text-gray-400 hover:text-gray-600 mt-0.5 shrink-0"
-            >
+            <button onClick={() => setToast(null)} className="text-gray-400 hover:text-gray-600 mt-0.5 shrink-0">
               ✕
             </button>
           </div>
