@@ -7,6 +7,7 @@ interface CalendarProps {
   onRangeChange: (startDate: Date, endDate: Date, isQuickAction?: boolean) => void;
   onClose: () => void;
   initialRange?: { from: Date; to: Date };
+  maxBars?: number;
 }
 
 const quickActions = [
@@ -15,7 +16,24 @@ const quickActions = [
   { label: "Last 90 days", days: 90 },
 ];
 
-export default function Calendar({ onRangeChange, onClose, initialRange }: CalendarProps) {
+function getWeekBucketCount(from: Date, to: Date): number {
+  const start = from < to ? from : to;
+  const end = from < to ? to : from;
+  const cursor = new Date(start);
+  cursor.setHours(0, 0, 0, 0);
+  cursor.setDate(cursor.getDate() - cursor.getDay());
+
+  let count = 0;
+
+  while (cursor <= end) {
+    count += 1;
+    cursor.setDate(cursor.getDate() + 7);
+  }
+
+  return count;
+}
+
+export default function Calendar({ onRangeChange, onClose, initialRange, maxBars = 12 }: CalendarProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [range, setRange] = useState<DateRange | undefined>(
     initialRange ? { from: initialRange.from, to: initialRange.to } : undefined
@@ -32,19 +50,32 @@ export default function Calendar({ onRangeChange, onClose, initialRange }: Calen
   }, [onClose]);
 
   function handleSelect(selected: DateRange | undefined) {
-    setRange(selected);
     if (selected?.from && selected?.to) {
       const start = selected.from < selected.to ? selected.from : selected.to;
       const end = selected.from < selected.to ? selected.to : selected.from;
+
+      if (getWeekBucketCount(start, end) > maxBars) {
+        return;
+      }
+
+      setRange({ from: start, to: end });
       // isQuickAction = false → triggers "Custom" label in parent
       onRangeChange(start, end, false);
+      return;
     }
+
+    setRange(selected);
   }
 
   function handleQuickAction(days: number) {
     const end = new Date();
     const start = new Date();
     start.setDate(end.getDate() - (days - 1));
+
+    if (getWeekBucketCount(start, end) > maxBars) {
+      return;
+    }
+
     setRange({ from: start, to: end });
     // isQuickAction = true → does NOT trigger "Custom" label in parent
     onRangeChange(start, end, true);
@@ -92,19 +123,19 @@ export default function Calendar({ onRangeChange, onClose, initialRange }: Calen
         .rdp-selected .rdp-day_button {
           background-color: #1a1a1a !important;
           color: white !important;
-          border-radius: 0 !important;
+          border-radius: 9999px !important;
           border: none !important;
         }
         .rdp-range_middle .rdp-day_button {
           background-color: #f3f4f6 !important;
           color: #1a1a1a !important;
-          border-radius: 0 !important;
+          border-radius: 9999px !important;
         }
         .rdp-range_start .rdp-day_button,
         .rdp-range_end .rdp-day_button {
           background-color: #1a1a1a !important;
           color: white !important;
-          border-radius: 0 !important;
+          border-radius: 9999px !important;
         }
         .rdp-today .rdp-day_button {
           font-weight: 700 !important;
@@ -123,8 +154,14 @@ export default function Calendar({ onRangeChange, onClose, initialRange }: Calen
         {quickActions.map(({ label, days }) => (
           <button
             key={label}
+            disabled={(() => {
+              const end = new Date();
+              const start = new Date();
+              start.setDate(end.getDate() - (days - 1));
+              return getWeekBucketCount(start, end) > maxBars;
+            })()}
             onClick={() => handleQuickAction(days)}
-            className="rounded-md border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-700 transition hover:bg-gray-100"
+            className="rounded-md border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-700 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-white"
           >
             {label}
           </button>

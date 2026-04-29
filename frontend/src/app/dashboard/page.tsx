@@ -35,7 +35,7 @@ function formatWeight(value: number): string {
 
 type MetricKey = "grossIncome" | "profit" | "totalCost" | "weightOfWoolSold" | "inventoryCost";
 
-const INVENTORY_COST = 10400;
+const INVENTORY_COST = 20000;
 
 function getMetricTitle(metric: MetricKey): string {
   if (metric === "grossIncome") return "Gross Income";
