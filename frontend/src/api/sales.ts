@@ -10,8 +10,21 @@ export type Sale = {
   pricePerWeight: number;
   totalPrice: number;
   costPerWeight: number;
-  soldAt: string;
+  soldAt: string | { _seconds?: number; seconds?: number };
   buyerName: string;
+  itemName?: string;
+  sku?: string;
+  breed?: string;
+  grade?: string;
+  color?: string;
+  status?: string;
+  isPublic?: boolean;
+  itemWeight?: number;
+  purchasePrice?: number;
+  farmerId?: string;
+  farmerName?: string;
+  farmerCity?: string;
+  farmerState?: string;
 };
 
 export type SaleInput = Omit<Sale, "id" | "totalPrice">;

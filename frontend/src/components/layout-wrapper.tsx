@@ -16,6 +16,7 @@ export default function LayoutWrapper({ children }: LayoutWrapperProps) {
   const showSidebar =
     pathname?.startsWith('/dashboard') ||
     pathname?.startsWith('/inventory') ||
+    pathname?.startsWith('/transactions') ||
     pathname?.startsWith('/analytics') || 
     pathname?.startsWith('/archive');
 

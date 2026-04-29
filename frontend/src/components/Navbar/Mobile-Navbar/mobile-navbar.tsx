@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, ScanLine, ArchiveX } from "lucide-react";
+import { ArrowLeftRight, Home, ScanLine, ArchiveX } from "lucide-react";
 
 const navItems = [
   {
@@ -14,6 +14,11 @@ const navItems = [
     title: "Scan",
     href: "#",
     icon: ScanLine,
+  },
+  {
+    title: "Sales",
+    href: "/transactions",
+    icon: ArrowLeftRight,
   },
   {
     title: "Archive",
