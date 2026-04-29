@@ -55,7 +55,7 @@ const ItemCard: React.FC<ItemCardProps> = ({ item }) => {
         <div className="flex flex-col gap-0 pt-[25px]">
           {tags.length > 0 && (
             <div
-              className="flex w-full flex-wrap items-center justify-center gap-2 text-center uppercase tracking-[0.08em]"
+              className="flex w-full flex-wrap items-center justify-start gap-2 uppercase tracking-[0.08em]"
               style={{
                 paddingBottom: "16px",
                 color: "#686868",
