@@ -9,8 +9,8 @@ import { getDashboardMetrics, DashboardMetrics } from "@/api/dashboard";
 import Graph from "@/components/Dashboard/Graph/graph";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-const taskIconChecked = "https://www.figma.com/api/mcp/asset/1988d384-b7b8-4e1b-a6ec-ed8b4ba95283";
-const taskIconUpcoming = "https://www.figma.com/api/mcp/asset/abe2f6e2-29bd-4295-b31b-64a7dfa58391";
+const taskIconEmpty = "https://www.figma.com/api/mcp/asset/200f9e41-1e8c-43c7-81ed-51961d41f553";
+const taskIconChecked = "https://www.figma.com/api/mcp/asset/e5d0e84b-48df-4f46-84b3-1dfdc5d3b42f";
 
 const DEFAULT_START = new Date("2026-02-11");
 const DEFAULT_END = new Date("2026-03-11");
@@ -45,7 +45,7 @@ function getMetricTitle(metric: MetricKey): string {
   return "Inventory Cost";
 }
 
-const tasks = [
+const initialTasks = [
   {
     date: "Mar. 10",
     lot: "Lot #39",
@@ -86,6 +86,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [activeMetric, setActiveMetric] = useState<MetricKey>("grossIncome");
   const [activeTaskTab, setActiveTaskTab] = useState<"tasks" | "upcoming">("tasks");
+  const [tasks, setTasks] = useState(initialTasks);
 
   const handleSignOut = async () => {
     document.cookie = "session=; path=/; max-age=0";
@@ -98,6 +99,14 @@ export default function DashboardPage() {
     setCalendarOpen(false);
     setDateRange({ from: start, to: end });
     setIsCustomRange(!isQuickAction);
+  };
+
+  const handleToggleTask = (taskIndex: number) => {
+    setTasks((prevTasks) =>
+      prevTasks.map((task, index) =>
+        index === taskIndex ? { ...task, completed: !task.completed } : task
+      )
+    );
   };
 
   useEffect(() => {
@@ -196,6 +205,11 @@ export default function DashboardPage() {
 
   const visibleTasks = activeTaskTab === "tasks" ? tasks : tasks.filter((task) => !task.completed);
 
+  const visibleTasksWithIndex = visibleTasks.map((task) => ({
+    ...task,
+    originalIndex: tasks.findIndex((t) => t.date === task.date && t.lot === task.lot && t.suffix === task.suffix),
+  }));
+
   if (authLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#fbfaf4]">
@@ -259,7 +273,7 @@ export default function DashboardPage() {
                 <button
                   type="button"
                   onClick={() => setActiveTaskTab("tasks")}
-                  className={`flex items-center justify-center px-1.5 py-2 ${activeTaskTab === "tasks" ? "border-b-2 border-black" : "border-b-2 border-transparent"}`}
+                  className={`flex items-center justify-center border-t-4 px-1.5 py-2 ${activeTaskTab === "tasks" ? "border-b-2 border-black border-t-transparent" : "border-b-2 border-transparent border-t-transparent"}`}
                 >
                   <p className={`whitespace-nowrap text-[16px] leading-normal ${activeTaskTab === "tasks" ? "font-bold text-black" : "font-normal text-[rgba(0,0,0,0.6)]"}`} style={{ fontFamily: "Acumin Pro, sans-serif" }}>
                     Tasks
@@ -268,7 +282,7 @@ export default function DashboardPage() {
                 <button
                   type="button"
                   onClick={() => setActiveTaskTab("upcoming")}
-                  className={`flex items-center justify-center px-1.5 py-2 ${activeTaskTab === "upcoming" ? "border-b-2 border-black" : "border-b-2 border-transparent"}`}
+                  className={`flex items-center justify-center border-t-4 px-1.5 py-2 ${activeTaskTab === "upcoming" ? "border-b-2 border-black border-t-transparent" : "border-b-2 border-transparent border-t-transparent"}`}
                 >
                   <p className={`whitespace-nowrap text-[16px] leading-normal ${activeTaskTab === "upcoming" ? "font-bold text-black" : "font-normal text-[rgba(0,0,0,0.6)]"}`} style={{ fontFamily: "Acumin Pro, sans-serif" }}>
                     Upcoming
@@ -277,28 +291,32 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <div className="flex flex-col gap-3">
-              {visibleTasks.map((task, index) => {
-                const icon = task.completed ? taskIconUpcoming : taskIconChecked;
-                const dateClass = task.completed ? "text-[rgba(0,0,0,0.5)]" : "text-black";
-                const textClass = task.completed ? "text-[rgba(0,0,0,0.5)] line-through" : "text-black";
+            <div className="flex flex-col gap-2">
+              {visibleTasksWithIndex.map(({ date, lot, suffix, completed, originalIndex }, index) => {
+                const icon = completed ? taskIconChecked : taskIconEmpty;
+                const dateClass = completed ? "text-[rgba(0,0,0,0.5)]" : "text-black";
+                const textClass = completed ? "[text-decoration-skip-ink:none] decoration-solid line-through text-black" : "text-black";
 
                 return (
-                  <div key={`${task.date}-${task.lot}-${index}`} className="flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-6">
-                      <div className="relative h-6 w-6 shrink-0 overflow-hidden">
+                  <div
+                    key={`${date}-${lot}-${index}`}
+                    onClick={() => handleToggleTask(originalIndex)}
+                    className="flex cursor-pointer items-center justify-between gap-4 rounded-md px-2 py-1.5 transition hover:bg-[rgba(0,0,0,0.02)]"
+                  >
+                    <div className="flex items-center gap-[24px]">
+                      <div className="relative size-[24px] shrink-0 overflow-clip">
                         <div className="absolute inset-[12.5%_12.5%_0.78%_12.5%]">
-                          <img alt="" className="block size-full max-w-none" src={icon} />
+                          <img alt="" className="absolute block inset-0 max-w-none size-full" src={icon} />
                         </div>
                       </div>
                       <p className={`whitespace-nowrap text-[15px] font-normal leading-normal ${dateClass}`} style={{ fontFamily: "Acumin Pro, sans-serif" }}>
-                        {task.date}
+                        {date}
                       </p>
                     </div>
 
                     <p className={`whitespace-nowrap text-[15px] font-normal leading-normal ${textClass}`} style={{ fontFamily: "Acumin Pro, sans-serif" }}>
-                      <span className="underline decoration-solid [text-decoration-skip-ink:none]">{task.lot}</span>
-                      <span>{task.suffix}</span>
+                      <span className="[text-decoration-skip-ink:none] decoration-solid underline">{lot}</span>
+                      <span>{suffix}</span>
                     </p>
                   </div>
                 );
@@ -317,21 +335,25 @@ export default function DashboardPage() {
               return (
                 <Card
                   key={item.title}
-                  className={`rounded-none border-0 bg-white shadow-none transition ${
+                  className={`relative overflow-hidden rounded-none border-0 bg-white shadow-none transition ${
                     isDisabled
                       ? "cursor-not-allowed opacity-50"
-                      : "cursor-pointer hover:bg-[#fafaf7]"
+                      : isActive
+                          ? "z-10 cursor-default -mb-px border-b border-b-white hover:bg-white hover:shadow-none"
+                        : "group cursor-pointer border-b border-b-[rgba(0,0,0,0.2)] hover:bg-[#fafaf7]"
                   }`}
                   onClick={() => {
                     if (!isDisabled) setActiveMetric(item.key);
                   }}
                 >
+                  {!isActive && !isDisabled && (
+                    <div className="absolute left-0 top-0 h-1 w-full bg-[#7f8030] opacity-0 transition-opacity group-hover:opacity-100" />
+                  )}
+                  {isActive && !isDisabled && (
+                    <div className="absolute left-0 top-0 h-1 w-full bg-[#7f8030]" />
+                  )}
                   <CardHeader
-                    className={`gap-0 px-3 pb-1 pt-3 ${
-                      isActive && !isDisabled
-                        ? "border-t-4 border-t-[#7f8030]"
-                        : "border-t border-t-transparent"
-                    }`}
+                    className="gap-0 px-3 pb-1 pt-4"
                   >
                     <CardDescription
                       className="whitespace-nowrap uppercase text-[14px] font-normal leading-normal text-[rgba(0,0,0,0.6)]"
@@ -340,7 +362,7 @@ export default function DashboardPage() {
                       {item.title}
                     </CardDescription>
                   </CardHeader>
-                  <CardContent className="px-3 pb-3 pt-0">
+                  <CardContent className="px-3 pb-4 pt-0">
                     <CardTitle className="text-[28px] font-bold tracking-tight text-slate-950 sm:text-[32px]">
                       {item.value}
                     </CardTitle>
