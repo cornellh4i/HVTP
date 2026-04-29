@@ -4,10 +4,16 @@ import { DayPicker, DateRange } from "react-day-picker";
 import "react-day-picker/dist/style.css";
 
 interface CalendarProps {
-  onRangeChange: (startDate: Date, endDate: Date) => void;
+  onRangeChange: (startDate: Date, endDate: Date, isQuickAction?: boolean) => void;
   onClose: () => void;
   initialRange?: { from: Date; to: Date };
 }
+
+const quickActions = [
+  { label: "Last 7 days", days: 7 },
+  { label: "Last 30 days", days: 30 },
+  { label: "Last 90 days", days: 90 },
+];
 
 export default function Calendar({ onRangeChange, onClose, initialRange }: CalendarProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -30,15 +36,25 @@ export default function Calendar({ onRangeChange, onClose, initialRange }: Calen
     if (selected?.from && selected?.to) {
       const start = selected.from < selected.to ? selected.from : selected.to;
       const end = selected.from < selected.to ? selected.to : selected.from;
-      onRangeChange(start, end);
+      // isQuickAction = false → triggers "Custom" label in parent
+      onRangeChange(start, end, false);
     }
+  }
+
+  function handleQuickAction(days: number) {
+    const end = new Date();
+    const start = new Date();
+    start.setDate(end.getDate() - (days - 1));
+    setRange({ from: start, to: end });
+    // isQuickAction = true → does NOT trigger "Custom" label in parent
+    onRangeChange(start, end, true);
   }
 
   return (
     <div
       ref={containerRef}
       className="rounded-xl border border-gray-200 bg-white shadow-xl"
-      style={{ minWidth: "620px" }}
+      style={{ minWidth: "680px" }}
     >
       <style>{`
         .rdp-root {
@@ -71,12 +87,12 @@ export default function Calendar({ onRangeChange, onClose, initialRange }: Calen
           width: 2.25rem !important;
           height: 2.25rem !important;
           font-size: 0.875rem !important;
-          border-radius: 50% !important;
+          border-radius: 0 !important;
         }
         .rdp-selected .rdp-day_button {
           background-color: #1a1a1a !important;
           color: white !important;
-          border-radius: 50% !important;
+          border-radius: 0 !important;
           border: none !important;
         }
         .rdp-range_middle .rdp-day_button {
@@ -88,7 +104,7 @@ export default function Calendar({ onRangeChange, onClose, initialRange }: Calen
         .rdp-range_end .rdp-day_button {
           background-color: #1a1a1a !important;
           color: white !important;
-          border-radius: 50% !important;
+          border-radius: 0 !important;
         }
         .rdp-today .rdp-day_button {
           font-weight: 700 !important;
@@ -101,6 +117,19 @@ export default function Calendar({ onRangeChange, onClose, initialRange }: Calen
           color: #111 !important;
         }
       `}</style>
+
+      {/* Quick action buttons */}
+      <div className="flex gap-2 border-b border-gray-100 px-5 pt-4 pb-3">
+        {quickActions.map(({ label, days }) => (
+          <button
+            key={label}
+            onClick={() => handleQuickAction(days)}
+            className="rounded-md border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-700 transition hover:bg-gray-100"
+          >
+            {label}
+          </button>
+        ))}
+      </div>
 
       <DayPicker
         mode="range"

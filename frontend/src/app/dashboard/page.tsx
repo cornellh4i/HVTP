@@ -15,6 +15,8 @@ const taskIconUpcoming = "https://www.figma.com/api/mcp/asset/abe2f6e2-29bd-4295
 const DEFAULT_START = new Date("2026-02-11");
 const DEFAULT_END = new Date("2026-03-11");
 
+const MAX_BARS = 12;
+
 function formatDateLabel(date: Date): string {
   return date.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
 }
@@ -79,6 +81,7 @@ export default function DashboardPage() {
     from: DEFAULT_START,
     to: DEFAULT_END,
   });
+  const [isCustomRange, setIsCustomRange] = useState(false);
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeMetric, setActiveMetric] = useState<MetricKey>("grossIncome");
@@ -90,9 +93,11 @@ export default function DashboardPage() {
     router.push("/login");
   };
 
-  const handleRangeChange = async (start: Date, end: Date) => {
+  // isQuickAction=true means a preset was used → don't show "Custom"
+  const handleRangeChange = async (start: Date, end: Date, isQuickAction = false) => {
     setCalendarOpen(false);
     setDateRange({ from: start, to: end });
+    setIsCustomRange(!isQuickAction);
   };
 
   useEffect(() => {
@@ -128,6 +133,9 @@ export default function DashboardPage() {
       active = false;
     };
   }, [authLoading, dateRange]);
+
+  const barCount = (metrics?.weeklyData ?? []).length;
+  const tooManyBars = barCount > MAX_BARS;
 
   const chartData = (metrics?.weeklyData ?? []).map((bucket) => {
     const gross = bucket.grossIncome;
@@ -183,10 +191,6 @@ export default function DashboardPage() {
   ];
 
   const graphLabelFormatter = (value: number): string => {
-    if (activeMetric === "weightOfWoolSold") {
-      return new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(value);
-    }
-
     return new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(value);
   };
 
@@ -228,7 +232,12 @@ export default function DashboardPage() {
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="16" viewBox="0 0 14 16" fill="none">
                 <path d="M4.08333 0.5V3.5M9.91667 0.5V3.5M0.5 6.5H13.5M2 2H12C12.8036 2 13.5 2.67645 13.5 3.5V13.5C13.5 14.3236 12.8036 15 12 15H2C1.19645 15 0.5 14.3236 0.5 13.5V3.5C0.5 2.67645 1.19645 2 2 2Z" stroke="white" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
-              <span>{formatDateLabel(dateRange.from)} - {formatDateLabel(dateRange.to)}</span>
+              {/* Show "Custom" when user manually picks a range */}
+              <span>
+                {isCustomRange
+                  ? "Custom"
+                  : `${formatDateLabel(dateRange.from)} - ${formatDateLabel(dateRange.to)}`}
+              </span>
             </button>
 
             {calendarOpen && (
@@ -300,29 +309,45 @@ export default function DashboardPage() {
 
         <div className="overflow-hidden rounded-[8px] border border-[rgba(0,0,0,0.2)] bg-white shadow-none">
           <section className="grid grid-cols-1 gap-px bg-[rgba(0,0,0,0.2)] lg:grid-cols-5">
-            {metricCards.map((item) => (
-              <Card
-                key={item.title}
-                className="cursor-pointer rounded-none border-0 bg-white shadow-none transition hover:bg-[#fafaf7]"
-                onClick={() => setActiveMetric(item.key)}
-              >
-                <CardHeader className={`gap-0 px-3 pb-1 pt-3 ${activeMetric === item.key ? "border-t-4 border-t-[#7f8030]" : "border-t border-t-transparent"}`}>
-                  <CardDescription
-                    className="whitespace-nowrap uppercase text-[14px] font-normal leading-normal text-[rgba(0,0,0,0.6)]"
-                    style={{ fontFamily: "Acumin Pro, sans-serif" }}
+            {metricCards.map((item) => {
+              // Disable metric card selection when bar count exceeds MAX_BARS
+              const isDisabled = tooManyBars;
+              const isActive = activeMetric === item.key;
+
+              return (
+                <Card
+                  key={item.title}
+                  className={`rounded-none border-0 bg-white shadow-none transition ${
+                    isDisabled
+                      ? "cursor-not-allowed opacity-50"
+                      : "cursor-pointer hover:bg-[#fafaf7]"
+                  }`}
+                  onClick={() => {
+                    if (!isDisabled) setActiveMetric(item.key);
+                  }}
+                >
+                  <CardHeader
+                    className={`gap-0 px-3 pb-1 pt-3 ${
+                      isActive && !isDisabled
+                        ? "border-t-4 border-t-[#7f8030]"
+                        : "border-t border-t-transparent"
+                    }`}
                   >
-                    {item.title}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="px-3 pb-3 pt-0">
-                  <CardTitle
-                    className="text-[28px] font-bold tracking-tight text-slate-950 sm:text-[32px]"
-                  >
-                    {item.value}
-                  </CardTitle>
-                </CardContent>
-              </Card>
-            ))}
+                    <CardDescription
+                      className="whitespace-nowrap uppercase text-[14px] font-normal leading-normal text-[rgba(0,0,0,0.6)]"
+                      style={{ fontFamily: "Acumin Pro, sans-serif" }}
+                    >
+                      {item.title}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="px-3 pb-3 pt-0">
+                    <CardTitle className="text-[28px] font-bold tracking-tight text-slate-950 sm:text-[32px]">
+                      {item.value}
+                    </CardTitle>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </section>
 
           <Card className="-mt-px rounded-none border-0 shadow-none">

@@ -5,10 +5,12 @@ import {
 	BarChart,
 	CartesianGrid,
 	LabelList,
-	ResponsiveContainer,
+	ResponsiveContainer as RC,
 	XAxis,
 	YAxis,
 } from "recharts";
+
+const ResponsiveContainer = RC as any;
 
 export type GraphPoint = {
 	label: string;
@@ -88,12 +90,12 @@ export default function Graph({ data, barLabelFormatter }: GraphProps) {
 						<LabelList
 							dataKey="value"
 							position="top"
-							formatter={(value) =>
-								typeof value === "number"
-									? barLabelFormatter
-										? barLabelFormatter(value)
-										: value.toLocaleString("en-US")
-									: `${value ?? ""}`
+							formatter={(value: number | string | undefined) =>
+							typeof value === "number"
+								? barLabelFormatter
+								? barLabelFormatter(value)
+								: value.toLocaleString("en-US")
+								: `${value ?? ""}`
 							}
 						/>
 					</Bar>
