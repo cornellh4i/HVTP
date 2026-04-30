@@ -8,9 +8,8 @@ import { addFarmer } from "@/api/farmers";
 import { uploadItemImage } from "@/lib/uploadImage";
 import EditableField from "@/components/ui/EditableField";
 import SelectField, { SelectOption } from "@/components/ui/selectField";
-import { Upload } from "lucide-react";
-
-// OPTIONS
+import { Upload, X, Plus } from "lucide-react";
+import Image from "next/image";
 
 const GRADE_OPTIONS: SelectOption[] = [
   { label: "Fine", value: "Fine" },
@@ -49,11 +48,9 @@ const STATE_OPTIONS: SelectOption[] = [
   "SD","TN","TX","UT","VT","VA","WA","WV","WI","WY",
 ].map((s) => ({ label: s, value: s }));
 
-// FIELD WRAPPER
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({ label, children, fullWidth = false }: { label: string; children: React.ReactNode; fullWidth?: boolean }) {
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className={`flex flex-col gap-1.5 ${fullWidth ? "w-full" : "w-[75%] md:w-full"} [&_input]:h-[44px] [&_input]:rounded-lg [&_input]:border [&_input]:border-gray-300 [&_input]:px-4 [&_input]:py-3 [&_select]:h-[44px] [&_select]:rounded-lg [&_select]:border [&_select]:border-gray-300 [&_select]:px-4 [&_select]:py-3`}>
       <label className="text-sm text-gray-600">{label}</label>
       {children}
     </div>
@@ -79,14 +76,14 @@ type FarmerFormFields = {
   state: string;
 };
 
-// MAIN COMPONENT
-
 export default function AddForm() {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [images, setImages] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [coverImage, setCoverImage] = useState<string>("");
+  const [showCoverPicker, setShowCoverPicker] = useState(false);
 
   const [itemFields, setItemFields] = useState<ItemFields>({
     breed: "",
@@ -112,6 +109,7 @@ export default function AddForm() {
 
   const setFarmerField = (field: keyof FarmerFormFields) => (val: string) =>
     setFarmerFormFields((prev) => ({ ...prev, [field]: val }));
+
   async function handleFileChange(e: ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? []);
     if (!files.length) return;
@@ -124,7 +122,13 @@ export default function AddForm() {
         const url = await uploadItemImage(file, "temp", images.length + uploaded.length);
         uploaded.push(url);
       }
-      setImages((prev) => [...prev, ...uploaded]);
+      setImages((prev) => {
+        const newImages = [...prev, ...uploaded];
+        if (!coverImage && newImages.length > 0) {
+          setCoverImage(newImages[0]);
+        }
+        return newImages;
+      });
     } catch (err) {
       console.error("Upload failed", err);
     } finally {
@@ -132,6 +136,16 @@ export default function AddForm() {
       e.target.value = "";
     }
   }
+
+  const removeImage = (index: number) => {
+    setImages((prev) => {
+      const newImages = prev.filter((_, i) => i !== index);
+      if (coverImage === prev[index]) {
+        setCoverImage(newImages[0] ?? "");
+      }
+      return newImages;
+    });
+  };
 
   const handleAddLot = async () => {
     try {
@@ -142,7 +156,7 @@ export default function AddForm() {
         weight: itemFields.weight ? parseFloat(itemFields.weight) : undefined,
         purchasePrice: itemFields.purchasePrice ? parseFloat(itemFields.purchasePrice) : undefined,
         images,
-        coverImage: images[0] ?? "",
+        coverImage: coverImage || images[0] || "",
         name: itemFields.breed || "Unnamed Lot",
         farmerId: farmer.id,
         isActive: true,
@@ -161,10 +175,8 @@ export default function AddForm() {
   };
 
   return (
-    <main className="min-h-screen bg-white p-8">
-
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+    <main className="min-h-screen bg-white px-4 py-6 md:p-8">
+      <div className="flex items-center justify-between mb-6 md:mb-6">
         <Link
           href="/inventory"
           className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900"
@@ -174,25 +186,22 @@ export default function AddForm() {
         <button
           onClick={handleAddLot}
           disabled={loading}
-          className="rounded bg-gray-900 px-4 py-1.5 text-sm text-white hover:bg-gray-700 disabled:opacity-50"
+          className="hidden md:block rounded bg-gray-900 px-4 py-1.5 text-sm text-white hover:bg-gray-700 disabled:opacity-50"
         >
           {loading ? "Adding..." : "Add Lot"}
         </button>
       </div>
 
-      {/* SKU */}
-      <div className="mb-6">
+      <div className="mb-6 hidden md:block">
         <p className="text-base font-semibold text-gray-900">SKU: ##-#-#-####-###</p>
         <p className="text-xs text-gray-400">(Automatically generated)</p>
       </div>
-      <div className="grid grid-cols-[1fr_380px] gap-12 items-start">
 
-        {/* LEFT */}
-        <div className="flex flex-col gap-10">
-
+      <div className="grid grid-cols-1 md:grid-cols-[1fr_380px] gap-6 md:gap-12 items-start">
+        <div className="flex flex-col gap-6 md:gap-10">
           <section>
-            <h2 className="text-2xl font-bold mb-5">General Information</h2>
-            <div className="grid grid-cols-2 gap-x-6 gap-y-5">
+            <h2 className="text-lg font-bold mb-4 md:text-2xl md:mb-5">General Information</h2>
+            <div className="flex flex-col gap-5 md:grid md:grid-cols-2 md:gap-x-6 md:gap-y-5">
               <Field label="Breed">
                 <EditableField isEditing value={itemFields.breed} placeholder="Breed" onChange={setItem("breed")} />
               </Field>
@@ -202,8 +211,11 @@ export default function AddForm() {
               <Field label="Color">
                 <SelectField value={itemFields.color} onChange={setItem("color")} options={COLOR_OPTIONS} placeholder="Color" />
               </Field>
-              <Field label="Quantity (lb)">
-                <EditableField isEditing value={itemFields.weight} placeholder="Weight" onChange={setItem("weight")} />
+              <Field label="Weight (lb)">
+                <EditableField isEditing value={itemFields.weight} placeholder="Weight (lb)" onChange={setItem("weight")} />
+              </Field>
+              <Field label="Pallet Location">
+                <EditableField isEditing value={itemFields.palletLocation} placeholder="Pallet Number" onChange={setItem("palletLocation")} />
               </Field>
               <Field label="Status">
                 <SelectField value={itemFields.status} onChange={setItem("status")} options={STATUS_OPTIONS} placeholder="Status" />
@@ -211,20 +223,20 @@ export default function AddForm() {
               <Field label="Type">
                 <SelectField value={itemFields.type} onChange={setItem("type")} options={TYPE_OPTIONS} placeholder="Type" />
               </Field>
-              <Field label="Pallet Location">
-                <EditableField isEditing value={itemFields.palletLocation} placeholder="Pallet Number" onChange={setItem("palletLocation")} />
-              </Field>
             </div>
           </section>
 
+          <div className="md:hidden">
+            <Field label="Notes" fullWidth>
+              <EditableField isEditing value={itemFields.notes} placeholder="Notes" multiline onChange={setItem("notes")} />
+            </Field>
+          </div>
+
           <section>
-            <h2 className="text-2xl font-bold mb-5">Purchase Information</h2>
-            <div className="grid grid-cols-2 gap-x-6 gap-y-5">
+            <h2 className="text-lg font-bold mb-4 md:text-2xl md:mb-5">Purchase Information</h2>
+            <div className="flex flex-col gap-5 md:grid md:grid-cols-2 md:gap-x-6 md:gap-y-5">
               <Field label="Farmer Name">
                 <EditableField isEditing value={farmerFormFields.name} placeholder="Name" onChange={setFarmerField("name")} />
-              </Field>
-              <Field label="Shear Date">
-                <EditableField isEditing value={itemFields.shearDate} placeholder="MM/DD/YYYY" onChange={setItem("shearDate")} />
               </Field>
               <Field label="Farmer City">
                 <EditableField isEditing value={farmerFormFields.city} placeholder="City" onChange={setFarmerField("city")} />
@@ -232,15 +244,103 @@ export default function AddForm() {
               <Field label="Farmer State">
                 <SelectField value={farmerFormFields.state} onChange={setFarmerField("state")} options={STATE_OPTIONS} placeholder="State" />
               </Field>
-              <Field label="Intake Price ($/lb)">
+              <Field label="Shear Date">
+                <input
+                  type="date"
+                  className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm h-[44px]"
+                  value={itemFields.shearDate}
+                  onChange={(e) => setItem("shearDate")(e.target.value)}
+                />
+              </Field>
+              <Field label="Purchase Price ($/lb)">
                 <EditableField isEditing value={itemFields.purchasePrice} placeholder="Price" onChange={setItem("purchasePrice")} />
               </Field>
             </div>
           </section>
+
+          <div className="md:hidden pb-4">
+            <input
+              ref={inputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              multiple
+              disabled={uploading || images.length >= 3}
+              onChange={handleFileChange}
+              className="hidden"
+            />
+
+            {images.length === 0 ? (
+              <button
+                type="button"
+                disabled={uploading}
+                onClick={() => inputRef.current?.click()}
+                className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-[#646D72] px-4 py-3 text-sm text-white hover:bg-[#545c60] disabled:opacity-50"
+              >
+                <Upload className="h-4 w-4" />
+                {uploading ? "Uploading..." : "Upload photos"}
+              </button>
+            ) : (
+              <div className="mb-4">
+                <p className="text-sm font-semibold text-gray-900 mb-2">Photos</p>
+                <div className="flex items-center gap-3">
+                  {images.map((img, i) => (
+                    <div key={i} className="relative w-16 h-16">
+                      <Image
+                        src={img}
+                        alt={`Photo ${i + 1}`}
+                        fill
+                        className="object-cover rounded-md"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeImage(i)}
+                        className="absolute -top-1.5 -right-1.5 bg-gray-600 rounded-full p-0.5"
+                      >
+                        <X className="h-3 w-3 text-white" />
+                      </button>
+                    </div>
+                  ))}
+                  {images.length < 3 && (
+                    <button
+                      type="button"
+                      disabled={uploading}
+                      onClick={() => inputRef.current?.click()}
+                      className="w-16 h-16 rounded-md border-2 border-dashed border-gray-300 flex items-center justify-center hover:border-gray-400 disabled:opacity-50"
+                    >
+                      <Plus className="h-5 w-5 text-gray-400" />
+                    </button>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowCoverPicker(true)}
+                  className="mt-3 inline-flex items-center gap-2 rounded border px-4 py-2 text-sm hover:bg-gray-50"
+                >
+                  Set cover photo
+                </button>
+              </div>
+            )}
+
+            <div className="flex flex-col gap-2 mt-8">
+              <button
+                onClick={handleAddLot}
+                disabled={loading}
+                className="w-full rounded-lg bg-[#9F9E97] px-4 py-3 text-sm text-white hover:bg-[#8a897e] disabled:opacity-50"
+              >
+                {loading ? "Publishing..." : "Publish"}
+              </button>
+              <button
+                onClick={handleAddLot}
+                disabled={loading}
+                className="w-full rounded-lg bg-[#2C2C2C] px-4 py-3 text-sm text-white hover:bg-[#1A1A1A] disabled:opacity-50"
+              >
+                {loading ? "Saving..." : "Save"}
+              </button>
+            </div>
+          </div>
         </div>
 
-        {/* RIGHT */}
-        <div className="flex flex-col gap-4">
+        <div className="hidden md:flex flex-col gap-4">
           <div>
             <input
               ref={inputRef}
@@ -265,11 +365,71 @@ export default function AddForm() {
             )}
           </div>
 
-          <Field label="Notes">
+          <Field label="Notes" fullWidth>
             <EditableField isEditing value={itemFields.notes} placeholder="Notes" multiline onChange={setItem("notes")} />
           </Field>
         </div>
       </div>
+
+      {showCoverPicker && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="relative w-[90%] max-w-[520px] max-h-[90vh] overflow-y-auto rounded-lg border border-gray-200 bg-white p-6 shadow-xl">
+            <button
+              onClick={() => setShowCoverPicker(false)}
+              className="absolute right-4 top-4 text-gray-400 hover:text-gray-600"
+            >
+              <X className="h-4 w-4" />
+            </button>
+
+            <h2 className="mb-5 text-base font-semibold text-gray-900">
+              Set cover photo
+            </h2>
+
+            <div className="grid grid-cols-2 gap-3 mb-6">
+              {images.map((url, idx) => {
+                const isSelected = url === coverImage;
+                return (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => setCoverImage(url)}
+                    className={`relative aspect-[4/3] overflow-hidden rounded-lg border-2 transition-colors ${
+                      isSelected
+                        ? "border-blue-600"
+                        : "border-gray-200 hover:border-gray-400"
+                    }`}
+                  >
+                    <Image
+                      src={url}
+                      alt={`Photo ${idx + 1}`}
+                      fill
+                      className="object-cover"
+                    />
+                    <span
+                      className={`absolute left-2 top-2 flex h-4 w-4 items-center justify-center rounded-full border-2 bg-white ${
+                        isSelected ? "border-blue-600" : "border-gray-400"
+                      }`}
+                    >
+                      {isSelected && (
+                        <span className="h-2 w-2 rounded-full bg-blue-600" />
+                      )}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="flex justify-end">
+              <button
+                onClick={() => setShowCoverPicker(false)}
+                className="rounded bg-gray-900 px-5 py-2 text-sm text-white hover:bg-gray-700"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
