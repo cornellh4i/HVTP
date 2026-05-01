@@ -5,10 +5,12 @@ import {
 	BarChart,
 	CartesianGrid,
 	LabelList,
-	ResponsiveContainer,
+	ResponsiveContainer as RC,
 	XAxis,
 	YAxis,
 } from "recharts";
+
+const ResponsiveContainer = RC as any;
 
 export type GraphPoint = {
 	label: string;
@@ -20,8 +22,8 @@ type GraphProps = {
 	barLabelFormatter?: (value: number) => string;
 };
 
-const Y_AXIS_STEP = 10000;
-const MIN_VISIBLE_TICK = 50000;
+const TARGET_Y_AXIS_STEPS = 4;
+const Y_AXIS_PADDING_RATIO = 1.08;
 
 function formatYAxisTick(value: number): string {
 	if (value === 0) {
@@ -31,24 +33,46 @@ function formatYAxisTick(value: number): string {
 	return `${value / 1000}k`;
 }
 
-function getYAxisTicks(maxValue: number): number[] {
-	const topTick = Math.max(MIN_VISIBLE_TICK, Math.floor(maxValue / Y_AXIS_STEP) * Y_AXIS_STEP);
+
+function niceNumber(value: number): number {
+	if (value <= 0) {
+		return 1;
+	}
+
+	const exponent = Math.floor(Math.log10(value));
+	const fraction = value / 10 ** exponent;
+
+	if (fraction <= 1) {
+		return 1 * 10 ** exponent;
+	}
+
+	if (fraction <= 2) {
+		return 2 * 10 ** exponent;
+	}
+
+	if (fraction <= 5) {
+		return 5 * 10 ** exponent;
+	}
+
+	return 10 ** (exponent + 1);
+}
+
+function getYAxisScale(maxValue: number): { topValue: number; step: number; ticks: number[] } {
+	const paddedMax = Math.max(maxValue * Y_AXIS_PADDING_RATIO, 1);
+	const step = niceNumber(paddedMax / TARGET_Y_AXIS_STEPS);
+	const topValue = Math.max(step, Math.ceil(paddedMax / step) * step);
 	const ticks: number[] = [];
 
-	for (let tick = 0; tick <= topTick; tick += Y_AXIS_STEP) {
+	for (let tick = 0; tick <= topValue; tick += step) {
 		ticks.push(tick);
 	}
 
-	return ticks;
+	return { topValue, step, ticks };
 }
 
 export default function Graph({ data, barLabelFormatter }: GraphProps) {
 	const maxValue = Math.max(...data.map((entry) => entry.value), 0);
-	const yAxisMax = Math.max(
-		Math.max(MIN_VISIBLE_TICK, Math.ceil(maxValue / Y_AXIS_STEP) * Y_AXIS_STEP),
-		maxValue * 1.1,
-	);
-	const yAxisTicks = getYAxisTicks(maxValue);
+	const { topValue: yAxisMax, ticks: yAxisTicks } = getYAxisScale(maxValue);
 
 	return (
 		<div className="h-[430px] w-full">
@@ -75,25 +99,25 @@ export default function Graph({ data, barLabelFormatter }: GraphProps) {
 					<YAxis
 						axisLine={false}
 						tickLine={false}
-						width={28}
+						width={56}
 						domain={[0, yAxisMax]}
 						ticks={yAxisTicks}
 						tickFormatter={formatYAxisTick}
-						tick={{ fill: "#5d5d5d", fontSize: 14, textAnchor: "start" }}
-						tickMargin={0}
-						dx={-16}
+						tick={{ fill: "#5d5d5d", fontSize: 14, textAnchor: "end" }}
+						tickMargin={10}
+						dx={0}
 					/>
 
 					<Bar dataKey="value" fill="url(#gross-income-gradient)" barSize={140} radius={0}>
 						<LabelList
 							dataKey="value"
 							position="top"
-							formatter={(value) =>
-								typeof value === "number"
-									? barLabelFormatter
-										? barLabelFormatter(value)
-										: value.toLocaleString("en-US")
-									: `${value ?? ""}`
+							formatter={(value: any) =>
+							typeof value === "number"
+								? barLabelFormatter
+								? barLabelFormatter(value)
+								: value.toLocaleString("en-US")
+								: `${value ?? ""}`
 							}
 						/>
 					</Bar>

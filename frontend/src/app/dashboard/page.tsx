@@ -9,11 +9,13 @@ import { getDashboardMetrics, DashboardMetrics } from "@/api/dashboard";
 import Graph from "@/components/Dashboard/Graph/graph";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-const taskIconChecked = "https://www.figma.com/api/mcp/asset/1988d384-b7b8-4e1b-a6ec-ed8b4ba95283";
-const taskIconUpcoming = "https://www.figma.com/api/mcp/asset/abe2f6e2-29bd-4295-b31b-64a7dfa58391";
+const taskIconEmpty = "https://www.figma.com/api/mcp/asset/200f9e41-1e8c-43c7-81ed-51961d41f553";
+const taskIconChecked = "https://www.figma.com/api/mcp/asset/e5d0e84b-48df-4f46-84b3-1dfdc5d3b42f";
 
 const DEFAULT_START = new Date("2026-02-11");
 const DEFAULT_END = new Date("2026-03-11");
+
+const MAX_BARS = 12;
 
 function formatDateLabel(date: Date): string {
   return date.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
@@ -33,7 +35,7 @@ function formatWeight(value: number): string {
 
 type MetricKey = "grossIncome" | "profit" | "totalCost" | "weightOfWoolSold" | "inventoryCost";
 
-const INVENTORY_COST = 10400;
+const INVENTORY_COST = 20000;
 
 function getMetricTitle(metric: MetricKey): string {
   if (metric === "grossIncome") return "Gross Income";
@@ -43,7 +45,7 @@ function getMetricTitle(metric: MetricKey): string {
   return "Inventory Cost";
 }
 
-const tasks = [
+const initialTasks = [
   {
     date: "Mar. 10",
     lot: "Lot #39",
@@ -79,10 +81,12 @@ export default function DashboardPage() {
     from: DEFAULT_START,
     to: DEFAULT_END,
   });
+  const [isCustomRange, setIsCustomRange] = useState(false);
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeMetric, setActiveMetric] = useState<MetricKey>("grossIncome");
   const [activeTaskTab, setActiveTaskTab] = useState<"tasks" | "upcoming">("tasks");
+  const [tasks, setTasks] = useState(initialTasks);
 
   const handleSignOut = async () => {
     document.cookie = "session=; path=/; max-age=0";
@@ -90,9 +94,19 @@ export default function DashboardPage() {
     router.push("/login");
   };
 
-  const handleRangeChange = async (start: Date, end: Date) => {
+  // isQuickAction=true means a preset was used → don't show "Custom"
+  const handleRangeChange = async (start: Date, end: Date, isQuickAction = false) => {
     setCalendarOpen(false);
     setDateRange({ from: start, to: end });
+    setIsCustomRange(!isQuickAction);
+  };
+
+  const handleToggleTask = (taskIndex: number) => {
+    setTasks((prevTasks) =>
+      prevTasks.map((task, index) =>
+        index === taskIndex ? { ...task, completed: !task.completed } : task
+      )
+    );
   };
 
   useEffect(() => {
@@ -128,6 +142,9 @@ export default function DashboardPage() {
       active = false;
     };
   }, [authLoading, dateRange]);
+
+  const barCount = (metrics?.weeklyData ?? []).length;
+  const tooManyBars = barCount > MAX_BARS;
 
   const chartData = (metrics?.weeklyData ?? []).map((bucket) => {
     const gross = bucket.grossIncome;
@@ -183,14 +200,15 @@ export default function DashboardPage() {
   ];
 
   const graphLabelFormatter = (value: number): string => {
-    if (activeMetric === "weightOfWoolSold") {
-      return new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(value);
-    }
-
     return new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(value);
   };
 
   const visibleTasks = activeTaskTab === "tasks" ? tasks : tasks.filter((task) => !task.completed);
+
+  const visibleTasksWithIndex = visibleTasks.map((task) => ({
+    ...task,
+    originalIndex: tasks.findIndex((t) => t.date === task.date && t.lot === task.lot && t.suffix === task.suffix),
+  }));
 
   if (authLoading) {
     return (
@@ -228,7 +246,12 @@ export default function DashboardPage() {
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="16" viewBox="0 0 14 16" fill="none">
                 <path d="M4.08333 0.5V3.5M9.91667 0.5V3.5M0.5 6.5H13.5M2 2H12C12.8036 2 13.5 2.67645 13.5 3.5V13.5C13.5 14.3236 12.8036 15 12 15H2C1.19645 15 0.5 14.3236 0.5 13.5V3.5C0.5 2.67645 1.19645 2 2 2Z" stroke="white" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
-              <span>{formatDateLabel(dateRange.from)} - {formatDateLabel(dateRange.to)}</span>
+              {/* Show "Custom" when user manually picks a range */}
+              <span>
+                {isCustomRange
+                  ? "Custom"
+                  : `${formatDateLabel(dateRange.from)} - ${formatDateLabel(dateRange.to)}`}
+              </span>
             </button>
 
             {calendarOpen && (
@@ -250,7 +273,7 @@ export default function DashboardPage() {
                 <button
                   type="button"
                   onClick={() => setActiveTaskTab("tasks")}
-                  className={`flex items-center justify-center px-1.5 py-2 ${activeTaskTab === "tasks" ? "border-b-2 border-black" : "border-b-2 border-transparent"}`}
+                  className={`flex items-center justify-center border-t-4 px-1.5 py-2 ${activeTaskTab === "tasks" ? "border-b-2 border-black border-t-transparent" : "border-b-2 border-transparent border-t-transparent"}`}
                 >
                   <p className={`whitespace-nowrap text-[16px] leading-normal ${activeTaskTab === "tasks" ? "font-bold text-black" : "font-normal text-[rgba(0,0,0,0.6)]"}`} style={{ fontFamily: "Acumin Pro, sans-serif" }}>
                     Tasks
@@ -259,7 +282,7 @@ export default function DashboardPage() {
                 <button
                   type="button"
                   onClick={() => setActiveTaskTab("upcoming")}
-                  className={`flex items-center justify-center px-1.5 py-2 ${activeTaskTab === "upcoming" ? "border-b-2 border-black" : "border-b-2 border-transparent"}`}
+                  className={`flex items-center justify-center border-t-4 px-1.5 py-2 ${activeTaskTab === "upcoming" ? "border-b-2 border-black border-t-transparent" : "border-b-2 border-transparent border-t-transparent"}`}
                 >
                   <p className={`whitespace-nowrap text-[16px] leading-normal ${activeTaskTab === "upcoming" ? "font-bold text-black" : "font-normal text-[rgba(0,0,0,0.6)]"}`} style={{ fontFamily: "Acumin Pro, sans-serif" }}>
                     Upcoming
@@ -268,28 +291,32 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <div className="flex flex-col gap-3">
-              {visibleTasks.map((task, index) => {
-                const icon = task.completed ? taskIconUpcoming : taskIconChecked;
-                const dateClass = task.completed ? "text-[rgba(0,0,0,0.5)]" : "text-black";
-                const textClass = task.completed ? "text-[rgba(0,0,0,0.5)] line-through" : "text-black";
+            <div className="flex flex-col gap-2">
+              {visibleTasksWithIndex.map(({ date, lot, suffix, completed, originalIndex }, index) => {
+                const icon = completed ? taskIconChecked : taskIconEmpty;
+                const dateClass = completed ? "text-[rgba(0,0,0,0.5)]" : "text-black";
+                const textClass = completed ? "[text-decoration-skip-ink:none] decoration-solid line-through text-black" : "text-black";
 
                 return (
-                  <div key={`${task.date}-${task.lot}-${index}`} className="flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-6">
-                      <div className="relative h-6 w-6 shrink-0 overflow-hidden">
+                  <div
+                    key={`${date}-${lot}-${index}`}
+                    onClick={() => handleToggleTask(originalIndex)}
+                    className="flex cursor-pointer items-center justify-between gap-4 rounded-md px-2 py-1.5 transition hover:bg-[rgba(0,0,0,0.02)]"
+                  >
+                    <div className="flex items-center gap-[24px]">
+                      <div className="relative size-[24px] shrink-0 overflow-clip">
                         <div className="absolute inset-[12.5%_12.5%_0.78%_12.5%]">
-                          <img alt="" className="block size-full max-w-none" src={icon} />
+                          <img alt="" className="absolute block inset-0 max-w-none size-full" src={icon} />
                         </div>
                       </div>
                       <p className={`whitespace-nowrap text-[15px] font-normal leading-normal ${dateClass}`} style={{ fontFamily: "Acumin Pro, sans-serif" }}>
-                        {task.date}
+                        {date}
                       </p>
                     </div>
 
                     <p className={`whitespace-nowrap text-[15px] font-normal leading-normal ${textClass}`} style={{ fontFamily: "Acumin Pro, sans-serif" }}>
-                      <span className="underline decoration-solid [text-decoration-skip-ink:none]">{task.lot}</span>
-                      <span>{task.suffix}</span>
+                      <span className="[text-decoration-skip-ink:none] decoration-solid underline">{lot}</span>
+                      <span>{suffix}</span>
                     </p>
                   </div>
                 );
@@ -300,29 +327,49 @@ export default function DashboardPage() {
 
         <div className="overflow-hidden rounded-[8px] border border-[rgba(0,0,0,0.2)] bg-white shadow-none">
           <section className="grid grid-cols-1 gap-px bg-[rgba(0,0,0,0.2)] lg:grid-cols-5">
-            {metricCards.map((item) => (
-              <Card
-                key={item.title}
-                className="cursor-pointer rounded-none border-0 bg-white shadow-none transition hover:bg-[#fafaf7]"
-                onClick={() => setActiveMetric(item.key)}
-              >
-                <CardHeader className={`gap-0 px-3 pb-1 pt-3 ${activeMetric === item.key ? "border-t-4 border-t-[#7f8030]" : "border-t border-t-transparent"}`}>
-                  <CardDescription
-                    className="whitespace-nowrap uppercase text-[14px] font-normal leading-normal text-[rgba(0,0,0,0.6)]"
-                    style={{ fontFamily: "Acumin Pro, sans-serif" }}
+            {metricCards.map((item) => {
+              // Disable metric card selection when bar count exceeds MAX_BARS
+              const isDisabled = tooManyBars;
+              const isActive = activeMetric === item.key;
+
+              return (
+                <Card
+                  key={item.title}
+                  className={`relative overflow-hidden rounded-none border-0 bg-white shadow-none transition ${
+                    isDisabled
+                      ? "cursor-not-allowed opacity-50"
+                      : isActive
+                          ? "z-10 cursor-default -mb-px border-b border-b-white hover:bg-white hover:shadow-none"
+                        : "group cursor-pointer border-b border-b-[rgba(0,0,0,0.2)] hover:bg-[#fafaf7]"
+                  }`}
+                  onClick={() => {
+                    if (!isDisabled) setActiveMetric(item.key);
+                  }}
+                >
+                  {!isActive && !isDisabled && (
+                    <div className="absolute left-0 top-0 h-1 w-full bg-[#7f8030] opacity-0 transition-opacity group-hover:opacity-100" />
+                  )}
+                  {isActive && !isDisabled && (
+                    <div className="absolute left-0 top-0 h-1 w-full bg-[#7f8030]" />
+                  )}
+                  <CardHeader
+                    className="gap-0 px-3 pb-1 pt-4"
                   >
-                    {item.title}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="px-3 pb-3 pt-0">
-                  <CardTitle
-                    className="text-[28px] font-bold tracking-tight text-slate-950 sm:text-[32px]"
-                  >
-                    {item.value}
-                  </CardTitle>
-                </CardContent>
-              </Card>
-            ))}
+                    <CardDescription
+                      className="whitespace-nowrap uppercase text-[14px] font-normal leading-normal text-[rgba(0,0,0,0.6)]"
+                      style={{ fontFamily: "Acumin Pro, sans-serif" }}
+                    >
+                      {item.title}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="px-3 pb-4 pt-0">
+                    <CardTitle className="text-[28px] font-bold tracking-tight text-slate-950 sm:text-[32px]">
+                      {item.value}
+                    </CardTitle>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </section>
 
           <Card className="-mt-px rounded-none border-0 shadow-none">
