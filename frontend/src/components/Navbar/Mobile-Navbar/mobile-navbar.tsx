@@ -14,17 +14,7 @@ const navItems = [
     title: "Scan",
     href: "#",
     icon: ScanLine,
-  },
-  {
-    title: "Sales",
-    href: "/transactions",
-    icon: ArrowLeftRight,
-  },
-  {
-    title: "Archive",
-    href: "/archive",
-    icon: ArchiveX,
-  },
+  }
 ];
 
 export default function MobileNavbar() {

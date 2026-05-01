@@ -54,9 +54,10 @@ export default function LayoutWrapper({ children }: LayoutWrapperProps) {
       <SidebarInset>
         <div className="pb-24 md:pb-0">{children}</div>
       </SidebarInset>
-      <div className="md:hidden">
+      {/* Temp disabled mobile navbar */}
+      {/* <div className="md:hidden">
         <MobileNavbar />
-      </div>
+      </div> */}
     </SidebarProvider>
   );
 }
