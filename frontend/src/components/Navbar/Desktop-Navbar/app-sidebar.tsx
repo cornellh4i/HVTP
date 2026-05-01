@@ -37,12 +37,11 @@ export default function AppSidebar() {
       title: 'Inventory',
       url: '/inventory',
       icon: <Home className="h-4 w-4" />,
-    }, 
-    { 
+    },
+    {
       title: 'Transactions',
       url: '/transactions',
-
-      icon: <ArrowLeftRight className='h-4 w-4' />
+      icon: <ArrowLeftRight className="h-4 w-4" />,
     }
   ];
 

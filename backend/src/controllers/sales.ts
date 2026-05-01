@@ -1,5 +1,7 @@
 import { Request, Response } from "express";
 import { SaleInsert, SaleUpdate } from "../models/sales";
+import { ItemInsert } from "../models/item";
+import { FarmerInsert } from "../models/farmer";
 import { getDb } from "../config/firebase";
 import { successJson, errorJson } from "../utils/jsonResponses";
 
@@ -8,10 +10,51 @@ const db = getDb();
 export const getAllSales = async (req: Request, res: Response) => {
   try {
     const snapshot = await db.collection("sales").get();
-    const sales = snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...(doc.data() as SaleInsert),
-    }));
+    const sales = await Promise.all(
+      snapshot.docs.map(async (doc) => {
+        const sale = doc.data() as SaleInsert;
+        const joinedFields: Record<string, unknown> = {};
+
+        if (sale.itemId) {
+          const itemDoc = await db.collection("items").doc(sale.itemId).get();
+
+          if (itemDoc.exists) {
+            const item = itemDoc.data() as ItemInsert;
+            Object.assign(joinedFields, {
+              itemName: item.name,
+              sku: item.sku,
+              breed: item.breed,
+              grade: item.grade,
+              color: item.color,
+              status: item.status,
+              isPublic: item.isPublic,
+              itemWeight: item.weight,
+              purchasePrice: item.purchasePrice,
+              farmerId: item.farmerId,
+            });
+
+            if (item.farmerId) {
+              const farmerDoc = await db.collection("farmers").doc(item.farmerId).get();
+
+              if (farmerDoc.exists) {
+                const farmer = farmerDoc.data() as FarmerInsert;
+                Object.assign(joinedFields, {
+                  farmerName: farmer.name,
+                  farmerCity: farmer.city,
+                  farmerState: farmer.state,
+                });
+              }
+            }
+          }
+        }
+
+        return {
+          id: doc.id,
+          ...sale,
+          ...joinedFields,
+        };
+      })
+    );
     res.status(200).json(successJson(sales));
   } catch {
     res.status(500).json(errorJson("Error fetching sales"));
