@@ -9,9 +9,10 @@ type Props = {
   sku: string;
   existingImages: string[];
   onImagesChange: (images: string[]) => void;
+  hidePreview?: boolean;
 };
 
-export default function ItemImageUpload({ sku, existingImages, onImagesChange }: Props) {
+export default function ItemImageUpload({ sku, existingImages, onImagesChange, hidePreview = false }: Props) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -70,30 +71,32 @@ export default function ItemImageUpload({ sku, existingImages, onImagesChange }:
       />
 
       {/* Cover / main preview — clicking opens picker when empty */}
-      <div
-        className="relative w-full aspect-[4/3] rounded-lg border border-dashed border-gray-300 bg-gray-50 overflow-hidden flex items-center justify-center cursor-pointer hover:bg-gray-100 transition-colors"
-        onClick={() => !coverImage && inputRef.current?.click()}
-      >
-        {coverImage ? (
-          <>
-            <Image src={coverImage} alt="Cover image" fill className="object-cover" />
-            {activeIndex === 0 && (
-              <span className="absolute top-2 left-2 rounded bg-gray-900/70 px-2 py-0.5 text-[11px] text-white">
-                Cover Photo
-              </span>
-            )}
-          </>
-        ) : (
-          <ImageIcon className="w-14 h-14 text-gray-300" />
-        )}
-      </div>
+      {!hidePreview && (
+        <div
+          className="relative w-full aspect-3/4 md:aspect-4/3 rounded-lg border border-dashed border-gray-300 bg-gray-50 overflow-hidden flex items-center justify-center cursor-pointer hover:bg-gray-100 transition-colors"
+          onClick={() => !coverImage && inputRef.current?.click()}
+        >
+          {coverImage ? (
+            <>
+              <Image src={coverImage} alt="Cover image" fill className="object-cover" />
+              {activeIndex === 0 && (
+                <span className="absolute top-2 left-2 rounded bg-gray-900/70 px-2 py-0.5 text-[11px] text-white">
+                  Cover Photo
+                </span>
+              )}
+            </>
+          ) : (
+            <ImageIcon className="w-14 h-14 text-gray-300" />
+          )}
+        </div>
+      )}
 
       {/* Horizontal scrollable thumbnail strip */}
       <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-thin scrollbar-thumb-gray-200">
         {existingImages.map((src, idx) => (
           <div
             key={idx}
-            className={`group relative flex-shrink-0 w-16 h-16 rounded-md border-2 overflow-hidden cursor-pointer transition-colors ${
+            className={`group relative flex-shrink-0 w-20 h-28 md:w-16 md:h-16 rounded-md border-2 overflow-hidden cursor-pointer transition-colors ${
               idx === activeIndex ? "border-gray-900" : "border-gray-200 hover:border-gray-400"
             }`}
             onClick={() => setActiveIndex(idx)}
@@ -115,7 +118,7 @@ export default function ItemImageUpload({ sku, existingImages, onImagesChange }:
           type="button"
           disabled={isUploading}
           onClick={() => inputRef.current?.click()}
-          className="flex-shrink-0 w-16 h-16 rounded-md border border-dashed border-gray-300 bg-gray-50 flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-600 disabled:opacity-50 transition-colors text-2xl leading-none"
+          className="flex-shrink-0 w-20 h-28 md:w-16 md:h-16 rounded-md border border-dashed border-gray-300 bg-gray-50 flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-600 disabled:opacity-50 transition-colors text-2xl leading-none"
           aria-label="Add photos"
         >
           {isUploading ? <span className="text-xs">…</span> : <span className="mb-0.5">+</span>}

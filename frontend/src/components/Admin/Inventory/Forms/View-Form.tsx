@@ -95,14 +95,12 @@ const STATE_OPTIONS: SelectOption[] = [
 function Field({
   label,
   children,
-  fullWidth = false,
 }: {
   label: string;
   children: React.ReactNode;
-  fullWidth?: boolean;
 }) {
   return (
-    <div className={`flex flex-col gap-1.5 ${fullWidth ? "w-full" : "w-[75%] md:w-full"} [&_input]:h-[44px] [&_input]:rounded-lg [&_input]:border [&_input]:border-gray-300 [&_input]:px-4 [&_input]:py-3 [&_select]:h-[44px] [&_select]:rounded-lg [&_select]:border [&_select]:border-gray-300 [&_select]:px-4 [&_select]:py-3`}>
+    <div className="flex flex-col gap-1.5 w-full [&_input]:h-[44px] [&_input]:rounded-lg [&_input]:border [&_input]:border-gray-300 [&_input]:px-4 [&_input]:py-3 [&_select]:h-[44px] [&_select]:rounded-lg [&_select]:border [&_select]:border-gray-300 [&_select]:px-4 [&_select]:py-3">
       <label className="text-sm text-gray-600">{label}</label>
       {children}
     </div>
@@ -236,8 +234,27 @@ export default function ViewForm() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-[1fr_380px] gap-6 md:gap-12 items-start">
+      <div className="grid grid-cols-1 md:grid-cols-[1fr_380px] gap-6 md:gap-12">
         <div className="flex flex-col gap-6 md:gap-10">
+          <div className="md:hidden">
+            <p className="text-sm font-semibold text-gray-900 mb-2">Photos</p>
+            <ItemImageUpload
+              sku={item.sku}
+              existingImages={images}
+              onImagesChange={setImages}
+              hidePreview
+            />
+            {images.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setShowCoverModal(true)}
+                className="mt-3 inline-flex items-center gap-2 rounded border px-4 py-2 text-sm hover:bg-gray-50 w-fit"
+              >
+                Set cover photo
+              </button>
+            )}
+          </div>
+
           <section>
             <h2 className="text-lg font-bold mb-4 md:text-2xl md:mb-5">
               General Information
@@ -303,7 +320,7 @@ export default function ViewForm() {
           </section>
 
           <div className="md:hidden">
-            <Field label="Notes" fullWidth>
+            <Field label="Notes">
               <EditableField
                 isEditing
                 value={formData.notes ?? ""}
@@ -321,25 +338,26 @@ export default function ViewForm() {
             <div className="flex flex-col gap-5 md:grid md:grid-cols-2 md:gap-x-6 md:gap-y-5">
               <Field label="Farmer Name">
                 <EditableField
-                  isEditing={false}
+                  isEditing
                   value={formData.farmerName ?? ""}
                   placeholder="Name"
+                  onChange={set("farmerName")}
                 />
               </Field>
               <Field label="Farmer City">
                 <EditableField
-                  isEditing={false}
+                  isEditing
                   value={formData.farmerCity ?? ""}
                   placeholder="City"
+                  onChange={set("farmerCity")}
                 />
               </Field>
               <Field label="Farmer State">
                 <SelectField
                   value={formData.farmerState ?? ""}
-                  onChange={() => {}}
+                  onChange={set("farmerState")}
                   options={STATE_OPTIONS}
                   placeholder="State"
-                  disabled
                 />
               </Field>
               <Field label="Shear Date">
@@ -362,26 +380,7 @@ export default function ViewForm() {
           </section>
 
           <div className="md:hidden pb-4">
-            <div className="mb-4">
-              <p className="text-sm font-semibold text-gray-900 mb-2">Photos</p>
-              <ItemImageUpload
-                sku={item.sku}
-                existingImages={images}
-                onImagesChange={setImages}
-              />
-            </div>
-
-            {images.length > 0 && (
-              <button
-                type="button"
-                onClick={() => setShowCoverModal(true)}
-                className="inline-flex items-center gap-2 rounded border px-4 py-2 text-sm hover:bg-gray-50 w-fit mb-4"
-              >
-                Set cover photo
-              </button>
-            )}
-
-            <div className="flex flex-col gap-2 mt-4">
+            <div className="flex flex-col gap-2">
               <button
                 onClick={handlePublish}
                 className="w-full rounded-lg bg-[#9F9E97] px-4 py-3 text-sm text-white hover:bg-[#8a897e]"
@@ -416,7 +415,7 @@ export default function ViewForm() {
             </button>
           )}
 
-          <Field label="Notes" fullWidth>
+          <Field label="Notes">
             <EditableField
               isEditing
               value={formData.notes ?? ""}
