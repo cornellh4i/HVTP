@@ -70,7 +70,7 @@ export default function SelectField({
       </button>
 
       {open && (
-        <ul className="absolute z-50 mt-1 w-full rounded border border-gray-200 bg-white py-1 shadow-lg">
+        <ul className="absolute z-50 mt-1 w-full rounded border border-gray-200 bg-white py-1 shadow-lg max-h-48 overflow-y-auto">
           {options.map((opt) => (
             <li
               key={opt.value}
