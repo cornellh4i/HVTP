@@ -12,6 +12,7 @@ import inventoryRoutes from "./routes/inventory";
 import auditLogRoutes from "./routes/auditLogs";
 import farmerRoutes from "./routes/farmers";
 import salesRoutes from "./routes/sales";
+import dashboardRoutes from "./routes/dashboard";
 
 const app = express();
 
@@ -31,6 +32,7 @@ app.use("/api/", auditLogRoutes);
 app.use("/api", farmerRoutes);
 app.use("/api", inventoryRoutes);
 app.use("/api", salesRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 
 /**
  * Some dummy routes to illustrate express syntax

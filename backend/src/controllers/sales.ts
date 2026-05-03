@@ -1,5 +1,7 @@
 import { Request, Response } from "express";
 import { SaleInsert, SaleUpdate } from "../models/sales";
+import { ItemInsert } from "../models/item";
+import { FarmerInsert } from "../models/farmer";
 import { getDb } from "../config/firebase";
 import { successJson, errorJson } from "../utils/jsonResponses";
 
@@ -8,10 +10,51 @@ const db = getDb();
 export const getAllSales = async (req: Request, res: Response) => {
   try {
     const snapshot = await db.collection("sales").get();
-    const sales = snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...(doc.data() as SaleInsert),
-    }));
+    const sales = await Promise.all(
+      snapshot.docs.map(async (doc) => {
+        const sale = doc.data() as SaleInsert;
+        const joinedFields: Record<string, unknown> = {};
+
+        if (sale.itemId) {
+          const itemDoc = await db.collection("items").doc(sale.itemId).get();
+
+          if (itemDoc.exists) {
+            const item = itemDoc.data() as ItemInsert;
+            Object.assign(joinedFields, {
+              itemName: item.name,
+              sku: item.sku,
+              breed: item.breed,
+              grade: item.grade,
+              color: item.color,
+              status: item.status,
+              isPublic: item.isPublic,
+              itemWeight: item.weight,
+              purchasePrice: item.purchasePrice,
+              farmerId: item.farmerId,
+            });
+
+            if (item.farmerId) {
+              const farmerDoc = await db.collection("farmers").doc(item.farmerId).get();
+
+              if (farmerDoc.exists) {
+                const farmer = farmerDoc.data() as FarmerInsert;
+                Object.assign(joinedFields, {
+                  farmerName: farmer.name,
+                  farmerCity: farmer.city,
+                  farmerState: farmer.state,
+                });
+              }
+            }
+          }
+        }
+
+        return {
+          id: doc.id,
+          ...sale,
+          ...joinedFields,
+        };
+      })
+    );
     res.status(200).json(successJson(sales));
   } catch {
     res.status(500).json(errorJson("Error fetching sales"));
@@ -36,7 +79,10 @@ export const getSaleById = async (req: Request, res: Response) => {
 export const getSalesByItemId = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const snapshot = await db.collection("sales").where("itemId", "==", id).get();
+    const snapshot = await db
+      .collection("sales")
+      .where("itemId", "==", id)
+      .get();
 
     const sales = snapshot.docs.map((doc) => ({
       id: doc.id,
@@ -58,14 +104,12 @@ export const addSale = async (
 
     if (
       !body.itemId ||
-      !body.locationsId ||
-      !body.inventoryId ||
       body.weightSold === undefined ||
       !body.weightUnit ||
       body.pricePerWeight === undefined ||
       body.costPerWeight === undefined ||
       !body.soldAt ||
-      !body.buyerName
+      !body.notes
     ) {
       return res.status(400).json(errorJson("Missing required fields"));
     }
@@ -74,8 +118,16 @@ export const addSale = async (
       return res.status(400).json(errorJson("weightUnit must be 'kg' or 'lb'"));
     }
 
-    if (body.weightSold <= 0 || body.pricePerWeight < 0 || body.costPerWeight < 0) {
-      return res.status(400).json(errorJson("weightSold must be positive; prices must be non-negative"));
+    if (
+      body.weightSold <= 0 ||
+      body.pricePerWeight < 0 ||
+      body.costPerWeight < 0
+    ) {
+      return res
+        .status(400)
+        .json(
+          errorJson("weightSold must be positive; prices must be non-negative")
+        );
     }
 
     const totalPrice = body.weightSold * body.pricePerWeight;
@@ -105,7 +157,10 @@ export const updateSale = async (
     const existing = doc.data() as SaleInsert;
     const weightSold = updates.weightSold ?? existing.weightSold;
     const pricePerWeight = updates.pricePerWeight ?? existing.pricePerWeight;
-    const payload: SaleUpdate = { ...updates, totalPrice: weightSold * pricePerWeight };
+    const payload: SaleUpdate = {
+      ...updates,
+      totalPrice: weightSold * pricePerWeight,
+    };
 
     await doc.ref.update(payload);
     res.status(200).json(successJson({ id }));
@@ -114,7 +169,10 @@ export const updateSale = async (
   }
 };
 
-export const deleteSale = async (req: Request<{ id: string }>, res: Response) => {
+export const deleteSale = async (
+  req: Request<{ id: string }>,
+  res: Response
+) => {
   try {
     const { id } = req.params;
     const doc = await db.collection("sales").doc(id).get();

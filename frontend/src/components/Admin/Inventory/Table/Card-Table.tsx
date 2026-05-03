@@ -1,63 +1,34 @@
 import { ItemCard } from "@/components/ui/itemCard";
-import { getAllItems, Item } from "@/api/items";
-import { useState, useEffect } from "react";
-// To get this information you would have to use item and
-// farmers information and possible add more fields
+import { Item } from "@/api/items";
+import { formatItemDate } from "@/components/Admin/Inventory/inventory-utils";
 
-function formatDate(createdAt: unknown): string | undefined {
-  if (!createdAt) return undefined;
-  const ts = createdAt as { _seconds?: number };
-  const ms = ts._seconds ? ts._seconds * 1000 : Number(createdAt);
-  const date = new Date(ms);
-  return isNaN(date.getTime()) ? undefined : date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-}
-
-export default function CardTable({ searchQuery = "" }: { searchQuery?: string }) {
-  const [items, setItems] = useState<Item[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchItems = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const data = await getAllItems();
-        setItems(data);
-      } catch (err) {
-        setError(String(err));
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchItems();
-  }, []);
-
-  if (loading) return <main className="min-h-screen p-8">Loading...</main>;
-  if (error) return <main className="min-h-screen p-8">Error: {error}</main>;
-
-  const filtered = searchQuery
-    ? items.filter(
-        (item) =>
-          item.sku?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          item.breed?.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    : items;
+export default function CardTable({ items }: { items: Item[] }) {
+  if (items.length === 0) {
+    return (
+      <main className="min-h-[40vh] px-4 py-8 sm:px-8">
+        <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-6 py-12 text-center text-slate-500">
+          No inventory items match the current filters.
+        </div>
+      </main>
+    );
+  }
 
   return (
-    <main className="min-h-screen p-8">
-      <div className="flex flex-col items-center justify-centergrid grid-cols-1 gap-4">
-        {filtered.map((item) => (
+    <main className="min-h-screen px-4 py-6 sm:px-8">
+      <div className="flex flex-col gap-4">
+        {items.map((item) => (
           <ItemCard
             key={item.id}
+            imgSrc={item.coverImage ?? item.images?.[0]}
             sku={item.sku}
             description={`${item.grade ?? ""} • ${item.color ?? ""}`}
             breed={item.breed ?? ""}
-            quantity={`${item.weight} lbs`}
+            quantity={item.weight ? `${item.weight} lbs` : "-"}
             status={item.status ?? ""}
             state={item.farmerState ?? ""}
             href={`/inventory/${item.id}`}
-            lastUpdated={formatDate(item.createdAt)}
+            lastUpdated={formatItemDate(item.createdAt)}
+            ctaLabel="Edit Lot"
           />
         ))}
       </div>

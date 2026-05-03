@@ -1,9 +1,13 @@
 'use client';
 
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import AppSidebar from './Navbar/Desktop-Navbar/app-sidebar';
 import MobileNavbar from './Navbar/Mobile-Navbar/mobile-navbar';
 import { SidebarInset, SidebarProvider } from './ui/sidebar';
+import { useAuth } from '@/utils/AuthContext';
+
+const PROTECTED_PATHS = ['/dashboard', '/inventory', '/transactions'];
 
 type LayoutWrapperProps = {
   children: React.ReactNode;
@@ -11,6 +15,21 @@ type LayoutWrapperProps = {
 
 export default function LayoutWrapper({ children }: LayoutWrapperProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, loading } = useAuth();
+  const [mounted, setMounted] = useState(false);
+
+  const isProtected = PROTECTED_PATHS.some((p) => pathname?.startsWith(p));
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (isProtected && !loading && !user) {
+      router.push('/login');
+    }
+  }, [isProtected, loading, user, router]);
 
   if (pathname?.startsWith('/scan')) {
     return (
@@ -22,13 +41,17 @@ export default function LayoutWrapper({ children }: LayoutWrapperProps) {
       </div>
     );
   }
-  
-  // Show sidebar only on dashboard, inventory, and analytics routes
+
   const showSidebar =
-    pathname?.startsWith('/dashboard') ||
-    pathname?.startsWith('/inventory') ||
-    pathname?.startsWith('/analytics') || 
-    pathname?.startsWith('/archive');
+    mounted && (
+      pathname?.startsWith('/dashboard') ||
+      pathname?.startsWith('/inventory') ||
+      pathname?.startsWith('/transactions')
+    );
+
+  if (isProtected && (loading || !user)) {
+    return null;
+  }
 
   if (!showSidebar) {
     return <>{children}</>;
@@ -42,9 +65,10 @@ export default function LayoutWrapper({ children }: LayoutWrapperProps) {
       <SidebarInset>
         <div className="pb-24 md:pb-0">{children}</div>
       </SidebarInset>
-      <div className="md:hidden">
+      {/* Temp disabled mobile navbar */}
+      {/* <div className="md:hidden">
         <MobileNavbar />
-      </div>
+      </div> */}
     </SidebarProvider>
   );
 }

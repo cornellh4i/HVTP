@@ -20,7 +20,7 @@ export type Item = {
   palletLocation?: string;
   shearDate?: string;
   purchasePrice?: number;
-  createdAt?: string;
+  createdAt?: unknown;
   // Denormalized from farmer (joined in getItemById)
   farmerName?: string;
   farmerContact?: string;

@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import {
   Card,
@@ -23,7 +25,7 @@ const ItemCard: React.FC<ItemCardProps> = ({ item }) => {
   ];
 
   return (
-    <Card className="box-border flex flex-col overflow-hidden rounded-[15px] border-none shadow-none hover:shadow-none" style={{ width: "392px", height: "483.2px", backgroundColor: "#E7E7E7" }}>
+    <Card className="box-border flex flex-col overflow-hidden rounded-[15px] border-none shadow-none hover:shadow-none" style={{ width: "402px", height: "483.2px", backgroundColor: "#E7E7E7" }}>
       <div className="flex h-full flex-col px-[30px] py-[20px]">
         <div className="h-[205.2px] w-full overflow-hidden rounded-[15px] bg-[#f5f5f5]">
           {hasImage ? (
@@ -53,7 +55,7 @@ const ItemCard: React.FC<ItemCardProps> = ({ item }) => {
         <div className="flex flex-col gap-0 pt-[25px]">
           {tags.length > 0 && (
             <div
-              className="flex w-full flex-wrap items-center justify-center gap-2 text-center uppercase tracking-[0.08em]"
+              className="flex w-full flex-wrap items-center justify-start gap-2 uppercase tracking-[0.08em]"
               style={{
                 paddingBottom: "16px",
                 color: "#686868",

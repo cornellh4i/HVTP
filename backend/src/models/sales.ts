@@ -2,8 +2,6 @@ import { Timestamp } from "firebase-admin/firestore";
 
 export interface SaleFields {
   itemId: string;
-  locationsId: string;
-  inventoryId: string;
   weightSold: number;
   weightUnit: "kg" | "lb";
   pricePerWeight: number;
@@ -11,6 +9,7 @@ export interface SaleFields {
   costPerWeight: number;
   soldAt: Timestamp;
   buyerName: string;
+  notes: string 
 }
 
 export type SaleInsert = SaleFields;

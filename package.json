@@ -5,19 +5,22 @@
   "devDependencies": {
     "@types/cors": "^2.8.19",
     "@types/node": "^25.5.0",
-    "@types/react": "^19.2.14",
-    "concurrently": "^7.0.0",
+    "@types/react": "^18.3.28",
+    "concurrently": "^7.6.0",
     "ts-node": "^10.9.2"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.15",
+    "@types/react-dom": "^18.3.7",
     "@zxing/browser": "^0.1.5",
     "@zxing/library": "^0.21.3",
     "cors": "^2.8.6",
+    "jose": "^6.2.2",
     "lucide": "^0.577.0",
     "lucide-react": "^0.577.0",
     "next": "^16.1.7",
     "react": "^19.2.4",
+    "react-day-picker": "^9.14.0",
     "react-qr-code": "^2.0.18"
   }
 }

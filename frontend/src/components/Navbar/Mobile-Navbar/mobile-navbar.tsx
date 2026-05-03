@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, ScanLine, ArchiveX } from "lucide-react";
+import { ArrowLeftRight, Home, ScanLine, ArchiveX } from "lucide-react";
 
 const navItems = [
   {
@@ -14,12 +14,7 @@ const navItems = [
     title: "Scan",
     href: "/scan",
     icon: ScanLine,
-  },
-  {
-    title: "Archive",
-    href: "/archive",
-    icon: ArchiveX,
-  },
+  }
 ];
 
 export default function MobileNavbar() {

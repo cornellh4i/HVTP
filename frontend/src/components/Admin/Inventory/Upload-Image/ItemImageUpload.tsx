@@ -2,28 +2,27 @@
 
 import { ChangeEvent, useRef, useState } from "react";
 import Image from "next/image";
-import { ImageIcon, Upload, X } from "lucide-react";
+import { ImageIcon, X } from "lucide-react";
 import { uploadItemImage } from "@/lib/uploadImage";
 
 type Props = {
   sku: string;
   existingImages: string[];
   onImagesChange: (images: string[]) => void;
+  hidePreview?: boolean;
 };
 
-export default function ItemImageUpload({ sku, existingImages, onImagesChange }: Props) {
+export default function ItemImageUpload({ sku, existingImages, onImagesChange, hidePreview = false }: Props) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
 
-  const images = existingImages.slice(0, 3);
+  const coverImage = existingImages[activeIndex] ?? existingImages[0] ?? null;
 
   async function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
     const files = Array.from(event.target.files ?? []);
     if (!files.length) return;
-
-    const remaining = 3 - images.length;
-    const selected = files.slice(0, remaining);
 
     setIsUploading(true);
     setError(null);
@@ -31,13 +30,16 @@ export default function ItemImageUpload({ sku, existingImages, onImagesChange }:
     try {
       const uploadedUrls: string[] = [];
 
-      for (const file of selected) {
-        const nextIndex = images.length + uploadedUrls.length;
+      for (const file of files) {
+        const nextIndex = existingImages.length + uploadedUrls.length;
         const url = await uploadItemImage(file, sku, nextIndex);
         uploadedUrls.push(url);
       }
 
-      onImagesChange([...images, ...uploadedUrls]);
+      const newImages = [...existingImages, ...uploadedUrls];
+      onImagesChange(newImages);
+      // Activate the first newly uploaded image
+      setActiveIndex(existingImages.length);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Upload failed.");
     } finally {
@@ -47,65 +49,83 @@ export default function ItemImageUpload({ sku, existingImages, onImagesChange }:
   }
 
   function removeImage(index: number) {
-    onImagesChange(images.filter((_, i) => i !== index));
+    const updated = existingImages.filter((_, i) => i !== index);
+    onImagesChange(updated);
+    // Adjust active index if needed
+    if (activeIndex >= updated.length) {
+      setActiveIndex(Math.max(0, updated.length - 1));
+    }
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="w-full aspect-square rounded-lg border border-gray-200 bg-white overflow-hidden flex items-center justify-center">
-        {images[0] ? (
-          <Image src={images[0]} alt="Cover image" width={600} height={600} className="h-full w-full object-cover" />
-        ) : (
-          <ImageIcon className="w-16 h-16 text-gray-300" />
-        )}
-      </div>
+    <div className="flex flex-col gap-3">
+      {/* Hidden file input */}
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        multiple
+        disabled={isUploading}
+        onChange={handleFileChange}
+        className="hidden"
+      />
 
-      <div className="grid grid-cols-3 gap-2">
-        {[0, 1, 2].map((idx) => {
-          const src = images[idx];
-          return (
-            <div key={idx} className="relative aspect-square rounded-md border border-gray-200 bg-white overflow-hidden flex items-center justify-center">
-              {src ? (
-                <>
-                  <Image src={src} alt={`Item image ${idx + 1}`} width={200} height={200} className="h-full w-full object-cover" />
-                  <button
-                    type="button"
-                    onClick={() => removeImage(idx)}
-                    className="absolute top-2 right-2 rounded-full bg-white/90 p-1"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                </>
-              ) : (
-                <ImageIcon className="w-6 h-6 text-gray-300" />
+      {/* Cover / main preview — clicking opens picker when empty */}
+      {!hidePreview && (
+        <div
+          className="relative w-full aspect-3/4 md:aspect-4/3 rounded-lg border border-dashed border-gray-300 bg-gray-50 overflow-hidden flex items-center justify-center cursor-pointer hover:bg-gray-100 transition-colors"
+          onClick={() => !coverImage && inputRef.current?.click()}
+        >
+          {coverImage ? (
+            <>
+              <Image src={coverImage} alt="Cover image" fill className="object-cover" />
+              {activeIndex === 0 && (
+                <span className="absolute top-2 left-2 rounded bg-gray-900/70 px-2 py-0.5 text-[11px] text-white">
+                  Cover Photo
+                </span>
               )}
-            </div>
-          );
-        })}
-      </div>
+            </>
+          ) : (
+            <ImageIcon className="w-14 h-14 text-gray-300" />
+          )}
+        </div>
+      )}
 
-      <div>
-        <input
-          ref={inputRef}
-          type="file"
-          accept="image/jpeg,image/png,image/webp"
-          multiple
-          disabled={isUploading || images.length >= 3}
-          onChange={handleFileChange}
-          className="hidden"
-        />
+      {/* Horizontal scrollable thumbnail strip */}
+      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-thin scrollbar-thumb-gray-200">
+        {existingImages.map((src, idx) => (
+          <div
+            key={idx}
+            className={`group relative flex-shrink-0 w-20 h-28 md:w-16 md:h-16 rounded-md border-2 overflow-hidden cursor-pointer transition-colors ${
+              idx === activeIndex ? "border-gray-900" : "border-gray-200 hover:border-gray-400"
+            }`}
+            onClick={() => setActiveIndex(idx)}
+          >
+            <Image src={src} alt={`Thumbnail ${idx + 1}`} fill className="object-cover" />
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); removeImage(idx); }}
+              className="absolute top-0.5 right-0.5 rounded-full bg-white/90 p-0.5 shadow-sm"
+              aria-label="Remove image"
+            >
+              <X className="h-3 w-3 text-gray-700" />
+            </button>
+          </div>
+        ))}
+
+        {/* + add button — always the last slot */}
         <button
           type="button"
-          disabled={isUploading || images.length >= 3}
+          disabled={isUploading}
           onClick={() => inputRef.current?.click()}
-          className="inline-flex items-center gap-2 rounded border px-4 py-2 text-sm hover:bg-gray-50 disabled:opacity-50"
+          className="flex-shrink-0 w-20 h-28 md:w-16 md:h-16 rounded-md border border-dashed border-gray-300 bg-gray-50 flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-600 disabled:opacity-50 transition-colors text-2xl leading-none"
+          aria-label="Add photos"
         >
-          <Upload className="h-4 w-4" />
-          {isUploading ? "Uploading..." : "Upload photos"}
+          {isUploading ? <span className="text-xs">…</span> : <span className="mb-0.5">+</span>}
         </button>
       </div>
 
-      {error ? <p className="text-sm text-red-600">{error}</p> : null}
+      {error && <p className="text-sm text-red-600">{error}</p>}
     </div>
   );
 }

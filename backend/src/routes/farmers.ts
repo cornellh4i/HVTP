@@ -5,6 +5,7 @@ import {
   updateFarmer,
   deleteFarmer,
 } from "../controllers/farmers";
+import { getFarmerByItemId } from "../controllers/items";
 
 const router = express.Router();
 
