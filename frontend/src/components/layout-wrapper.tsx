@@ -31,6 +31,17 @@ export default function LayoutWrapper({ children }: LayoutWrapperProps) {
     }
   }, [isProtected, loading, user, router]);
 
+  if (pathname?.startsWith('/scan')) {
+    return (
+      <div className="pb-24 md:pb-0">
+        {children}
+        <div className="md:hidden">
+          <MobileNavbar />
+        </div>
+      </div>
+    );
+  }
+
   const showSidebar =
     mounted && (
       pathname?.startsWith('/dashboard') ||

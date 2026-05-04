@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
@@ -48,6 +49,8 @@ const STATE_OPTIONS: SelectOption[] = [
   "SD","TN","TX","UT","VT","VA","WA","WV","WI","WY",
 ].map((s) => ({ label: s, value: s }));
 
+const QRCode = dynamic(() => import("react-qr-code"), { ssr: false });
+
 function Field({
   label,
   children,
@@ -75,6 +78,7 @@ export default function ViewForm() {
   const [toast, setToast] = useState<{ message: string; sub: string } | null>(null);
 
   const { id: itemId } = useParams<{ id: string }>();
+  const qrValue = formData.qrCode ?? item?.qrCode ?? itemId;
   const router = useRouter();
 
   useEffect(() => {
@@ -376,6 +380,33 @@ export default function ViewForm() {
         </div>
 
         <div className="hidden md:flex flex-col gap-4">
+          <section
+            data-print-label
+            className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+          >
+            <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
+              <div className="space-y-2">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                  QR Label
+                </p>
+                <h2 className="text-2xl font-semibold text-slate-900">
+                  {formData.name ?? item.name}
+                </h2>
+                <div className="space-y-1 text-sm text-slate-600">
+                  <p><span className="font-medium text-slate-900">SKU:</span> {formData.sku ?? item.sku}</p>
+                  <p><span className="font-medium text-slate-900">Breed:</span> {formData.breed ?? item.breed ?? "-"}</p>
+                  <p><span className="font-medium text-slate-900">Grade:</span> {formData.grade ?? item.grade ?? "-"}</p>
+                  <p><span className="font-medium text-slate-900">Status:</span> {formData.status ?? item.status ?? "-"}</p>
+                  <p><span className="font-medium text-slate-900">Pallet Location:</span> {formData.palletLocation ?? item.palletLocation ?? "-"}</p>
+                </div>
+              </div>
+              <div className="flex flex-col items-center gap-3 self-center rounded-2xl bg-slate-50 p-4">
+                <QRCode value={qrValue} size={148} />
+                <p className="max-w-[180px] break-all text-center text-xs text-slate-500">{qrValue}</p>
+              </div>
+            </div>
+          </section>
+
           <ItemImageUpload
             sku={item.sku}
             existingImages={images}

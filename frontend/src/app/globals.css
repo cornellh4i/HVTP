@@ -48,3 +48,24 @@
     color: var(--color-foreground);
   }
 }
+
+@media print {
+  body.printing-label * {
+    visibility: hidden !important;
+  }
+
+  body.printing-label [data-print-label],
+  body.printing-label [data-print-label] * {
+    visibility: visible !important;
+  }
+
+  body.printing-label [data-print-label] {
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100%;
+    max-width: none;
+    border: 0;
+    box-shadow: none;
+    padding: 24px;
+  }
+}

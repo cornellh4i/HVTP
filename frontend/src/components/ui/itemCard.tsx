@@ -15,6 +15,14 @@ interface ItemCardProps {
   href: string;
   imgSrc?: string;
   lastUpdated?: string;
+  title?: string;
+  subtitle?: string;
+  mobileSummary?: string;
+  desktopDetails?: Array<{
+    label: string;
+    value: string;
+  }>;
+  actionLabel?: string;
   ctaLabel?: string;
 }
 
@@ -38,7 +46,36 @@ const PlaceholderImage = () => (
 );
 
 const ItemCard = React.forwardRef<HTMLDivElement, ItemCardProps>(
-  ({ sku, description, breed, quantity, status, state, href, imgSrc, lastUpdated, ctaLabel = "View Lot" }, ref) => (
+  (
+    {
+      sku,
+      description,
+      breed,
+      quantity,
+      status,
+      state,
+      href,
+      imgSrc,
+      lastUpdated,
+      title,
+      subtitle,
+      mobileSummary,
+      desktopDetails,
+      actionLabel,
+      ctaLabel,
+    },
+    ref
+  ) => {
+    const details = desktopDetails ?? [
+      { label: "Breed", value: breed },
+      { label: "Quantity Available", value: quantity },
+      { label: "Status", value: status },
+      { label: "State", value: state },
+    ];
+
+    const buttonLabel = actionLabel ?? ctaLabel ?? "View Lot";
+
+    return (
     <Card ref={ref} className="relative w-full max-w-5xl rounded-xl p-2 sm:p-3 lg:p-4">
       <div className="flex flex-row items-center gap-3 sm:gap-4 lg:gap-6">
 
@@ -66,19 +103,24 @@ const ItemCard = React.forwardRef<HTMLDivElement, ItemCardProps>(
             </p>
 
             {/* SKU */}
-            <p className="truncate text-sm font-bold sm:text-lg lg:text-xl">{sku}</p>
+            <p className="truncate text-sm font-bold sm:text-lg lg:text-xl">{title ?? sku}</p>
+
+            {subtitle ? (
+              <p className="mt-0.5 truncate text-xs text-slate-600 sm:text-sm">{subtitle}</p>
+            ) : null}
 
             {/* Mobile: single condensed line */}
             <p className="mt-0.5 truncate text-xs text-slate-600 sm:hidden">
-              {breed} / {status} / {quantity} / {state}
+              {mobileSummary ?? `${breed} / ${status} / ${quantity} / ${state}`}
             </p>
 
             {/* Desktop: grid of fields */}
             <div className="mt-2 hidden grid-cols-2 gap-x-6 gap-y-1 text-sm sm:grid lg:text-base">
-              <p><span className="font-semibold">Breed:</span> {breed}</p>
-              <p><span className="font-semibold">Quantity Available:</span> {quantity}</p>
-              <p><span className="font-semibold">Status:</span> {status}</p>
-              <p><span className="font-semibold">State:</span> {state}</p>
+              {details.map((detail) => (
+                <p key={detail.label}>
+                  <span className="font-semibold">{detail.label}:</span> {detail.value}
+                </p>
+              ))}
             </div>
 
             {lastUpdated && (
@@ -86,20 +128,21 @@ const ItemCard = React.forwardRef<HTMLDivElement, ItemCardProps>(
             )}
 
             <Button asChild size="sm" className="mt-3 rounded-xl bg-[#556b2f] px-4 sm:hidden">
-              <Link href={href}>{ctaLabel}</Link>
+              <Link href={href}>{buttonLabel}</Link>
             </Button>
           </div>
 
 
           {/* Desktop: full button */}
           <Button asChild className="hidden shrink-0 bg-[#556b2f] sm:block">
-            <Link href={href}>{ctaLabel}</Link>
+            <Link href={href}>{buttonLabel}</Link>
           </Button>
         </div>
 
       </div>
     </Card>
-  )
+    );
+  }
 );
 ItemCard.displayName = "ItemCard";
 
