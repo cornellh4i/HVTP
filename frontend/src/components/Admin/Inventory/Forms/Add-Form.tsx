@@ -10,6 +10,7 @@ import EditableField from "@/components/ui/EditableField";
 import SelectField, { SelectOption } from "@/components/ui/selectField";
 import { Upload, X, Plus } from "lucide-react";
 import Image from "next/image";
+import { Card } from "@/components/ui/card";
 
 const GRADE_OPTIONS: SelectOption[] = [
   { label: "Fine", value: "Fine" },
@@ -258,30 +259,32 @@ export default function AddForm() {
           </div>
 
           <section>
-            <h2 className="text-lg font-bold mb-4 md:text-2xl md:mb-5">General Information</h2>
-            <div className="flex flex-col gap-5 md:grid md:grid-cols-2 md:gap-x-6 md:gap-y-5">
-              <Field label="Breed">
-                <EditableField isEditing value={itemFields.breed} placeholder="Breed" onChange={setItem("breed")} />
-              </Field>
-              <Field label="Grade">
-                <SelectField value={itemFields.grade} onChange={setItem("grade")} options={GRADE_OPTIONS} placeholder="Grade" />
-              </Field>
-              <Field label="Color">
-                <SelectField value={itemFields.color} onChange={setItem("color")} options={COLOR_OPTIONS} placeholder="Color" />
-              </Field>
-              <Field label="Weight (lb)">
-                <EditableField isEditing value={itemFields.weight} placeholder="Weight (lb)" onChange={setItem("weight")} />
-              </Field>
-              <Field label="Pallet Location">
-                <EditableField isEditing value={itemFields.palletLocation} placeholder="Pallet Number" onChange={setItem("palletLocation")} />
-              </Field>
-              <Field label="Status">
-                <SelectField value={itemFields.status} onChange={setItem("status")} options={STATUS_OPTIONS} placeholder="Status" />
-              </Field>
-              <Field label="Type">
-                <SelectField value={itemFields.type} onChange={setItem("type")} options={TYPE_OPTIONS} placeholder="Type" />
-              </Field>
-            </div>
+            <Card className="p-6">
+              <h2 className="text-lg font-bold mb-4 md:text-2xl md:mb-5">General Information</h2>
+              <div className="flex flex-col gap-5 md:grid md:grid-cols-2 md:gap-x-6 md:gap-y-5">
+                <Field label="Breed">
+                  <EditableField isEditing value={itemFields.breed} placeholder="Breed" onChange={setItem("breed")} />
+                </Field>
+                <Field label="Grade">
+                  <SelectField value={itemFields.grade} onChange={setItem("grade")} options={GRADE_OPTIONS} placeholder="Grade" />
+                </Field>
+                <Field label="Color">
+                  <SelectField value={itemFields.color} onChange={setItem("color")} options={COLOR_OPTIONS} placeholder="Color" />
+                </Field>
+                <Field label="Weight (lb)">
+                  <EditableField isEditing value={itemFields.weight} placeholder="Weight (lb)" onChange={setItem("weight")} />
+                </Field>
+                <Field label="Pallet Location">
+                  <EditableField isEditing value={itemFields.palletLocation} placeholder="Pallet Number" onChange={setItem("palletLocation")} />
+                </Field>
+                <Field label="Status">
+                  <SelectField value={itemFields.status} onChange={setItem("status")} options={STATUS_OPTIONS} placeholder="Status" />
+                </Field>
+                <Field label="Type">
+                  <SelectField value={itemFields.type} onChange={setItem("type")} options={TYPE_OPTIONS} placeholder="Type" />
+                </Field>
+              </div>
+            </Card>
           </section>
 
           <div className="md:hidden">
@@ -291,29 +294,31 @@ export default function AddForm() {
           </div>
 
           <section>
-            <h2 className="text-lg font-bold mb-4 md:text-2xl md:mb-5">Purchase Information</h2>
-            <div className="flex flex-col gap-5 md:grid md:grid-cols-2 md:gap-x-6 md:gap-y-5">
-              <Field label="Farmer Name">
-                <EditableField isEditing value={farmerFormFields.name} placeholder="Name" onChange={setFarmerField("name")} />
-              </Field>
-              <Field label="Farmer City">
-                <EditableField isEditing value={farmerFormFields.city} placeholder="City" onChange={setFarmerField("city")} />
-              </Field>
-              <Field label="Farmer State">
-                <SelectField value={farmerFormFields.state} onChange={setFarmerField("state")} options={STATE_OPTIONS} placeholder="State" />
-              </Field>
-              <Field label="Shear Date">
-                <input
-                  type="date"
-                  className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm h-[44px]"
-                  value={itemFields.shearDate}
-                  onChange={(e) => setItem("shearDate")(e.target.value)}
-                />
-              </Field>
-              <Field label="Purchase Price ($/lb)">
-                <EditableField isEditing value={itemFields.purchasePrice} placeholder="Price" onChange={setItem("purchasePrice")} />
-              </Field>
-            </div>
+            <Card className="p-6">
+              <h2 className="text-lg font-bold mb-4 md:text-2xl md:mb-5">Purchase Information</h2>
+              <div className="flex flex-col gap-5 md:grid md:grid-cols-2 md:gap-x-6 md:gap-y-5">
+                <Field label="Farmer Name">
+                  <EditableField isEditing value={farmerFormFields.name} placeholder="Name" onChange={setFarmerField("name")} />
+                </Field>
+                <Field label="Farmer City">
+                  <EditableField isEditing value={farmerFormFields.city} placeholder="City" onChange={setFarmerField("city")} />
+                </Field>
+                <Field label="Farmer State">
+                  <SelectField value={farmerFormFields.state} onChange={setFarmerField("state")} options={STATE_OPTIONS} placeholder="State" />
+                </Field>
+                <Field label="Shear Date">
+                  <input
+                    type="date"
+                    className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm h-[44px]"
+                    value={itemFields.shearDate}
+                    onChange={(e) => setItem("shearDate")(e.target.value)}
+                  />
+                </Field>
+                <Field label="Purchase Price ($/lb)">
+                  <EditableField isEditing value={itemFields.purchasePrice} placeholder="Price" onChange={setItem("purchasePrice")} />
+                </Field>
+              </div>
+            </Card>
           </section>
 
           <div className="md:hidden pb-4">

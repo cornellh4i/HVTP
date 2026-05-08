@@ -11,6 +11,7 @@ import ItemImageUpload from "@/components/Admin/Inventory/Upload-Image/ItemImage
 import SetCoverPhotoModal from "@/components/Admin/Inventory/SetCoverPhotoModal";
 import SaleModal from "@/components/Admin/Inventory/Forms/Add-Sale";
 import { Trash, Printer } from "lucide-react";
+import { Card } from "@/components/ui/card";
 
 const GRADE_OPTIONS: SelectOption[] = [
   { label: "Fine", value: "Fine" },
@@ -175,7 +176,7 @@ export default function ViewForm() {
 
   const handleDelete = async () => {
     if (
-      !confirm("Are you sure you want to delete this lot? This action cannot be undone.")
+      !confirm("Unpublish this lot? Placing this lot on hold will remove this lot from the external inventory page.")
     ) {
       return;
     }
@@ -267,42 +268,45 @@ export default function ViewForm() {
           </div>
 
           <section>
-            <h2 className="text-lg font-bold mb-4 md:text-2xl md:mb-5">
-              General Information
-            </h2>
-            <div className="flex flex-col gap-5 md:grid md:grid-cols-2 md:gap-x-6 md:gap-y-5">
-              <Field label="Breed">
-                <EditableField isEditing value={formData.breed ?? ""} placeholder="Breed" onChange={set("breed")} />
-              </Field>
-              <Field label="Grade">
-                <SelectField value={formData.grade ?? ""} onChange={set("grade")} options={GRADE_OPTIONS} placeholder="Grade" />
-              </Field>
-              <Field label="Color">
-                <SelectField value={formData.color ?? ""} onChange={set("color")} options={COLOR_OPTIONS} placeholder="Color" />
-              </Field>
-              <Field label="Quantity (lb)">
-                <EditableField isEditing value={String(formData.weight ?? "")} placeholder="Weight" onChange={set("weight")} />
-              </Field>
-              <Field label="Pallet Location">
-                <EditableField
-                  isEditing
-                  value={formData.palletLocation ?? ""}
-                  placeholder="Pallet Number"
-                  onChange={set("palletLocation")}
-                />
-              </Field>
-              <Field label="Status">
-                <SelectField value={formData.status ?? ""} onChange={set("status")} options={STATUS_OPTIONS} placeholder="Status" />
-              </Field>
-              <Field label="Type">
-                <SelectField
-                  value={(formData as any).type ?? ""}
-                  onChange={(v) => setFormData((p) => ({ ...p, type: v }))}
-                  options={TYPE_OPTIONS}
-                  placeholder="Type"
-                />
-              </Field>
-            </div>
+            <Card className="p-6">
+
+              <h2 className="text-lg font-bold mb-4 md:text-2xl md:mb-5">
+                General Information
+              </h2>
+              <div className="flex flex-col gap-5 md:grid md:grid-cols-2 md:gap-x-6 md:gap-y-5">
+                <Field label="Breed">
+                  <EditableField isEditing value={formData.breed ?? ""} placeholder="Breed" onChange={set("breed")} />
+                </Field>
+                <Field label="Grade">
+                  <SelectField value={formData.grade ?? ""} onChange={set("grade")} options={GRADE_OPTIONS} placeholder="Grade" />
+                </Field>
+                <Field label="Color">
+                  <SelectField value={formData.color ?? ""} onChange={set("color")} options={COLOR_OPTIONS} placeholder="Color" />
+                </Field>
+                <Field label="Quantity (lb)">
+                  <EditableField isEditing value={String(formData.weight ?? "")} placeholder="Weight" onChange={set("weight")} />
+                </Field>
+                <Field label="Pallet Location">
+                  <EditableField
+                    isEditing
+                    value={formData.palletLocation ?? ""}
+                    placeholder="Pallet Number"
+                    onChange={set("palletLocation")}
+                  />
+                </Field>
+                <Field label="Status">
+                  <SelectField value={formData.status ?? ""} onChange={set("status")} options={STATUS_OPTIONS} placeholder="Status" />
+                </Field>
+                <Field label="Type">
+                  <SelectField
+                    value={(formData as any).type ?? ""}
+                    onChange={(v) => setFormData((p) => ({ ...p, type: v }))}
+                    options={TYPE_OPTIONS}
+                    placeholder="Type"
+                  />
+                </Field>
+              </div>
+            </Card> 
           </section>
 
           <div className="md:hidden">
@@ -318,46 +322,48 @@ export default function ViewForm() {
           </div>
 
           <section>
-            <h2 className="text-lg font-bold mb-4 md:text-2xl md:mb-5">
-              Purchase Information
-            </h2>
-            <div className="flex flex-col gap-5 md:grid md:grid-cols-2 md:gap-x-6 md:gap-y-5">
-              <Field label="Farmer Name">
-                <EditableField
-                  isEditing
-                  value={formData.farmerName ?? ""}
-                  placeholder="Name"
-                  onChange={set("farmerName")}
-                />
-              </Field>
-              <Field label="Farmer City">
-                <EditableField
-                  isEditing
-                  value={formData.farmerCity ?? ""}
-                  placeholder="City"
-                  onChange={set("farmerCity")}
-                />
-              </Field>
-              <Field label="Farmer State">
-                <SelectField
-                  value={formData.farmerState ?? ""}
-                  onChange={set("farmerState")}
-                  options={STATE_OPTIONS}
-                  placeholder="State"
-                />
-              </Field>
-              <Field label="Shear Date">
-                <EditableField isEditing value={formData.shearDate ?? ""} placeholder="MM/DD/YYYY" onChange={set("shearDate")} />
-              </Field>
-              <Field label="Purchase Price ($/lb)">
-                <EditableField
-                  isEditing
-                  value={String(formData.purchasePrice ?? "")}
-                  placeholder="Price"
-                  onChange={set("purchasePrice")}
-                />
-              </Field>
-            </div>
+            <Card className="p-6">
+              <h2 className="text-lg font-bold mb-4 md:text-2xl md:mb-5">
+                Purchase Information
+              </h2>
+              <div className="flex flex-col gap-5 md:grid md:grid-cols-2 md:gap-x-6 md:gap-y-5">
+                <Field label="Farmer Name">
+                  <EditableField
+                    isEditing
+                    value={formData.farmerName ?? ""}
+                    placeholder="Name"
+                    onChange={set("farmerName")}
+                  />
+                </Field>
+                <Field label="Farmer City">
+                  <EditableField
+                    isEditing
+                    value={formData.farmerCity ?? ""}
+                    placeholder="City"
+                    onChange={set("farmerCity")}
+                  />
+                </Field>
+                <Field label="Farmer State">
+                  <SelectField
+                    value={formData.farmerState ?? ""}
+                    onChange={set("farmerState")}
+                    options={STATE_OPTIONS}
+                    placeholder="State"
+                  />
+                </Field>
+                <Field label="Shear Date">
+                  <EditableField isEditing value={formData.shearDate ?? ""} placeholder="MM/DD/YYYY" onChange={set("shearDate")} />
+                </Field>
+                <Field label="Purchase Price ($/lb)">
+                  <EditableField
+                    isEditing
+                    value={String(formData.purchasePrice ?? "")}
+                    placeholder="Price"
+                    onChange={set("purchasePrice")}
+                  />
+                </Field>
+              </div>
+            </Card>
           </section>
 
           <div className="md:hidden pb-4">

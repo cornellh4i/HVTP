@@ -2,7 +2,7 @@
 
 import { Item } from "@/api/items";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
-import { SquarePen } from "lucide-react";
+import { Link, SquarePen } from "lucide-react";
 
 export default function SheetTable({ items }: { items: Item[] }) {
   if (items.length === 0) {
@@ -56,9 +56,9 @@ export default function SheetTable({ items }: { items: Item[] }) {
                     <span className="flex items-center gap-2">
                       <span
                         className={`w-2 h-2 rounded-full flex-shrink-0 ${
-                          item.status === "active"
-                            ? "bg-[#3A4F0D]"
-                            : "bg-[#900B09]"
+                          item.isPublic
+                            ? "bg-green-500"
+                            : "bg-red-400"
                         }`}
                       />
                       {item.sku}
@@ -71,7 +71,9 @@ export default function SheetTable({ items }: { items: Item[] }) {
                   <td className="px-4 py-3">{item.weight} lbs</td>
                   <td className="px-4 py-3">
                     <button className="text-gray-500/50 hover:text-gray-500/75">
-                      <SquarePen className="w-5 h-5" />
+                      <a href={`/inventory/${item.id}`}>
+                        <SquarePen className="w-5 h-5" />
+                      </a>
                     </button>
                   </td>
                 </tr>

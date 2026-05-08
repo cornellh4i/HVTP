@@ -29,6 +29,7 @@ export default function CardTable({ items }: { items: Item[] }) {
             href={`/inventory/${item.id}`}
             lastUpdated={formatItemDate(item.createdAt)}
             ctaLabel="Edit Lot"
+            isPublic={item.isPublic}
           />
         ))}
       </div>

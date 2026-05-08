@@ -24,6 +24,7 @@ interface ItemCardProps {
   }>;
   actionLabel?: string;
   ctaLabel?: string;
+  isPublic?: boolean;
 }
 
 const PlaceholderImage = () => (
@@ -63,6 +64,7 @@ const ItemCard = React.forwardRef<HTMLDivElement, ItemCardProps>(
       desktopDetails,
       actionLabel,
       ctaLabel,
+      isPublic,
     },
     ref
   ) => {
@@ -102,8 +104,21 @@ const ItemCard = React.forwardRef<HTMLDivElement, ItemCardProps>(
               {description}
             </p>
 
-            {/* SKU */}
-            <p className="truncate text-sm font-bold sm:text-lg lg:text-xl">{title ?? sku}</p>
+            {/* SKU + published badge */}
+            <div className="flex items-center gap-2">
+              <p className="truncate text-sm font-bold sm:text-lg lg:text-xl">{title ?? sku}</p>
+              {isPublic ? (
+                <span className="flex shrink-0 items-center gap-1.5 rounded-full bg-[#f0ede6] px-2.5 py-0.5 text-xs font-medium text-slate-700">
+                  <span className="h-2 w-2 rounded-full bg-green-500" />
+                  Published
+                </span>
+              ) : (
+                <span className="flex shrink-0 items-center gap-1.5 rounded-full bg-red-50 px-2.5 py-0.5 text-xs font-medium text-red-700">
+                  <span className="h-2 w-2 rounded-full bg-red-400" />
+                  Unpublished
+                </span>
+              )}
+            </div>
 
             {subtitle ? (
               <p className="mt-0.5 truncate text-xs text-slate-600 sm:text-sm">{subtitle}</p>

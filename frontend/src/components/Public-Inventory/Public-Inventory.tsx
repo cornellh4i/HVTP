@@ -56,7 +56,7 @@ export default function PublicInventoryPage() {
           href="/"
           className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900 mb-4"
         >
-          ← Back to Inventory
+          ← Back to Hudson Valley Textile Project
         </Link>
 
         {/* ── Title ─────────────────────────────────────────────── */}
@@ -125,6 +125,12 @@ export default function PublicInventoryPage() {
             )}
           </>
         )}
+      </div>
+
+      <div className="mt-12 flex justify-center">
+        <Link href="/login" className="text-sm text-gray-500 underline hover:text-gray-800">
+          Sign in as admin
+        </Link>
       </div>
     </main>
   );

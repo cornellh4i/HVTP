@@ -82,6 +82,11 @@ export default function LoginPage() {
             Sign Up
           </Link>
         </p>
+        <p className="text-center text-sm">
+          <Link href="/" className="text-blue-600 hover:underline">
+            Back to Inventory
+          </Link>
+        </p>
       </div>
     </main>
   );
