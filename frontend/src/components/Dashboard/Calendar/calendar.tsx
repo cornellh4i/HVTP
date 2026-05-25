@@ -33,11 +33,21 @@ function getWeekBucketCount(from: Date, to: Date): number {
   return count;
 }
 
+function addMonths(date: Date, n: number): Date {
+  const d = new Date(date);
+  d.setMonth(d.getMonth() + n);
+  return d;
+}
+
 export default function Calendar({ onRangeChange, onClose, initialRange, maxBars = 12 }: CalendarProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [range, setRange] = useState<DateRange | undefined>(
+
+  const initialLeft = initialRange?.from ?? new Date();
+  const [draft, setDraft] = useState<DateRange | undefined>(
     initialRange ? { from: initialRange.from, to: initialRange.to } : undefined
   );
+  const [leftMonth, setLeftMonth] = useState<Date>(initialLeft);
+  const [rightMonth, setRightMonth] = useState<Date>(addMonths(initialLeft, 1));
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -50,21 +60,7 @@ export default function Calendar({ onRangeChange, onClose, initialRange, maxBars
   }, [onClose]);
 
   function handleSelect(selected: DateRange | undefined) {
-    if (selected?.from && selected?.to) {
-      const start = selected.from < selected.to ? selected.from : selected.to;
-      const end = selected.from < selected.to ? selected.to : selected.from;
-
-      if (getWeekBucketCount(start, end) > maxBars) {
-        return;
-      }
-
-      setRange({ from: start, to: end });
-      // isQuickAction = false → triggers "Custom" label in parent
-      onRangeChange(start, end, false);
-      return;
-    }
-
-    setRange(selected);
+    setDraft(selected);
   }
 
   function handleQuickAction(days: number) {
@@ -72,14 +68,22 @@ export default function Calendar({ onRangeChange, onClose, initialRange, maxBars
     const start = new Date();
     start.setDate(end.getDate() - (days - 1));
 
-    if (getWeekBucketCount(start, end) > maxBars) {
-      return;
-    }
+    if (getWeekBucketCount(start, end) > maxBars) return;
 
-    setRange({ from: start, to: end });
-    // isQuickAction = true → does NOT trigger "Custom" label in parent
-    onRangeChange(start, end, true);
+    setDraft({ from: start, to: end });
+    setLeftMonth(start);
+    setRightMonth(end);
   }
+
+  function handleConfirm() {
+    if (!draft?.from || !draft?.to) return;
+    const start = draft.from < draft.to ? draft.from : draft.to;
+    const end   = draft.from < draft.to ? draft.to   : draft.from;
+    onRangeChange(start, end, false);
+    onClose();
+  }
+
+  const confirmDisabled = !draft?.from || !draft?.to;
 
   return (
     <div
@@ -96,7 +100,6 @@ export default function Calendar({ onRangeChange, onClose, initialRange, maxBars
           display: flex !important;
           flex-direction: row !important;
           gap: 2rem !important;
-          padding: 1.25rem !important;
         }
         .rdp-month {
           flex: 1 !important;
@@ -168,14 +171,46 @@ export default function Calendar({ onRangeChange, onClose, initialRange, maxBars
         ))}
       </div>
 
-      <DayPicker
-        mode="range"
-        numberOfMonths={2}
-        selected={range}
-        onSelect={handleSelect}
-        defaultMonth={initialRange?.from ?? new Date()}
-        showOutsideDays={false}
-      />
+      {/* Two independent calendars */}
+      <div className="flex flex-row gap-8 px-5 py-4">
+        <DayPicker
+          mode="range"
+          numberOfMonths={1}
+          selected={draft}
+          onSelect={handleSelect}
+          month={leftMonth}
+          onMonthChange={setLeftMonth}
+          endMonth={addMonths(rightMonth, -1)}
+          showOutsideDays={false}
+        />
+        <DayPicker
+          mode="range"
+          numberOfMonths={1}
+          selected={draft}
+          onSelect={handleSelect}
+          month={rightMonth}
+          onMonthChange={setRightMonth}
+          startMonth={addMonths(leftMonth, 1)}
+          showOutsideDays={false}
+        />
+      </div>
+
+      {/* Footer */}
+      <div className="flex items-center justify-end gap-2 border-t border-gray-100 px-5 py-3">
+        <button
+          onClick={onClose}
+          className="rounded-md border border-gray-200 px-4 py-1.5 text-sm font-medium text-gray-700 transition hover:bg-gray-100"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={handleConfirm}
+          disabled={confirmDisabled}
+          className="rounded-md bg-[#1a1a1a] px-4 py-1.5 text-sm font-medium text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          Confirm
+        </button>
+      </div>
     </div>
   );
 }

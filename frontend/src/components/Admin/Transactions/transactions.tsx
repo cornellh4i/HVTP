@@ -263,8 +263,6 @@ export default function Transactions() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [dateRange, setDateRange] = useState<DateRange>(() => initialRange());
-  const [draftRange, setDraftRange] = useState<DateRange>(() => initialRange());
-  const [calendarMonth, setCalendarMonth] = useState(() => initialRange().start);
   const [openPanel, setOpenPanel] = useState<"calendar" | "filters" | "columns" | null>(null);
   const [filters, setFilters] = useState<Filters>(() => emptyFilters());
   const [draftFilters, setDraftFilters] = useState<Filters>(() => emptyFilters());
@@ -282,8 +280,6 @@ export default function Transactions() {
 
         if (defaultRange) {
           setDateRange(defaultRange);
-          setDraftRange(defaultRange);
-          setCalendarMonth(defaultRange.start);
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : String(err));
@@ -363,11 +359,7 @@ export default function Transactions() {
             <div className="relative">
               <button
                 type="button"
-                onClick={() => {
-                  setDraftRange(dateRange);
-                  setCalendarMonth(dateRange.start);
-                  setOpenPanel(openPanel === "calendar" ? null : "calendar");
-                }}
+                onClick={() => setOpenPanel(openPanel === "calendar" ? null : "calendar")}
                 className="inline-flex items-center gap-3 rounded-md bg-[#3d4f0a] px-4 py-3 text-white"
               >
                 <CalendarDays className="h-5 w-5" />
@@ -375,15 +367,12 @@ export default function Transactions() {
               </button>
               {openPanel === "calendar" && (
                 <Calendar
-                  draftRange={draftRange}
-                  month={calendarMonth}
-                  onMonthChange={setCalendarMonth}
-                  onRangeChange={setDraftRange}
-                  onCancel={() => setOpenPanel(null)}
-                  onApply={() => {
-                    setDateRange(draftRange);
+                  initialRange={dateRange}
+                  onConfirm={(range) => {
+                    setDateRange(range);
                     setOpenPanel(null);
                   }}
+                  onCancel={() => setOpenPanel(null)}
                 />
               )}
             </div>

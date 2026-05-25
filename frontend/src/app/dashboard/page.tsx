@@ -12,8 +12,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 const taskIconEmpty = "https://www.figma.com/api/mcp/asset/200f9e41-1e8c-43c7-81ed-51961d41f553";
 const taskIconChecked = "https://www.figma.com/api/mcp/asset/e5d0e84b-48df-4f46-84b3-1dfdc5d3b42f";
 
-const DEFAULT_START = new Date("2026-02-11");
-const DEFAULT_END = new Date("2026-03-11");
+function defaultDateRange() {
+  const end = new Date();
+  const start = new Date();
+  start.setMonth(start.getMonth() - 1);
+  return { from: start, to: end };
+}
 
 const MAX_BARS = 12;
 
@@ -30,17 +34,15 @@ function formatCurrency(value: number): string {
 }
 
 function formatWeight(value: number): string {
-  return `${new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(value)} kg`;
+  return `${new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(value)} lbs`;
 }
 
-type MetricKey = "grossIncome" | "profit" | "totalCost" | "weightOfWoolSold" | "inventoryCost";
-
-const INVENTORY_COST = 20000;
+type MetricKey = "grossIncome" | "profit" | "woolCost" | "weightOfWoolSold" | "inventoryCost";
 
 function getMetricTitle(metric: MetricKey): string {
   if (metric === "grossIncome") return "Gross Income";
   if (metric === "profit") return "Profit";
-  if (metric === "totalCost") return "Wool Cost";
+  if (metric === "woolCost") return "Wool Cost";
   if (metric === "weightOfWoolSold") return "Weight of Wool Sold";
   return "Inventory Cost";
 }
@@ -77,10 +79,7 @@ export default function DashboardPage() {
   const router = useRouter();
 
   const [calendarOpen, setCalendarOpen] = useState(false);
-  const [dateRange, setDateRange] = useState<{ from: Date; to: Date }>({
-    from: DEFAULT_START,
-    to: DEFAULT_END,
-  });
+  const [dateRange, setDateRange] = useState<{ from: Date; to: Date }>(defaultDateRange);
   const [isCustomRange, setIsCustomRange] = useState(false);
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [loading, setLoading] = useState(true);
@@ -147,28 +146,14 @@ export default function DashboardPage() {
   const tooManyBars = barCount > MAX_BARS;
 
   const chartData = (metrics?.weeklyData ?? []).map((bucket) => {
-    const gross = bucket.grossIncome;
-    const grossTotal = metrics?.grossIncome ?? 0;
-    const ratio = grossTotal > 0 ? gross / grossTotal : 0;
-
-    if (activeMetric === "profit") {
-      return { label: bucket.label, value: (metrics?.profit ?? 0) * ratio };
-    }
-
-    if (activeMetric === "totalCost") {
-      return { label: bucket.label, value: (metrics?.totalCost ?? 0) * ratio };
-    }
-
-    if (activeMetric === "weightOfWoolSold") {
-      return { label: bucket.label, value: (metrics?.weightOfWoolSold ?? 0) * ratio };
-    }
-
+    if (activeMetric === "profit")          return { label: bucket.label, value: bucket.profit };
+    if (activeMetric === "woolCost")        return { label: bucket.label, value: bucket.woolCost };
+    if (activeMetric === "weightOfWoolSold") return { label: bucket.label, value: bucket.weightSold };
     if (activeMetric === "inventoryCost") {
       const bucketCount = Math.max((metrics?.weeklyData ?? []).length, 1);
-      return { label: bucket.label, value: INVENTORY_COST / bucketCount };
+      return { label: bucket.label, value: (metrics?.inventoryCost ?? 0) / bucketCount };
     }
-
-    return { label: bucket.label, value: gross };
+    return { label: bucket.label, value: bucket.grossIncome };
   });
 
   const metricCards = [
@@ -183,9 +168,9 @@ export default function DashboardPage() {
       value: metrics ? formatCurrency(metrics.profit) : "—",
     },
     {
-      key: "totalCost" as const,
+      key: "woolCost" as const,
       title: "Wool Cost",
-      value: metrics ? formatCurrency(metrics.totalCost) : "—",
+      value: metrics ? formatCurrency(metrics.woolCost) : "—",
     },
     {
       key: "weightOfWoolSold" as const,
@@ -195,7 +180,7 @@ export default function DashboardPage() {
     {
       key: "inventoryCost" as const,
       title: "Inventory Cost",
-      value: metrics ? formatCurrency(INVENTORY_COST) : "—",
+      value: metrics ? formatCurrency(metrics.inventoryCost) : "—",
     },
   ];
 

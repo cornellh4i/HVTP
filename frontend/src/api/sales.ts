@@ -24,14 +24,8 @@ export const getSaleById = async (id: string) => {
   });
 };
 
-export const getSalesByItemId = async (itemId: string) => {
-  return apiRequest<Sale[]>(
-    `/api/getSalesByItemId/${encodeURIComponent(itemId)}`,
-    {
-      method: "GET",
-    },
-  );
-};
+// Write getSalesByItemId here
+
 
 export const addSale = async (data: SaleInput) => {
   return apiRequest<{ id: string; totalPrice: number }>("/api/addSale", {

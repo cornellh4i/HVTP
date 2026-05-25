@@ -1,11 +1,23 @@
 import { Request, Response } from "express";
-import db from "../config/firebase";
+import { getDb } from "../config/firebase";
 import { Timestamp, QueryDocumentSnapshot, DocumentData } from "firebase-admin/firestore";
 import { SaleFields } from "../models/sales";
+import { ItemFields } from "../models/item";
+
+const db = getDb();
+
+// Safely coerce any Firestore value to a finite number, defaulting to 0.
+function safeNum(v: unknown): number {
+  const n = Number(v);
+  return isFinite(n) ? n : 0;
+}
 
 interface WeeklyBucket {
   label: string;
   grossIncome: number;
+  woolCost: number;
+  weightSold: number;
+  profit: number;
 }
 
 function getWeekBuckets(startDate: Date, endDate: Date): { start: Date; end: Date }[] {
@@ -58,42 +70,77 @@ export async function getDashboardMetrics(req: Request, res: Response): Promise<
     const startTimestamp = Timestamp.fromDate(start);
     const endTimestamp = Timestamp.fromDate(end);
 
-    const snapshot = await db.firestore()
+    // ── Sales (gross income, weight sold) ────────────────────────────────────
+    const salesSnapshot = await db
       .collection("sales")
       .where("soldAt", ">=", startTimestamp)
       .where("soldAt", "<=", endTimestamp)
       .get();
 
-    const sales: SaleFields[] = snapshot.docs.map(
+    const sales: SaleFields[] = salesSnapshot.docs.map(
       (doc: QueryDocumentSnapshot<DocumentData>) => doc.data() as SaleFields
     );
 
     let grossIncome = 0;
-    let totalCost = 0;
     let weightOfWoolSold = 0;
 
     for (const sale of sales) {
-      const cost = sale.costPerWeight * sale.weightSold;
-      grossIncome += sale.totalPrice;
-      totalCost += cost;
-      weightOfWoolSold += sale.weightSold;
+      grossIncome += safeNum(sale.totalPrice);
+      weightOfWoolSold += safeNum(sale.weightSold);
     }
 
-    const profit = grossIncome - totalCost;
+    // ── Items added in date range (wool cost) ─────────────────────────────────
+    const itemsInRangeSnapshot = await db
+      .collection("items")
+      .where("createdAt", ">=", startTimestamp)
+      .where("createdAt", "<=", endTimestamp)
+      .get();
 
+    const itemsInRange: ItemFields[] = itemsInRangeSnapshot.docs.map(
+      (doc: QueryDocumentSnapshot<DocumentData>) => doc.data() as ItemFields
+    );
+
+    let woolCost = 0;
+    for (const item of itemsInRange) {
+      woolCost += safeNum(item.purchasePrice) * safeNum(item.weight);
+    }
+
+    const profit = grossIncome - woolCost;
+
+    // ── All items (inventory cost — total current value regardless of date) ───
+    const allItemsSnapshot = await db.collection("items").get();
+
+    let inventoryCost = 0;
+    for (const doc of allItemsSnapshot.docs) {
+      const item = doc.data() as ItemFields;
+      inventoryCost += safeNum(item.purchasePrice) * safeNum(item.weight);
+    }
+
+    // ── Weekly buckets ────────────────────────────────────────────────────────
     const buckets = getWeekBuckets(start, end);
 
     const weeklyData: WeeklyBucket[] = buckets.map(({ start: wStart, end: wEnd }) => {
-      const wStartTs = Timestamp.fromDate(wStart);
-      const wEndTs = Timestamp.fromDate(wEnd);
+      const wStartMs = Timestamp.fromDate(wStart).toMillis();
+      const wEndMs   = Timestamp.fromDate(wEnd).toMillis();
 
-      const bucketGrossIncome = sales
-        .filter((s) => s.soldAt >= wStartTs && s.soldAt <= wEndTs)
-        .reduce((sum, s) => sum + s.totalPrice, 0);
+      const weekGrossIncome = sales
+        .filter((s) => s.soldAt.toMillis() >= wStartMs && s.soldAt.toMillis() <= wEndMs)
+        .reduce((sum, s) => sum + safeNum(s.totalPrice), 0);
+
+      const weekWeightSold = sales
+        .filter((s) => s.soldAt.toMillis() >= wStartMs && s.soldAt.toMillis() <= wEndMs)
+        .reduce((sum, s) => sum + safeNum(s.weightSold), 0);
+
+      const weekWoolCost = itemsInRange
+        .filter((i) => i.createdAt.toMillis() >= wStartMs && i.createdAt.toMillis() <= wEndMs)
+        .reduce((sum, i) => sum + safeNum(i.purchasePrice) * safeNum(i.weight), 0);
 
       return {
         label: formatBucketLabel(wStart, wEnd),
-        grossIncome: bucketGrossIncome,
+        grossIncome: weekGrossIncome,
+        woolCost: weekWoolCost,
+        weightSold: weekWeightSold,
+        profit: weekGrossIncome - weekWoolCost,
       };
     });
 
@@ -102,8 +149,9 @@ export async function getDashboardMetrics(req: Request, res: Response): Promise<
       data: {
         grossIncome,
         profit,
-        totalCost,
+        woolCost,
         weightOfWoolSold,
+        inventoryCost,
         weeklyData,
       },
     });

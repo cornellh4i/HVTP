@@ -75,25 +75,8 @@ export const getSaleById = async (req: Request, res: Response) => {
     res.status(500).json(errorJson("Error retrieving sale"));
   }
 };
+// Write getSalesByItemId here
 
-export const getSalesByItemId = async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-    const snapshot = await db
-      .collection("sales")
-      .where("itemId", "==", id)
-      .get();
-
-    const sales = snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...(doc.data() as SaleInsert),
-    }));
-
-    res.status(200).json(successJson(sales));
-  } catch {
-    res.status(500).json(errorJson("Error fetching sales for item"));
-  }
-};
 
 export const addSale = async (
   req: Request<{}, {}, Omit<SaleInsert, "totalPrice">>,

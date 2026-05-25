@@ -1,138 +1,164 @@
 "use client";
 
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { DateRange, formatRange } from "../transaction-utils";
+import { useRef, useEffect, useState } from "react";
+import { DayPicker, DateRange as DayPickerRange } from "react-day-picker";
+import "react-day-picker/dist/style.css";
+import { DateRange } from "../transaction-utils";
 
 type CalendarProps = {
-  draftRange: DateRange;
-  month: Date;
-  onMonthChange: (date: Date) => void;
-  onRangeChange: (range: DateRange) => void;
-  onApply: () => void;
+  initialRange: DateRange;
+  onConfirm: (range: DateRange) => void;
   onCancel: () => void;
 };
 
-const dayLabels = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
-
-const sameDay = (a: Date, b: Date) =>
-  a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
-
-const startOfDay = (date: Date) => new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
-
-function MonthGrid({
-  month,
-  range,
-  onPick,
-}: {
-  month: Date;
-  range: DateRange;
-  onPick: (date: Date) => void;
-}) {
-  const first = new Date(month.getFullYear(), month.getMonth(), 1);
-  const daysInMonth = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
-  const blanks = Array.from({ length: first.getDay() });
-  const days = Array.from({ length: daysInMonth }, (_, index) => index + 1);
-  const title = month.toLocaleDateString("en-US", { month: "long", year: "numeric" });
-
-  return (
-    <div className="w-[320px]">
-      <h3 className="mb-6 text-center text-xl font-semibold">{title}</h3>
-      <div className="mb-4 grid grid-cols-7 text-center text-base font-semibold text-[#686868]">
-        {dayLabels.map((day) => (
-          <div key={day}>{day}</div>
-        ))}
-      </div>
-      <div className="grid grid-cols-7 gap-y-3 text-center text-lg font-medium">
-        {blanks.map((_, index) => (
-          <div key={`blank-${index}`} className="h-10" />
-        ))}
-        {days.map((day) => {
-          const date = new Date(month.getFullYear(), month.getMonth(), day);
-          const selected = sameDay(date, range.start) || sameDay(date, range.end);
-          const inRange = startOfDay(date) >= startOfDay(range.start) && startOfDay(date) <= startOfDay(range.end);
-
-          return (
-            <button
-              key={day}
-              type="button"
-              onClick={() => onPick(date)}
-              className={`mx-auto h-10 w-full rounded-md transition-colors ${
-                selected
-                  ? "bg-[#4b2306] text-white"
-                  : inRange
-                    ? "bg-[#eee9dd] text-black"
-                    : "text-black hover:bg-[#f5f2eb]"
-              }`}
-            >
-              {day}
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
+function addMonths(date: Date, n: number): Date {
+  const d = new Date(date);
+  d.setMonth(d.getMonth() + n);
+  return d;
 }
 
-export default function Calendar({
-  draftRange,
-  month,
-  onMonthChange,
-  onRangeChange,
-  onApply,
-  onCancel,
-}: CalendarProps) {
-  const nextMonth = new Date(month.getFullYear(), month.getMonth() + 1, 1);
+export default function Calendar({ initialRange, onConfirm, onCancel }: CalendarProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  const pickDate = (date: Date) => {
-    const start = startOfDay(draftRange.start);
-    const end = startOfDay(draftRange.end);
-    const picked = startOfDay(date);
+  const [draft, setDraft] = useState<DayPickerRange | undefined>({
+    from: initialRange.start,
+    to: initialRange.end,
+  });
+  const [leftMonth, setLeftMonth] = useState<Date>(initialRange.start);
+  const [rightMonth, setRightMonth] = useState<Date>(
+    addMonths(initialRange.start, 1)
+  );
 
-    if (picked < start || start !== end) {
-      onRangeChange({ start: date, end: date });
-      return;
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        onCancel();
+      }
     }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [onCancel]);
 
-    onRangeChange({ start: draftRange.start, end: date });
-  };
+  function handleSelect(selected: DayPickerRange | undefined) {
+    setDraft(selected);
+  }
+
+  function handleConfirm() {
+    if (!draft?.from || !draft?.to) return;
+    const start = draft.from < draft.to ? draft.from : draft.to;
+    const end   = draft.from < draft.to ? draft.to   : draft.from;
+    onConfirm({ start, end });
+  }
+
+  const confirmDisabled = !draft?.from || !draft?.to;
 
   return (
-    <div className="absolute left-0 top-[48px] z-30 w-[760px] rounded-md border border-[#d1d1cc] bg-white p-7 shadow-md">
-      <span className="sr-only">{formatRange(draftRange)}</span>
-      <button
-        type="button"
-        aria-label="Previous month"
-        onClick={() => onMonthChange(new Date(month.getFullYear(), month.getMonth() - 1, 1))}
-        className="absolute left-7 top-7 flex h-9 w-9 items-center justify-center rounded-md border border-[#d1d1cc] text-[#8a8a86]"
-      >
-        <ChevronLeft className="h-5 w-5" />
-      </button>
-      <button
-        type="button"
-        aria-label="Next month"
-        onClick={() => onMonthChange(new Date(month.getFullYear(), month.getMonth() + 1, 1))}
-        className="absolute right-7 top-7 flex h-9 w-9 items-center justify-center rounded-md border border-[#d1d1cc] text-[#8a8a86]"
-      >
-        <ChevronRight className="h-5 w-5" />
-      </button>
-      <div className="flex gap-14">
-        <MonthGrid month={month} range={draftRange} onPick={pickDate} />
-        <MonthGrid month={nextMonth} range={draftRange} onPick={pickDate} />
+    <div
+      ref={containerRef}
+      className="absolute left-0 top-12 z-30 rounded-xl border border-gray-200 bg-white shadow-xl"
+      style={{ minWidth: "680px" }}
+    >
+      <style>{`
+        .rdp-root {
+          --rdp-accent-color: #1a1a1a !important;
+          --rdp-accent-background-color: #f3f4f6 !important;
+        }
+        .rdp-months {
+          display: flex !important;
+          flex-direction: row !important;
+          gap: 2rem !important;
+        }
+        .rdp-month {
+          flex: 1 !important;
+        }
+        .rdp-month_caption {
+          font-weight: 700 !important;
+          font-size: 1rem !important;
+          color: #111 !important;
+          margin-bottom: 0.75rem !important;
+        }
+        .rdp-weekday {
+          color: #6b7280 !important;
+          font-weight: 500 !important;
+          font-size: 0.8rem !important;
+          width: 2.5rem !important;
+          text-align: center !important;
+        }
+        .rdp-day {
+          width: 2.25rem !important;
+          height: 2.25rem !important;
+          font-size: 0.875rem !important;
+          border-radius: 0 !important;
+        }
+        .rdp-selected .rdp-day_button {
+          background-color: #1a1a1a !important;
+          color: white !important;
+          border-radius: 9999px !important;
+          border: none !important;
+        }
+        .rdp-range_middle .rdp-day_button {
+          background-color: #f3f4f6 !important;
+          color: #1a1a1a !important;
+          border-radius: 9999px !important;
+        }
+        .rdp-range_start .rdp-day_button,
+        .rdp-range_end .rdp-day_button {
+          background-color: #1a1a1a !important;
+          color: white !important;
+          border-radius: 9999px !important;
+        }
+        .rdp-today .rdp-day_button {
+          font-weight: 700 !important;
+          color: #3d4f0a !important;
+        }
+        .rdp-nav button {
+          border: 1px solid #e5e7eb !important;
+          border-radius: 6px !important;
+          padding: 4px !important;
+          color: #111 !important;
+        }
+      `}</style>
+
+      {/* Two independent calendars */}
+      <div className="flex flex-row gap-8 px-5 py-4">
+        <DayPicker
+          mode="range"
+          numberOfMonths={1}
+          selected={draft}
+          onSelect={handleSelect}
+          month={leftMonth}
+          onMonthChange={setLeftMonth}
+          endMonth={addMonths(rightMonth, -1)}
+          showOutsideDays={false}
+        />
+        <DayPicker
+          mode="range"
+          numberOfMonths={1}
+          selected={draft}
+          onSelect={handleSelect}
+          month={rightMonth}
+          onMonthChange={setRightMonth}
+          startMonth={addMonths(leftMonth, 1)}
+          showOutsideDays={false}
+        />
       </div>
-      <div className="mt-12 flex items-center justify-between">
+
+      {/* Footer */}
+      <div className="flex items-center justify-end gap-2 border-t border-gray-100 px-5 py-3">
         <button
           type="button"
           onClick={onCancel}
-          className="rounded-md border border-[#3d4f0a] px-4 py-2 text-[#333]"
+          className="rounded-md border border-gray-200 px-4 py-1.5 text-sm font-medium text-gray-700 transition hover:bg-gray-100"
         >
           Cancel
         </button>
         <button
           type="button"
-          onClick={onApply}
-          className="rounded-md bg-[#3d4f0a] px-4 py-2 text-white"
+          onClick={handleConfirm}
+          disabled={confirmDisabled}
+          className="rounded-md bg-[#3d4f0a] px-4 py-1.5 text-sm font-medium text-white transition hover:bg-[#4a5f0c] disabled:cursor-not-allowed disabled:opacity-40"
         >
-          Apply
+          Confirm
         </button>
       </div>
     </div>
