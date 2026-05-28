@@ -4,6 +4,7 @@ import Link from "next/link";
 
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import styles from "./itemCard.module.css";
 
 interface ItemCardProps {
   sku: string;
@@ -32,7 +33,7 @@ const PlaceholderImage = () => (
     viewBox="0 0 24 24"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
-    className="h-8 w-8 text-slate-400 sm:h-12 sm:w-12 lg:h-16 lg:w-16"
+    className={styles.placeholderSvg}
     aria-hidden="true"
   >
     <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="1" />
@@ -78,18 +79,18 @@ const ItemCard = React.forwardRef<HTMLDivElement, ItemCardProps>(
     const buttonLabel = actionLabel ?? ctaLabel ?? "View Lot";
 
     return (
-    <Card ref={ref} className="relative w-full max-w-5xl rounded-xl p-2 sm:p-3 lg:p-4">
-      <div className="flex flex-row items-center gap-3 sm:gap-4 lg:gap-6">
+    <Card ref={ref} className={styles.card}>
+      <div className={styles.cardRow}>
 
         {/* Image — small square on mobile, larger on desktop */}
-        <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 sm:h-32 sm:w-32 lg:h-44 lg:w-60 lg:rounded-2xl">
+        <div className={styles.imageWrapper}>
           {imgSrc ? (
             <Image
               src={imgSrc}
               alt={sku}
               width={240}
               height={176}
-              className="h-full w-full rounded-xl object-cover lg:rounded-2xl"
+              className={styles.image}
             />
           ) : (
             <PlaceholderImage />
@@ -97,40 +98,40 @@ const ItemCard = React.forwardRef<HTMLDivElement, ItemCardProps>(
         </div>
 
         {/* Content */}
-        <div className="flex min-w-0 flex-1 flex-col gap-0.5 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-          <div className="min-w-0 flex-1">
+        <div className={styles.content}>
+          <div className={styles.contentLeft}>
             {/* Grade • Color */}
-            <p className="text-[10px] uppercase tracking-wide text-slate-500 sm:text-xs">
+            <p className={styles.description}>
               {description}
             </p>
 
             {/* SKU + published badge */}
-            <div className="flex items-center gap-2">
-              <p className="truncate text-sm font-bold sm:text-lg lg:text-xl">{title ?? sku}</p>
+            <div className={styles.skuRow}>
+              <p className={styles.sku}>{title ?? sku}</p>
               {isPublic ? (
-                <span className="flex shrink-0 items-center gap-1.5 rounded-full bg-[#f0ede6] px-2.5 py-0.5 text-xs font-medium text-slate-700">
-                  <span className="h-2 w-2 rounded-full bg-green-500" />
+                <span className={styles.publishedBadge}>
+                  <span className={styles.publishedDot} />
                   Published
                 </span>
               ) : (
-                <span className="flex shrink-0 items-center gap-1.5 rounded-full bg-red-50 px-2.5 py-0.5 text-xs font-medium text-red-700">
-                  <span className="h-2 w-2 rounded-full bg-red-400" />
+                <span className={styles.unpublishedBadge}>
+                  <span className={styles.unpublishedDot} />
                   Unpublished
                 </span>
               )}
             </div>
 
             {subtitle ? (
-              <p className="mt-0.5 truncate text-xs text-slate-600 sm:text-sm">{subtitle}</p>
+              <p className={styles.subtitle}>{subtitle}</p>
             ) : null}
 
             {/* Mobile: single condensed line */}
-            <p className="mt-0.5 truncate text-xs text-slate-600 sm:hidden">
+            <p className={styles.mobileSummary}>
               {mobileSummary ?? `${breed} / ${status} / ${quantity} / ${state}`}
             </p>
 
             {/* Desktop: grid of fields */}
-            <div className="mt-2 hidden grid-cols-2 gap-x-6 gap-y-1 text-sm sm:grid lg:text-base">
+            <div className={styles.desktopDetails}>
               {details.map((detail) => (
                 <p key={detail.label}>
                   <span className="font-semibold">{detail.label}:</span> {detail.value}
@@ -139,17 +140,17 @@ const ItemCard = React.forwardRef<HTMLDivElement, ItemCardProps>(
             </div>
 
             {lastUpdated && (
-              <p className="mt-1 hidden text-xs text-slate-400 sm:block">Last Updated: {lastUpdated}</p>
+              <p className={styles.lastUpdated}>Last Updated: {lastUpdated}</p>
             )}
 
-            <Button asChild size="sm" className="mt-3 rounded-xl bg-[#556b2f] px-4 sm:hidden">
+            <Button asChild size="sm" className={styles.mobileButton}>
               <Link href={href}>{buttonLabel}</Link>
             </Button>
           </div>
 
 
           {/* Desktop: full button */}
-          <Button asChild className="hidden shrink-0 bg-[#556b2f] sm:block">
+          <Button asChild className={styles.desktopButton}>
             <Link href={href}>{buttonLabel}</Link>
           </Button>
         </div>

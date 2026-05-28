@@ -1,0 +1,17 @@
+@reference "tailwindcss";
+
+.emptyMain {
+  @apply min-h-[40vh] px-4 py-8 sm:px-8;
+}
+
+.emptyContent {
+  @apply rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-6 py-12 text-center text-slate-500;
+}
+
+.main {
+  @apply min-h-screen px-4 py-6 sm:px-8;
+}
+
+.cardList {
+  @apply flex flex-col gap-4;
+}

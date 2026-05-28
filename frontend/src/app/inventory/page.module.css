@@ -1,0 +1,61 @@
+@reference "tailwindcss";
+
+.pageMain {
+  @apply pb-8;
+}
+
+.heading {
+  @apply px-4 pt-8 text-3xl font-bold tracking-[-0.03em] sm:px-8 sm:text-5xl;
+}
+
+.topControls {
+  @apply px-4 pt-6 sm:px-8;
+}
+
+.controlsRow {
+  @apply flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between;
+}
+
+.searchBar {
+  @apply w-full lg:w-[520px];
+}
+
+.rightControls {
+  @apply flex items-center gap-4 self-start lg:self-auto;
+}
+
+.addButton {
+  @apply flex h-11 shrink-0 items-center gap-1 rounded-2xl bg-[#556b2f] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#445523];
+}
+
+.viewToggle {
+  @apply flex items-center gap-1 rounded-2xl border border-[#556b2f] bg-white p-1;
+}
+
+.viewToggleButton {
+  @apply rounded-lg p-2 transition-colors;
+}
+
+.viewToggleButtonActive {
+  @apply bg-[#556b2f] text-white;
+}
+
+.viewToggleButtonInactive {
+  @apply text-[#556b2f] hover:bg-[#f4f6ee];
+}
+
+.filterWrapper {
+  @apply mt-6;
+}
+
+.itemCount {
+  @apply mx-4 mt-6 border-t border-[#d8d5cc] pt-5 text-sm text-slate-500 sm:mx-8;
+}
+
+.loadingMain {
+  @apply min-h-[40vh] px-4 py-8 sm:px-8;
+}
+
+.errorMain {
+  @apply min-h-[40vh] px-4 py-8 text-red-500 sm:px-8;
+}

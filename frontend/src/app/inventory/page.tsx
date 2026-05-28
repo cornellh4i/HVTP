@@ -5,7 +5,7 @@ import { LayoutGrid, AlignJustify, Plus } from "lucide-react";
 import Link from "next/link";
 
 import { getAllItems, Item } from "@/api/items";
-import CardTable from "@/components/Admin/Inventory/Table/Card-Table";
+import CardTable from "@/components/Admin/Inventory/Table/Card-Table/Card-Table";
 import SheetTable from "@/components/Admin/Inventory/Table/Sheet-Table";
 import Filter from "@/components/Public-Inventory/Filter";
 import SearchBar from "@/components/ui/searchBar";
@@ -15,6 +15,7 @@ import {
   getInventoryFilterOptions,
   InventoryFilters,
 } from "@/components/Admin/Inventory/inventory-utils";
+import styles from "./page.module.css";
 
 type ViewMode = "view" | "list";
 
@@ -60,43 +61,43 @@ export default function InventoryPage() {
   const filteredItems = filterInventoryItems(items, search, filters);
 
   return (
-    <main className="pb-8">
-      <h1 className="px-4 pt-8 text-3xl font-bold tracking-[-0.03em] sm:px-8 sm:text-5xl">
+    <main className={styles.pageMain}>
+      <h1 className={styles.heading}>
         Inventory
       </h1>
-      <div className="px-4 pt-6 sm:px-8">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+      <div className={styles.topControls}>
+        <div className={styles.controlsRow}>
           <SearchBar
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search"
-            className="w-full lg:w-[520px]"
+            className={styles.searchBar}
           />
-          <div className="flex items-center gap-4 self-start lg:self-auto">
+          <div className={styles.rightControls}>
             <Link
               href="/inventory/add"
-              className="flex h-11 shrink-0 items-center gap-1 rounded-2xl bg-[#556b2f] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#445523]"
+              className={styles.addButton}
             >
               <Plus size={16} />
               Add Lot
             </Link>
-            <div className="flex items-center gap-1 rounded-2xl border border-[#556b2f] bg-white p-1">
+            <div className={styles.viewToggle}>
               <button
                 onClick={() => setMode("view")}
-                className={`rounded-lg p-2 transition-colors ${
+                className={`${styles.viewToggleButton} ${
                   mode === "view"
-                    ? "bg-[#556b2f] text-white"
-                    : "text-[#556b2f] hover:bg-[#f4f6ee]"
+                    ? styles.viewToggleButtonActive
+                    : styles.viewToggleButtonInactive
                 }`}
               >
                 <LayoutGrid size={16} />
               </button>
               <button
                 onClick={() => setMode("list")}
-                className={`rounded-lg p-2 transition-colors ${
+                className={`${styles.viewToggleButton} ${
                   mode === "list"
-                    ? "bg-[#556b2f] text-white"
-                    : "text-[#556b2f] hover:bg-[#f4f6ee]"
+                    ? styles.viewToggleButtonActive
+                    : styles.viewToggleButtonInactive
                 }`}
               >
                 <AlignJustify size={16} />
@@ -105,11 +106,11 @@ export default function InventoryPage() {
           </div>
         </div>
 
-        <div className="mt-6">
+        <div className={styles.filterWrapper}>
           <Filter filters={filters} options={filterOptions} onChange={setFilters} />
         </div>
       </div>
-      <div className="mx-4 mt-6 border-t border-[#d8d5cc] pt-5 text-sm text-slate-500 sm:mx-8">
+      <div className={styles.itemCount}>
         {loading
           ? "Loading inventory..."
           : error
@@ -117,9 +118,9 @@ export default function InventoryPage() {
             : `${filteredItems.length} of ${items.length} lots shown`}
       </div>
       {loading ? (
-        <main className="min-h-[40vh] px-4 py-8 sm:px-8">Loading...</main>
+        <main className={styles.loadingMain}>Loading...</main>
       ) : error ? (
-        <main className="min-h-[40vh] px-4 py-8 text-red-500 sm:px-8">Error: {error}</main>
+        <main className={styles.errorMain}>Error: {error}</main>
       ) : mode === "view" ? (
         <CardTable items={filteredItems} />
       ) : (

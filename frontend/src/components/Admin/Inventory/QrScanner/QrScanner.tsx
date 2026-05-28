@@ -6,7 +6,7 @@ import { Camera, RefreshCw, TriangleAlert } from "lucide-react";
 import { getItemById, Item } from "@/api/items";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useQrScanner } from "@/hooks/useQrScanner";
-import { ItemCard } from "@/components/ui/itemCard";
+import { ItemCard } from "@/components/ui/itemCard/itemCard";
 import { Button } from "@/components/ui/button";
 
 type ScanState = "scanning" | "loading" | "found" | "not_found" | "error";
