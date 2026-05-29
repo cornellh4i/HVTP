@@ -1,12 +1,7 @@
-FROM node:16
-
-RUN mkdir /usr/app
+FROM node:18-alpine
 WORKDIR /usr/app
-
-COPY yarn.lock .
-COPY package.json .
-
-RUN yarn install
+COPY package*.json ./
+RUN npm ci
 COPY . .
-EXPOSE 3000
-CMD ["yarn", "start"]
+EXPOSE 8000
+CMD ["npm", "start"]

@@ -1,5 +1,15 @@
-import { redirect } from "next/navigation";
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export default function SuccessPage() {
-  redirect("/dashboard");
+  const router = useRouter();
+
+  useEffect(() => {
+    const isMobile = window.innerWidth < 768;
+    router.replace(isMobile ? "/inventory" : "/dashboard");
+  }, [router]);
+
+  return null;
 }
