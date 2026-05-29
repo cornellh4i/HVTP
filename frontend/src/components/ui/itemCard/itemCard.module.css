@@ -5,7 +5,7 @@
 }
 
 .card {
-  @apply relative w-full max-w-5xl rounded-xl p-2 sm:p-3 lg:p-4;
+  @apply relative w-full rounded-lg border border-slate-200 bg-white p-4 lg:p-5;
 }
 
 .cardRow {
@@ -13,11 +13,11 @@
 }
 
 .imageWrapper {
-  @apply flex h-16 w-16 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 sm:h-32 sm:w-32 lg:h-44 lg:w-60 lg:rounded-2xl;
+  @apply flex w-[150px] h-[100px] sm:w-[200px] sm:h-[125px] lg:w-[250px] lg:h-[150px] shrink-0 items-center justify-center overflow-hidden rounded-lg border border-[#646D72] bg-slate-100;
 }
 
 .image {
-  @apply h-full w-full rounded-xl object-cover lg:rounded-2xl;
+  @apply h-full w-full object-cover;
 }
 
 .content {
@@ -29,15 +29,15 @@
 }
 
 .description {
-  @apply text-[10px] uppercase tracking-wide text-slate-500 sm:text-xs;
+  @apply text-xs uppercase tracking-widest text-slate-500;
 }
 
 .skuRow {
-  @apply flex items-center gap-2;
+  @apply mt-0.5 flex flex-wrap items-center gap-2;
 }
 
 .sku {
-  @apply truncate text-sm font-bold sm:text-lg lg:text-xl;
+  @apply text-xl font-bold sm:text-2xl lg:text-2xl;
 }
 
 .publishedBadge {
@@ -53,7 +53,7 @@
 }
 
 .unpublishedDot {
-  @apply h-2 w-2 rounded-full bg-red-400;
+  @apply h-2 w-2 rounded-full border-2 border-red-400;
 }
 
 .subtitle {
@@ -65,7 +65,7 @@
 }
 
 .desktopDetails {
-  @apply mt-2 hidden grid-cols-2 gap-x-6 gap-y-1 text-sm sm:grid lg:text-base;
+  @apply mt-2 hidden grid-cols-[auto_auto] justify-start gap-x-12 gap-y-1 text-sm sm:grid lg:text-sm text-slate-700;
 }
 
 .lastUpdated {
@@ -73,9 +73,9 @@
 }
 
 .mobileButton {
-  @apply mt-3 rounded-xl bg-[#556b2f] px-4 sm:hidden;
+  @apply mt-3 inline-flex items-center justify-center gap-2 rounded-lg border border-[#3A4F0D] bg-[#3A4F0D] p-3 text-sm text-white transition-colors hover:bg-[#2e3e0a] sm:hidden;
 }
 
 .desktopButton {
-  @apply hidden shrink-0 bg-[#556b2f] sm:block;
+  @apply hidden shrink-0 items-center justify-center gap-2 rounded-lg border border-[#3A4F0D] bg-[#3A4F0D] p-3 text-sm text-white transition-colors hover:bg-[#2e3e0a] sm:flex;
 }
