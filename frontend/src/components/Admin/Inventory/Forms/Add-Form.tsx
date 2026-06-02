@@ -149,13 +149,30 @@ export default function AddForm() {
   };
 
   const handleAddLot = async () => {
+    const missing: string[] = [];
+    if (!itemFields.breed) missing.push("Breed");
+    if (!itemFields.grade) missing.push("Grade");
+    if (!itemFields.color) missing.push("Color");
+    if (itemFields.weight === "") missing.push("Weight");
+    if (itemFields.palletLocation === "") missing.push("Pallet Location");
+    if (!itemFields.status) missing.push("Status");
+    if (!itemFields.type) missing.push("Type");
+    if (!itemFields.shearDate) missing.push("Shear Date");
+    if (!farmerFormFields.name) missing.push("Farmer Name");
+    if (!farmerFormFields.city) missing.push("Farmer City");
+    if (!farmerFormFields.state) missing.push("Farmer State");
+    if (missing.length > 0) {
+      alert(`Please fill in the following required fields:\n• ${missing.join("\n• ")}`);
+      return;
+    }
+
     try {
       setLoading(true);
       const farmer = await addFarmer(farmerFormFields);
       const payload: Partial<Item> & Record<string, unknown> = {
         ...itemFields,
         weight: itemFields.weight ? parseFloat(itemFields.weight) : undefined,
-        purchasePrice: itemFields.purchasePrice ? parseFloat(itemFields.purchasePrice) : undefined,
+        purchasePrice: itemFields.purchasePrice !== "" ? parseFloat(itemFields.purchasePrice) : undefined,
         images,
         coverImage: coverImage || images[0] || "",
         name: itemFields.breed || "Unnamed Lot",
@@ -169,7 +186,7 @@ export default function AddForm() {
       router.push(`/inventory/${created.id}`);
     } catch (err) {
       console.error(err);
-      alert("Error creating lot");
+      alert(`Error creating lot: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setLoading(false);
     }

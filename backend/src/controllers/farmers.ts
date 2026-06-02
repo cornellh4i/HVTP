@@ -26,18 +26,18 @@ export const addFarmer = async (
   try {
     const newFarmer = req.body;
 
-    if (
-      !newFarmer.name ||
-      !newFarmer.city ||
-      !newFarmer.state
-    ) {
-      return res.status(400).json(errorJson("Missing required fields"));
+    const missingFarmerFields = (["name", "city", "state"] as const).filter(
+      (f) => !newFarmer[f]
+    );
+    if (missingFarmerFields.length > 0) {
+      return res.status(400).json(errorJson(`Missing required farmer fields: ${missingFarmerFields.join(", ")}`));
     }
 
     const ref = await db.collection("farmers").add(newFarmer);
     res.status(201).json(successJson({ id: ref.id }));
-  } catch {
-    res.status(500).json(errorJson("Error adding farmer"));
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    res.status(500).json(errorJson(`Error adding farmer: ${message}`));
   }
 };
 
