@@ -72,6 +72,7 @@ export default function InventoryPage() {
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search"
             className={styles.searchBar}
+            scanHref="/scan"
           />
           <div className={styles.rightControls}>
             <Link

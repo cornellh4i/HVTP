@@ -17,7 +17,11 @@ import dashboardRoutes from "./routes/dashboard";
 const app = express();
 
 // Middleware to parse json request bodies
-app.use(cors({ origin: "http://localhost:3000" }));
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://hvtp-platform-exwqb.ondigitalocean.app",
+];
+app.use(cors({ origin: allowedOrigins }));
 app.use(bodyParser.json());
 app.use("/api-docs", swaggerUI.serve, swaggerUI.setup(spec));
 

@@ -104,22 +104,20 @@ export const addItem = async (
   try {
     const newItem = req.body;
 
-    if (
-      !newItem.farmerId ||
-      !newItem.breed ||
-      !newItem.grade ||
-      !newItem.color ||
-      newItem.weight === undefined ||
-      !newItem.status ||
-      newItem.isActive === undefined ||
-      newItem.isPublic === undefined ||
-      !newItem.notes ||
-      !newItem.palletLocation ||
-      !newItem.shearDate ||
-      !newItem.purchasePrice ||
-      !newItem.createdAt
-    ) {
-      return res.status(400).json(errorJson("Missing required fields"));
+    const missingItemFields: string[] = [];
+    if (!newItem.farmerId) missingItemFields.push("farmerId");
+    if (!newItem.breed) missingItemFields.push("breed");
+    if (!newItem.grade) missingItemFields.push("grade");
+    if (!newItem.color) missingItemFields.push("color");
+    if (newItem.weight === undefined) missingItemFields.push("weight");
+    if (!newItem.status) missingItemFields.push("status");
+    if (newItem.isActive === undefined) missingItemFields.push("isActive");
+    if (newItem.isPublic === undefined) missingItemFields.push("isPublic");
+    if (newItem.palletLocation == null || newItem.palletLocation === "") missingItemFields.push("palletLocation");
+    if (!newItem.shearDate) missingItemFields.push("shearDate");
+    if (!newItem.createdAt) missingItemFields.push("createdAt");
+    if (missingItemFields.length > 0) {
+      return res.status(400).json(errorJson(`Missing required fields: ${missingItemFields.join(", ")}`));
     }
 
     let farmerState = "";
@@ -142,8 +140,9 @@ export const addItem = async (
     await ref.update({ qrCode: ref.id });
 
     res.status(201).json(successJson({ id: ref.id, sku }));
-  } catch {
-    res.status(500).json(errorJson("Error adding item"));
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    res.status(500).json(errorJson(`Error adding item: ${message}`));
   }
 };
 

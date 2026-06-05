@@ -17,7 +17,7 @@
 }
 
 .searchBar {
-  @apply w-full lg:w-[520px];
+  @apply w-full lg:w-130;
 }
 
 .rightControls {

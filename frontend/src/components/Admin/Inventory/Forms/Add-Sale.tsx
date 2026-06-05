@@ -93,7 +93,6 @@ export default function SaleModal({
         weightSold: parseFloat(weightSold),
         weightUnit: "lb",
         pricePerWeight: parseFloat(pricePerWeight),
-        totalPrice: parseFloat(totalPrice!),
         costPerWeight: Number(costPerWeight),
         soldAt: new Date().toISOString(),
         notes: notes?.trim() || "",

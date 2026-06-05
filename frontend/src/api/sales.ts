@@ -1,6 +1,7 @@
 import { apiRequest } from "./APIWrapper";
 
 export type Sale = {
+  id: string;
   itemId: string;
   weightSold: number;
   weightUnit: "kg" | "lb";
@@ -10,6 +11,13 @@ export type Sale = {
   soldAt: string;
   buyerName?: string;
   notes: string;
+  itemName?: string;
+  itemWeight?: number;
+  purchasePrice?: number;
+  isPublic?: boolean;
+  farmerName?: string;
+  farmerCity?: string;
+  farmerState?: string;
 };
 
 export type SaleInput = Omit<Sale, "id" | "totalPrice">;

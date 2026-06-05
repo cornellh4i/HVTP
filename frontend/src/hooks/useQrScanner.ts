@@ -101,31 +101,18 @@ export function useQrScanner({ videoRef, onResult }: UseQrScannerArgs) {
       const controls = await reader.decodeFromVideoDevice(
         undefined,
         video,
-        (result, decodeError) => {
+        (result) => {
           if (result) {
             onResult(result.getText());
             return;
           }
 
-          if (decodeError) {
-            const decodeErrorName =
-              typeof decodeError === "object" &&
-              decodeError !== null &&
-              "name" in decodeError
-                ? String((decodeError as { name?: string }).name)
-                : "";
-
-            if (
-              decodeErrorName &&
-              !["NotFoundException", "ChecksumException", "FormatException"].includes(
-                decodeErrorName
-              )
-            ) {
-              const friendlyError = getFriendlyScannerError(decodeError);
-              setError(friendlyError);
-              setStatus("error");
-            }
-          }
+          // Per-frame decode failures (no code visible yet, checksum mismatch,
+          // format mismatch) are expected during scanning and must not be
+          // escalated. Class names get minified in production, so we cannot
+          // reliably filter on `error.name` — we just ignore all decode errors
+          // here. Real setup failures throw from `decodeFromVideoDevice` itself
+          // and are caught by the outer try/catch.
         }
       );
 

@@ -18,7 +18,8 @@ export default function LoginPage() {
       // Refresh the session cookie (it may have expired) before redirecting
       user.getIdToken().then((token) => {
         document.cookie = `session=${token}; path=/; max-age=3600; SameSite=Strict`;
-        router.replace("/dashboard");
+        const isMobile = window.innerWidth < 768;
+        router.replace(isMobile ? "/inventory" : "/dashboard");
       });
     }
   }, [user, loading, router]);
@@ -29,7 +30,6 @@ export default function LoginPage() {
 
     try {
       await logIn(email, password);
-      router.push("/success");
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message);

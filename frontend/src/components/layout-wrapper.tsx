@@ -3,7 +3,6 @@
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import AppSidebar from './Navbar/Desktop-Navbar/app-sidebar';
-import MobileNavbar from './Navbar/Mobile-Navbar/mobile-navbar';
 import { SidebarInset, SidebarProvider } from './ui/sidebar';
 import { useAuth } from '@/utils/AuthContext';
 
@@ -32,14 +31,7 @@ export default function LayoutWrapper({ children }: LayoutWrapperProps) {
   }, [isProtected, loading, user, router]);
 
   if (pathname?.startsWith('/scan')) {
-    return (
-      <div className="pb-24 md:pb-0">
-        {children}
-        <div className="md:hidden">
-          <MobileNavbar />
-        </div>
-      </div>
-    );
+    return <>{children}</>;
   }
 
   const showSidebar =
