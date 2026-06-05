@@ -1,6 +1,6 @@
 "use client";
 
-import ViewForm from "@/components/Admin/Inventory/Forms/View-Form";
+import ViewForm from "@/components/Admin/Inventory/Forms/View-Form/View-Form";
 
 export default function ItemPage() {
   return (
