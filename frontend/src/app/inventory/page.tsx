@@ -89,7 +89,7 @@ export default function InventoryPage() {
                   mode === "view"
                     ? styles.viewToggleButtonActive
                     : styles.viewToggleButtonInactive
-                }`}
+                } rounded-l-lg`}
               >
                 <LayoutGrid size={16} />
               </button>
@@ -99,7 +99,7 @@ export default function InventoryPage() {
                   mode === "list"
                     ? styles.viewToggleButtonActive
                     : styles.viewToggleButtonInactive
-                }`}
+                } rounded-r-lg -ml-px`}
               >
                 <AlignJustify size={16} />
               </button>
