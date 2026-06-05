@@ -9,7 +9,10 @@ export interface SaleFields {
   costPerWeight: number;
   soldAt: Timestamp;
   buyerName: string;
-  notes: string 
+  buyerPhone?: string;
+  buyerEmail?: string;
+  buyerAddress?: string;
+  notes: string;
 }
 
 export type SaleInsert = SaleFields;

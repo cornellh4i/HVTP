@@ -9,7 +9,10 @@ export type Sale = {
   totalPrice: number;
   costPerWeight: number;
   soldAt: string;
-  buyerName?: string;
+  buyerName: string;       
+  buyerPhone?: string;    
+  buyerEmail?: string;     
+  buyerAddress?: string; 
   notes: string;
   itemName?: string;
   itemWeight?: number;
@@ -20,7 +23,7 @@ export type Sale = {
   farmerState?: string;
 };
 
-export type SaleInput = Omit<Sale, "id" | "totalPrice">;
+export type SaleInput = Omit<Sale, "id">;
 
 export const getAllSales = async () => {
   return apiRequest<Sale[]>("/api/getAllSales", { method: "GET" });
