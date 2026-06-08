@@ -2,12 +2,15 @@
 
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { getItemById, updateItem, deleteItem, Item } from "@/api/items";
 import { getSalesByItemId, Sale } from "@/api/sales";
 import SaleModal from "@/components/Admin/Inventory/Forms/Add-Sale";
 import { Trash, Printer } from "lucide-react";
 import InfoTab from "./Info-Tab/Info-Tab";
+import SalesTab from "./Sales-Tab/Sales-Tab";
+
+type ActiveTab = "info" | "sales";
 
 export default function ViewForm() {
   const [item, setItem] = useState<Item | null>(null);
@@ -19,6 +22,7 @@ export default function ViewForm() {
   const [formData, setFormData] = useState<Partial<Item>>({});
   const [saving, setSaving] = useState(false);
   const [showSaleModal, setShowSaleModal] = useState(false);
+  const [activeTab, setActiveTab] = useState<ActiveTab>("info");
   const [toast, setToast] = useState<{ message: string; sub: string } | null>(null);
 
   const { id: itemId } = useParams<{ id: string }>();
@@ -40,20 +44,21 @@ export default function ViewForm() {
     fetchItem();
   }, [itemId]);
 
-  useEffect(() => {
-    const fetchSales = async () => {
-      try {
-        setSalesLoading(true);
-        const data = await getSalesByItemId(itemId);
-        setSales(data);
-      } catch {
-        setSales([]);
-      } finally {
-        setSalesLoading(false);
-      }
-    };
-    fetchSales();
+  const fetchSales = useCallback(async () => {
+    try {
+      setSalesLoading(true);
+      const data = await getSalesByItemId(itemId);
+      setSales(data);
+    } catch {
+      setSales([]);
+    } finally {
+      setSalesLoading(false);
+    }
   }, [itemId]);
+
+  useEffect(() => {
+    fetchSales();
+  }, [fetchSales]);
 
   const showToast = (message: string, sub: string) => {
     setToast({ message, sub });
@@ -200,26 +205,61 @@ export default function ViewForm() {
         SKU: {formData.sku ?? itemId}
       </h1>
 
-      <InfoTab
-        itemId={itemId}
-        item={item}
-        formData={formData}
-        setFormData={setFormData}
-        images={images}
-        setImages={setImages}
-        sales={sales}
-        salesLoading={salesLoading}
-        saving={saving}
-        onPublish={handlePublish}
-        onSave={handleSave}
-      />
+      <div className="pt-2 md:pt-9">
+        <div className="flex gap-10 border-b border-[#aeadab] text-2xl">
+          <button
+            type="button"
+            onClick={() => setActiveTab("info")}
+            className={`pb-3 text-black ${
+              activeTab === "info" ? "border-b-[6px] border-[#848c2d]" : ""
+            }`}
+          >
+            Lot Information
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("sales")}
+            className={`pb-3 text-black ${
+              activeTab === "sales" ? "border-b-[6px] border-[#848c2d]" : ""
+            }`}
+          >
+            Sales History
+          </button>
+        </div>
+
+        <div className="border-t border-[#aeadab] pt-7">
+          {activeTab === "info" ? (
+            <InfoTab
+              itemId={itemId}
+              item={item}
+              formData={formData}
+              setFormData={setFormData}
+              images={images}
+              setImages={setImages}
+              saving={saving}
+              onPublish={handlePublish}
+              onSave={handleSave}
+            />
+          ) : (
+            <SalesTab
+              item={item}
+              formData={formData}
+              sales={sales}
+              salesLoading={salesLoading}
+            />
+          )}
+        </div>
+      </div>
 
       {showSaleModal && (
         <SaleModal
           itemId={itemId}
           costPerWeight={formData.purchasePrice ?? 0}
           onClose={() => setShowSaleModal(false)}
-          onSaleRecorded={(id, total) => console.log("Sold!", id, total)}
+          onSaleRecorded={() => {
+            fetchSales();
+            setActiveTab("sales");
+          }}
         />
       )}
 

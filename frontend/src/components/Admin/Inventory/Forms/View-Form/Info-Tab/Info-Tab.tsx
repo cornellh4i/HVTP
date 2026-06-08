@@ -3,7 +3,6 @@
 import dynamic from "next/dynamic";
 import { useState } from "react";
 import { Item } from "@/api/items";
-import { Sale } from "@/api/sales";
 import EditableField from "@/components/ui/EditableField";
 import SelectField, { SelectOption } from "@/components/ui/selectField";
 import ItemImageUpload from "@/components/Admin/Inventory/Upload-Image/ItemImageUpload";
@@ -64,21 +63,6 @@ function Field({
   );
 }
 
-const formatCurrency = (value?: number) =>
-  new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(value ?? 0);
-
-const formatWeight = (value?: number, unit?: "kg" | "lb") => {
-  const weight = value ?? 0;
-  const suffix = unit === "kg" ? "kg" : "lbs";
-  return `${weight.toLocaleString("en-US", {
-    maximumFractionDigits: 1,
-    minimumFractionDigits: Number.isInteger(weight) ? 0 : 1,
-  })} ${suffix}`;
-};
-
 type InfoTabProps = {
   itemId: string;
   item: Item;
@@ -86,8 +70,6 @@ type InfoTabProps = {
   setFormData: React.Dispatch<React.SetStateAction<Partial<Item>>>;
   images: string[];
   setImages: React.Dispatch<React.SetStateAction<string[]>>;
-  sales: Sale[];
-  salesLoading: boolean;
   saving: boolean;
   onPublish: () => void;
   onSave: () => void;
@@ -100,8 +82,6 @@ export default function InfoTab({
   setFormData,
   images,
   setImages,
-  sales,
-  salesLoading,
   saving,
   onPublish,
   onSave,
@@ -139,7 +119,7 @@ export default function InfoTab({
           <section>
             <Card className="p-6">
               <h2 className="text-lg font-bold mb-4 md:text-2xl md:mb-5">
-                General Information
+                Lot Information
               </h2>
               <div className="flex flex-col gap-5 md:grid md:grid-cols-2 md:gap-x-6 md:gap-y-5">
                 <Field label="Breed">
@@ -230,69 +210,6 @@ export default function InfoTab({
                     onChange={set("purchasePrice")}
                   />
                 </Field>
-              </div>
-            </Card>
-          </section>
-
-          <section>
-            <Card className="overflow-hidden border border-[#aeadab] p-0">
-              <div className="border-b border-[#aeadab] px-6 py-4">
-                <h2 className="text-lg font-semibold text-black">Sales History</h2>
-              </div>
-
-              <div className="overflow-x-auto">
-                <table className="min-w-full text-sm text-[#1f1f1f]">
-                  <thead className="border-b border-[#aeadab] bg-white">
-                    <tr className="[&_th]:whitespace-nowrap [&_th]:px-5 [&_th]:py-3 [&_th]:text-left [&_th]:font-semibold">
-                      <th>SKU</th>
-                      <th>Grade</th>
-                      <th>Wool Type</th>
-                      <th>Intake Price</th>
-                      <th>Selling Price</th>
-                      <th>Profit (lot)</th>
-                      <th>Quantity Sold</th>
-                      <th>Buyer</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {salesLoading ? (
-                      <tr>
-                        <td colSpan={8} className="px-5 py-8 text-center text-gray-500">
-                          Loading sales...
-                        </td>
-                      </tr>
-                    ) : sales.length === 0 ? (
-                      <tr>
-                        <td colSpan={8} className="px-5 py-8 text-center text-gray-500">
-                          No sales recorded yet.
-                        </td>
-                      </tr>
-                    ) : (
-                      sales.map((sale, index) => {
-                        const intake = sale.costPerWeight ?? 0;
-                        const selling = sale.pricePerWeight ?? 0;
-                        const weight = sale.weightSold ?? 0;
-                        const profit = (selling - intake) * weight;
-                        const rowBg = index % 2 === 0 ? "bg-[#F6F6F4]" : "bg-white";
-                        return (
-                          <tr
-                            key={`${sale.itemId}-${sale.soldAt}-${index}`}
-                            className={`${rowBg} border-b border-[#ecece8] last:border-b-0 [&_td]:whitespace-nowrap [&_td]:px-5 [&_td]:py-3`}
-                          >
-                            <td>{formData.sku ?? item.sku ?? "-"}</td>
-                            <td>{formData.grade ?? item.grade ?? "-"}</td>
-                            <td>{(formData as Partial<Item> & { type?: string }).type ?? item.type ?? "-"}</td>
-                            <td>{formatCurrency(intake)}</td>
-                            <td>{formatCurrency(selling)}</td>
-                            <td>{formatCurrency(profit)}</td>
-                            <td>{formatWeight(sale.weightSold, sale.weightUnit)}</td>
-                            <td>{sale.buyerName || "-"}</td>
-                          </tr>
-                        );
-                      })
-                    )}
-                  </tbody>
-                </table>
               </div>
             </Card>
           </section>

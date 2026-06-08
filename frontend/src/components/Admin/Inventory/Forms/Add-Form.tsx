@@ -260,7 +260,7 @@ export default function AddForm() {
 
           <section>
             <Card className="p-6">
-              <h2 className="text-lg font-bold mb-4 md:text-2xl md:mb-5">General Information</h2>
+              <h2 className="text-lg font-bold mb-4 md:text-2xl md:mb-5">Lot Information</h2>
               <div className="flex flex-col gap-5 md:grid md:grid-cols-2 md:gap-x-6 md:gap-y-5">
                 <Field label="Breed">
                   <EditableField isEditing value={itemFields.breed} placeholder="Breed" onChange={setItem("breed")} />
