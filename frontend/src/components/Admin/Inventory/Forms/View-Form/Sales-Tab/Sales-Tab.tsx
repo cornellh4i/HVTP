@@ -18,6 +18,19 @@ const formatWeight = (value?: number, unit?: "kg" | "lb") => {
   })} ${suffix}`;
 };
 
+const dateFormatter = new Intl.DateTimeFormat("en-US", {
+  month: "short",
+  day: "numeric",
+  year: "numeric",
+});
+
+const formatDate = (value?: string) => {
+  if (!value) return "-";
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return "-";
+  return dateFormatter.format(d);
+};
+
 type SalesTabProps = {
   item: Item;
   formData: Partial<Item>;
@@ -26,78 +39,66 @@ type SalesTabProps = {
 };
 
 export default function SalesTab({
-  item,
-  formData,
+  item: _item,
+  formData: _formData,
   sales,
   salesLoading,
 }: SalesTabProps) {
+  void _item;
+  void _formData;
   return (
     <section>
       <div className="overflow-hidden rounded-md border border-[#b8b8b2] bg-white">
         <div className="overflow-x-auto">
-          <table className="min-w-full border-collapse text-left text-sm">
+          <table className="w-full table-fixed border-collapse text-left text-sm">
             <thead>
               <tr className="h-14 border-b border-[#d8d7cf] bg-white shadow-sm">
-                <th className="whitespace-nowrap px-7 text-base font-semibold text-black">SKU</th>
-                <th className="whitespace-nowrap px-7 text-base font-semibold text-black">Grade</th>
-                <th className="whitespace-nowrap px-7 text-base font-semibold text-black">Wool Type</th>
-                <th className="whitespace-nowrap px-7 text-base font-semibold text-black">Intake Price</th>
-                <th className="whitespace-nowrap px-7 text-base font-semibold text-black">Selling Price</th>
-                <th className="whitespace-nowrap px-7 text-base font-semibold text-black">Profit (lot)</th>
-                <th className="whitespace-nowrap px-7 text-base font-semibold text-black">Quantity Sold</th>
-                <th className="whitespace-nowrap px-7 text-base font-semibold text-black">Buyer</th>
+                <th className="w-[12%] whitespace-nowrap px-7 text-left text-base font-semibold text-black">Date</th>
+                <th className="w-[12%] whitespace-nowrap px-7 text-right text-base font-semibold text-black">Quantity</th>
+                <th className="w-[14%] whitespace-nowrap px-7 text-right text-base font-semibold text-black">Selling Price</th>
+                <th className="w-[18%] whitespace-nowrap px-7 text-left text-base font-semibold text-black">Buyer</th>
+                <th className="w-[18%] whitespace-nowrap px-7 text-left text-base font-semibold text-black">Phone</th>
+                <th className="w-[26%] whitespace-nowrap px-7 text-left text-base font-semibold text-black">Email</th>
               </tr>
             </thead>
             <tbody>
               {salesLoading ? (
                 <tr>
-                  <td colSpan={8} className="px-7 py-10 text-center text-sm text-gray-500">
+                  <td colSpan={6} className="px-7 py-10 text-center text-sm text-gray-500">
                     Loading sales...
                   </td>
                 </tr>
               ) : sales.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-7 py-10 text-center text-sm text-gray-500">
+                  <td colSpan={6} className="px-7 py-10 text-center text-sm text-gray-500">
                     No sales recorded yet.
                   </td>
                 </tr>
               ) : (
                 sales.map((sale, index) => {
-                  const intake = sale.costPerWeight ?? 0;
-                  const selling = sale.pricePerWeight ?? 0;
-                  const weight = sale.weightSold ?? 0;
-                  const profit = (selling - intake) * weight;
                   const rowBg = index % 2 === 1 ? "bg-[#f3f0e8]" : "bg-white";
                   return (
                     <tr
                       key={`${sale.itemId}-${sale.soldAt}-${index}`}
                       className={`h-12 ${rowBg}`}
                     >
-                      <td className="whitespace-nowrap px-7 text-[#242424]">
-                        {formData.sku ?? item.sku ?? "-"}
+                      <td className="whitespace-nowrap px-7 text-left text-[#242424]">
+                        {formatDate(sale.soldAt)}
                       </td>
-                      <td className="whitespace-nowrap px-7 text-[#242424]">
-                        {formData.grade ?? item.grade ?? "-"}
-                      </td>
-                      <td className="whitespace-nowrap px-7 text-[#242424]">
-                        {(formData as Partial<Item> & { type?: string }).type ??
-                          item.type ??
-                          "-"}
-                      </td>
-                      <td className="whitespace-nowrap px-7 text-[#242424]">
-                        {formatCurrency(intake)}
-                      </td>
-                      <td className="whitespace-nowrap px-7 text-[#242424]">
-                        {formatCurrency(selling)}
-                      </td>
-                      <td className="whitespace-nowrap px-7 text-[#242424]">
-                        {formatCurrency(profit)}
-                      </td>
-                      <td className="whitespace-nowrap px-7 text-[#242424]">
+                      <td className="whitespace-nowrap px-7 text-right text-[#242424]">
                         {formatWeight(sale.weightSold, sale.weightUnit)}
                       </td>
-                      <td className="whitespace-nowrap px-7 text-[#242424]">
+                      <td className="whitespace-nowrap px-7 text-right text-[#242424]">
+                        {formatCurrency(sale.pricePerWeight)}
+                      </td>
+                      <td className="whitespace-nowrap px-7 text-left text-[#242424]">
                         {sale.buyerName || "-"}
+                      </td>
+                      <td className="whitespace-nowrap px-7 text-left text-[#242424]">
+                        {sale.buyerPhone || "-"}
+                      </td>
+                      <td className="whitespace-nowrap px-7 text-left text-[#242424]">
+                        {sale.buyerEmail || "-"}
                       </td>
                     </tr>
                   );

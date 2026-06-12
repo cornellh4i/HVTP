@@ -1,4 +1,4 @@
-import AddForm from "@/components/Admin/Inventory/Forms/Add-Form";
+import AddForm from "@/components/Admin/Inventory/Forms/Add-Form/Add-Form";
 
 export default function AddInventoryPage() {
   return (

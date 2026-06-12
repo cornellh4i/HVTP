@@ -9,6 +9,7 @@ import SaleModal from "@/components/Admin/Inventory/Forms/Add-Sale";
 import { Trash, Printer } from "lucide-react";
 import InfoTab from "./Info-Tab/Info-Tab";
 import SalesTab from "./Sales-Tab/Sales-Tab";
+import styles from "./View-Form.module.css";
 
 type ActiveTab = "info" | "sales";
 
@@ -99,7 +100,7 @@ export default function ViewForm() {
         setFormData((p) => ({ ...p, isPublic: true }));
         showToast(
           "Lot successfully published!",
-          "Your changes have been saved and published externally. Change the status to “Processing” to hide this lot from the public inventory.",
+          'Your changes have been saved and published externally. Change the status to "Processing" to hide this lot from the public inventory.',
         );
       } else {
         await updateItem(itemId, { isPublic: false });
@@ -124,7 +125,7 @@ export default function ViewForm() {
       });
       showToast(
         "Lot successfully updated!",
-        "Your changes have been saved internally. Change the status to “In Stock” to make this lot available for sale.",
+        'Your changes have been saved internally. Change the status to "In Stock" to make this lot available for sale.',
       );
     } catch {
       setError("Failed to save.");
@@ -154,80 +155,66 @@ export default function ViewForm() {
     );
 
   return (
-    <main className="min-h-screen bg-white px-4 py-6 md:p-8">
-      <div className="flex items-center justify-between mb-4 md:mb-8">
-        <Link
-          href="/inventory"
-          className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900"
-        >
+    <main className={styles.main}>
+      <div className={styles.header}>
+        <Link href="/inventory" className={styles.backLink}>
           ← Back to Inventory
         </Link>
-        <div className="hidden md:flex gap-2">
+        <div className={styles.headerActions}>
           <button
             onClick={handleGenerateLabel}
-            className="hover:bg-gray-50 rounded p-1"
+            className={styles.iconBtn}
             aria-label="Print Label"
           >
             <Printer size={24} />
           </button>
-          <button onClick={handleDelete}>
+          <button onClick={handleDelete} className={styles.iconBtn}>
             <Trash size={24} />
           </button>
           <button
             onClick={() => setShowSaleModal(true)}
-            className="rounded bg-[#D9D9D9] px-4 py-1.5 text-sm text-black hover:bg-blue-500"
+            className={styles.btnSecondary}
           >
             Record a sale
           </button>
-          <button
-            onClick={handlePublish}
-            className="rounded bg-[#D9D9D9] px-4 py-1.5 text-sm text-black hover:bg-blue-500"
-          >
+          <button onClick={handlePublish} className={styles.btnSecondary}>
             {formData.isPublic ? "Unpublish" : "Publish"}
           </button>
           <button
             onClick={handleSave}
             disabled={saving}
-            className="rounded bg-[#3A4F0D] px-4 py-1.5 text-sm text-white hover:bg-blue-500 disabled:opacity-50"
+            className={styles.btnPrimary}
           >
             {saving ? "Saving..." : "Save"}
           </button>
         </div>
       </div>
 
-      <div className="mb-6 hidden md:block">
-        <p className="text-base font-semibold text-gray-900">
-          SKU: {formData.sku ?? ""}
-        </p>
+      <div className={styles.skuDesktop}>
+        <p className={styles.skuText}>SKU: {formData.sku ?? ""}</p>
       </div>
 
-      <h1 className="text-lg font-bold mb-4 md:hidden">
-        SKU: {formData.sku ?? itemId}
-      </h1>
+      <h1 className={styles.skuMobile}>SKU: {formData.sku ?? itemId}</h1>
 
-      <div className="pt-2 md:pt-9">
-        <div className="flex gap-10 border-b border-[#aeadab] text-2xl">
+      <div className={styles.tabsWrapper}>
+        <div className={styles.tabList}>
           <button
             type="button"
             onClick={() => setActiveTab("info")}
-            className={`pb-3 text-black ${
-              activeTab === "info" ? "border-b-[6px] border-[#848c2d]" : ""
-            }`}
+            className={activeTab === "info" ? styles.tabActive : styles.tab}
           >
             Lot Information
           </button>
           <button
             type="button"
             onClick={() => setActiveTab("sales")}
-            className={`pb-3 text-black ${
-              activeTab === "sales" ? "border-b-[6px] border-[#848c2d]" : ""
-            }`}
+            className={activeTab === "sales" ? styles.tabActive : styles.tab}
           >
             Sales History
           </button>
         </div>
 
-        <div className="border-t border-[#aeadab] pt-7">
+        <div className={styles.tabContent}>
           {activeTab === "info" ? (
             <InfoTab
               itemId={itemId}
@@ -264,13 +251,13 @@ export default function ViewForm() {
       )}
 
       {toast && (
-        <div className="fixed bottom-6 right-6 z-50 w-80 rounded-lg border border-gray-200 bg-white p-4 shadow-lg">
-          <div className="flex items-start justify-between gap-2">
+        <div className={styles.toast}>
+          <div className={styles.toastInner}>
             <div>
-              <p className="font-semibold text-gray-900 text-sm">{toast.message}</p>
-              <p className="mt-1 text-sm text-gray-600">{toast.sub}</p>
+              <p className={styles.toastTitle}>{toast.message}</p>
+              <p className={styles.toastSub}>{toast.sub}</p>
             </div>
-            <button onClick={() => setToast(null)} className="text-gray-400 hover:text-gray-600 mt-0.5 shrink-0">
+            <button onClick={() => setToast(null)} className={styles.toastClose}>
               ✕
             </button>
           </div>

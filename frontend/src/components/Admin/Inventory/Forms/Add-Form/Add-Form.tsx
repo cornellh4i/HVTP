@@ -11,6 +11,7 @@ import SelectField, { SelectOption } from "@/components/ui/selectField";
 import { Upload, X, Plus } from "lucide-react";
 import Image from "next/image";
 import { Card } from "@/components/ui/card";
+import styles from "./Add-Form.module.css";
 
 const GRADE_OPTIONS: SelectOption[] = [
   { label: "Fine", value: "Fine" },
@@ -51,8 +52,8 @@ const STATE_OPTIONS: SelectOption[] = [
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="flex flex-col gap-1.5 w-full [&_input]:h-[44px] [&_input]:rounded-lg [&_input]:border [&_input]:border-gray-300 [&_input]:px-4 [&_input]:py-3 [&_select]:h-[44px] [&_select]:rounded-lg [&_select]:border [&_select]:border-gray-300 [&_select]:px-4 [&_select]:py-3">
-      <label className="text-sm text-gray-600">{label}</label>
+    <div className={styles.field}>
+      <label className={styles.fieldLabel}>{label}</label>
       {children}
     </div>
   );
@@ -193,31 +194,28 @@ export default function AddForm() {
   };
 
   return (
-    <main className="min-h-screen bg-white px-4 py-6 md:p-8">
-      <div className="flex items-center justify-between mb-6 md:mb-6">
-        <Link
-          href="/inventory"
-          className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900"
-        >
+    <main className={styles.main}>
+      <div className={styles.header}>
+        <Link href="/inventory" className={styles.backLink}>
           ← Back to Inventory
         </Link>
         <button
           onClick={handleAddLot}
           disabled={loading}
-          className="hidden md:block rounded bg-gray-900 px-4 py-1.5 text-sm text-white hover:bg-gray-700 disabled:opacity-50"
+          className={styles.btnAddLot}
         >
           {loading ? "Adding..." : "Add Lot"}
         </button>
       </div>
 
-      <div className="mb-6 hidden md:block">
-        <p className="text-base font-semibold text-gray-900">SKU: ##-#-#-####-###</p>
-        <p className="text-xs text-gray-400">(Automatically generated)</p>
+      <div className={styles.skuDesktop}>
+        <p className={styles.skuText}>SKU: ##-#-#-####-###</p>
+        <p className={styles.skuSub}>(Automatically generated)</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-[1fr_380px] gap-6 md:gap-12 items-start">
-        <div className="flex flex-col gap-6 md:gap-10">
-          <div className="md:hidden">
+      <div className={styles.layout}>
+        <div className={styles.leftCol}>
+          <div className={styles.mobileUpload}>
             <input
               ref={inputRef}
               type="file"
@@ -232,22 +230,22 @@ export default function AddForm() {
                 type="button"
                 disabled={uploading}
                 onClick={() => inputRef.current?.click()}
-                className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-[#646D72] px-4 py-3 text-sm text-white hover:bg-[#545c60] disabled:opacity-50"
+                className={styles.uploadBtnFull}
               >
                 <Upload className="h-4 w-4" />
                 {uploading ? "Uploading..." : "Upload photos"}
               </button>
             ) : (
               <div>
-                <p className="text-sm font-semibold text-gray-900 mb-2">Photos</p>
-                <div className="flex items-center gap-3">
+                <p className={styles.photosLabel}>Photos</p>
+                <div className={styles.photoRow}>
                   {images.map((img, i) => (
-                    <div key={i} className="relative w-20 h-28">
+                    <div key={i} className={styles.photoThumb}>
                       <Image src={img} alt={`Photo ${i + 1}`} fill className="object-cover rounded-md" />
                       <button
                         type="button"
                         onClick={() => removeImage(i)}
-                        className="absolute -top-1.5 -right-1.5 bg-gray-600 rounded-full p-0.5"
+                        className={styles.removeBtn}
                       >
                         <X className="h-3 w-3 text-white" />
                       </button>
@@ -258,7 +256,7 @@ export default function AddForm() {
                       type="button"
                       disabled={uploading}
                       onClick={() => inputRef.current?.click()}
-                      className="w-20 h-28 rounded-md border-2 border-dashed border-gray-300 flex items-center justify-center hover:border-gray-400 disabled:opacity-50"
+                      className={styles.addPhotoBtn}
                     >
                       <Plus className="h-5 w-5 text-gray-400" />
                     </button>
@@ -267,7 +265,7 @@ export default function AddForm() {
                 <button
                   type="button"
                   onClick={() => setShowCoverPicker(true)}
-                  className="mt-3 inline-flex items-center gap-2 rounded border px-4 py-2 text-sm hover:bg-gray-50"
+                  className={styles.setCoverBtn}
                 >
                   Set cover photo
                 </button>
@@ -277,8 +275,8 @@ export default function AddForm() {
 
           <section>
             <Card className="p-6">
-              <h2 className="text-lg font-bold mb-4 md:text-2xl md:mb-5">Lot Information</h2>
-              <div className="flex flex-col gap-5 md:grid md:grid-cols-2 md:gap-x-6 md:gap-y-5">
+              <h2 className={styles.sectionTitle}>Lot Information</h2>
+              <div className={styles.fieldGrid}>
                 <Field label="Breed">
                   <EditableField isEditing value={itemFields.breed} placeholder="Breed" onChange={setItem("breed")} />
                 </Field>
@@ -312,8 +310,8 @@ export default function AddForm() {
 
           <section>
             <Card className="p-6">
-              <h2 className="text-lg font-bold mb-4 md:text-2xl md:mb-5">Purchase Information</h2>
-              <div className="flex flex-col gap-5 md:grid md:grid-cols-2 md:gap-x-6 md:gap-y-5">
+              <h2 className={styles.sectionTitle}>Purchase Information</h2>
+              <div className={styles.fieldGrid}>
                 <Field label="Farmer Name">
                   <EditableField isEditing value={farmerFormFields.name} placeholder="Name" onChange={setFarmerField("name")} />
                 </Field>
@@ -326,7 +324,7 @@ export default function AddForm() {
                 <Field label="Shear Date">
                   <input
                     type="date"
-                    className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm h-[44px]"
+                    className={styles.dateInput}
                     value={itemFields.shearDate}
                     onChange={(e) => setItem("shearDate")(e.target.value)}
                   />
@@ -338,19 +336,19 @@ export default function AddForm() {
             </Card>
           </section>
 
-          <div className="md:hidden pb-4">
-            <div className="flex flex-col gap-2 mt-8">
+          <div className={styles.mobileBtns}>
+            <div className={styles.mobileBtnGroup}>
               <button
                 onClick={handleAddLot}
                 disabled={loading}
-                className="w-full rounded-lg bg-[#9F9E97] px-4 py-3 text-sm text-white hover:bg-[#8a897e] disabled:opacity-50"
+                className={styles.btnPublish}
               >
                 {loading ? "Publishing..." : "Publish"}
               </button>
               <button
                 onClick={handleAddLot}
                 disabled={loading}
-                className="w-full rounded-lg bg-[#2C2C2C] px-4 py-3 text-sm text-white hover:bg-[#1A1A1A] disabled:opacity-50"
+                className={styles.btnSave}
               >
                 {loading ? "Saving..." : "Save"}
               </button>
@@ -358,7 +356,7 @@ export default function AddForm() {
           </div>
         </div>
 
-        <div className="hidden md:flex flex-col gap-4">
+        <div className={styles.rightCol}>
           <div>
             <input
               ref={inputRef}
@@ -373,13 +371,15 @@ export default function AddForm() {
               type="button"
               disabled={uploading || images.length >= 3}
               onClick={() => inputRef.current?.click()}
-              className="inline-flex items-center gap-2 rounded border px-4 py-2 text-sm hover:bg-gray-50 disabled:opacity-50"
+              className={styles.uploadBtnDesktop}
             >
               <Upload className="h-4 w-4" />
               {uploading ? "Uploading..." : "Upload photos"}
             </button>
             {images.length > 0 && (
-              <p className="mt-1.5 text-xs text-gray-400">{images.length} photo{images.length > 1 ? "s" : ""} selected</p>
+              <p className={styles.photoCount}>
+                {images.length} photo{images.length > 1 ? "s" : ""} selected
+              </p>
             )}
           </div>
 
@@ -390,20 +390,18 @@ export default function AddForm() {
       </div>
 
       {showCoverPicker && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="relative w-[90%] max-w-[520px] max-h-[90vh] overflow-y-auto rounded-lg border border-gray-200 bg-white p-6 shadow-xl">
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalInner}>
             <button
               onClick={() => setShowCoverPicker(false)}
-              className="absolute right-4 top-4 text-gray-400 hover:text-gray-600"
+              className={styles.modalClose}
             >
               <X className="h-4 w-4" />
             </button>
 
-            <h2 className="mb-5 text-base font-semibold text-gray-900">
-              Set cover photo
-            </h2>
+            <h2 className={styles.modalTitle}>Set cover photo</h2>
 
-            <div className="grid grid-cols-2 gap-3 mb-6">
+            <div className={styles.coverGrid}>
               {images.map((url, idx) => {
                 const isSelected = url === coverImage;
                 return (
@@ -411,36 +409,21 @@ export default function AddForm() {
                     key={idx}
                     type="button"
                     onClick={() => setCoverImage(url)}
-                    className={`relative aspect-[4/3] overflow-hidden rounded-lg border-2 transition-colors ${
-                      isSelected
-                        ? "border-blue-600"
-                        : "border-gray-200 hover:border-gray-400"
-                    }`}
+                    className={isSelected ? styles.coverOptionActive : styles.coverOption}
                   >
-                    <Image
-                      src={url}
-                      alt={`Photo ${idx + 1}`}
-                      fill
-                      className="object-cover"
-                    />
-                    <span
-                      className={`absolute left-2 top-2 flex h-4 w-4 items-center justify-center rounded-full border-2 bg-white ${
-                        isSelected ? "border-blue-600" : "border-gray-400"
-                      }`}
-                    >
-                      {isSelected && (
-                        <span className="h-2 w-2 rounded-full bg-blue-600" />
-                      )}
+                    <Image src={url} alt={`Photo ${idx + 1}`} fill className="object-cover" />
+                    <span className={isSelected ? styles.coverRadioActive : styles.coverRadio}>
+                      {isSelected && <span className={styles.coverRadioDot} />}
                     </span>
                   </button>
                 );
               })}
             </div>
 
-            <div className="flex justify-end">
+            <div className={styles.modalFooter}>
               <button
                 onClick={() => setShowCoverPicker(false)}
-                className="rounded bg-gray-900 px-5 py-2 text-sm text-white hover:bg-gray-700"
+                className={styles.btnSaveModal}
               >
                 Save
               </button>
