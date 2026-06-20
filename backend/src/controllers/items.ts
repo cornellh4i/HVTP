@@ -133,7 +133,8 @@ export const addItem = async (
     const itemToInsert: ItemInsert = {
       ...newItem,
       sku,
-      name: newItem.breed,  
+      name: newItem.breed,
+      remainingWeight: newItem.weight,
     };
 
     const ref = await db.collection("items").add(itemToInsert);
@@ -254,6 +255,35 @@ export const deleteItem = async (req: Request<{ id: string }>, res: Response) =>
     res.status(200).json(successJson({ id }));
   } catch {
     res.status(500).json(errorJson("Delete failed"));
+  }
+};
+
+export const recalculateRemainingWeight = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const itemDoc = await db.collection("items").doc(id).get();
+
+    if (!itemDoc.exists) {
+      return res.status(404).json(errorJson("Item not found"));
+    }
+
+    const item = itemDoc.data() as ItemInsert;
+    const salesSnapshot = await db
+      .collection("sales")
+      .where("itemId", "==", id)
+      .get();
+
+    const totalSold = salesSnapshot.docs.reduce((sum, saleDoc) => {
+      const sale = saleDoc.data() as { weightSold?: number };
+      return sum + (sale.weightSold ?? 0);
+    }, 0);
+
+    const remainingWeight = item.weight - totalSold;
+    await itemDoc.ref.update({ remainingWeight });
+
+    res.status(200).json(successJson({ id, remainingWeight, totalSold }));
+  } catch {
+    res.status(500).json(errorJson("Error recalculating remaining weight"));
   }
 };
 

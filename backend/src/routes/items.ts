@@ -11,6 +11,7 @@ import {
   toggleActive,
   getFarmerByItemId,
   getPublicItems,
+  recalculateRemainingWeight,
 } from "../controllers/items";
 import { authenticateToken } from "../middleware/middleware";
 
@@ -22,6 +23,7 @@ router.post("/addItem", addItem);
 router.patch("/updateItem/:id", updateItem);
 router.delete("/deleteItem/:id", deleteItem);
 router.patch("/togglePublish/:id", authenticateToken, togglePublish);
+router.post("/recalculateItemWeight/:id", authenticateToken, recalculateRemainingWeight);
 
 router.get("/getActiveItems", getActiveItems);
 router.get("/getInactiveItems", getInactiveItems);
