@@ -1,51 +1,131 @@
 @reference "tailwindcss";
 
 .main {
-  @apply min-h-screen bg-white px-4 py-6 md:p-8;
+  @apply min-h-screen bg-transparent px-4 py-6 md:p-8;
 }
 
 .header {
-  @apply flex items-center justify-between mb-6;
+  @apply flex items-center justify-between mb-4 md:hidden;
 }
 
 .backLink {
   @apply flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900;
 }
 
-.btnAddLot {
-  @apply hidden md:block rounded bg-gray-900 px-4 py-1.5 text-sm text-white hover:bg-gray-700 disabled:opacity-50;
+.headerTop {
+  @apply hidden md:block mb-6;
 }
 
-.skuDesktop {
-  @apply mb-6 hidden md:block;
+.titleRow {
+  @apply hidden md:flex items-center justify-between;
 }
 
-.skuText {
-  @apply text-base font-semibold text-gray-900;
+.skuTitle {
+  @apply text-2xl font-bold text-gray-900;
 }
 
 .skuSub {
+  @apply mt-0.5 text-sm text-gray-400;
+}
+
+.skuMobile {
+  @apply mb-6 md:hidden;
+}
+
+.skuMobileTitle {
+  @apply text-lg font-bold text-gray-900;
+}
+
+.skuMobileSub {
   @apply text-xs text-gray-400;
 }
 
+.btnAddLot {
+  @apply hidden md:block rounded bg-[#3A4F0D] px-4 py-1.5 text-sm text-white hover:bg-[#2e3e0a] disabled:cursor-not-allowed disabled:bg-[#E8E8E6] disabled:text-gray-900 disabled:hover:bg-[#E8E8E6];
+}
+
+.btnAddLotMobile {
+  @apply md:hidden w-full rounded-lg bg-[#3A4F0D] px-4 py-3 text-sm text-white hover:bg-[#2e3e0a] disabled:cursor-not-allowed disabled:bg-[#E8E8E6] disabled:text-gray-900;
+}
+
 .layout {
-  @apply grid grid-cols-1 md:grid-cols-[1fr_380px] gap-6 md:gap-12 items-start;
+  @apply grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-6 md:gap-8 items-start;
 }
 
 .leftCol {
-  @apply flex flex-col gap-6 md:gap-10;
+  @apply flex flex-col gap-6 md:gap-10 min-w-0;
 }
 
 .rightCol {
-  @apply hidden md:flex flex-col gap-4;
+  @apply hidden md:flex flex-col gap-6;
 }
 
 .mobileUpload {
   @apply md:hidden;
 }
 
+.sectionCard {
+  @apply rounded-xl border border-gray-200 p-6 shadow-none hover:shadow-none;
+}
+
+.sectionTitle {
+  @apply text-lg font-bold mb-4 md:mb-5;
+}
+
+.fieldGrid {
+  @apply flex flex-col gap-5 md:grid md:grid-cols-2 md:gap-x-6 md:gap-y-5;
+}
+
+.field {
+  @apply flex flex-col gap-1.5 w-full [&_input]:h-[44px] [&_input]:rounded-lg [&_input]:border [&_input]:border-gray-300 [&_input]:px-4 [&_input]:py-3 [&_select]:h-[44px] [&_select]:rounded-lg [&_select]:border [&_select]:border-gray-300 [&_select]:px-4 [&_select]:py-3;
+}
+
+.fieldLabel {
+  @apply text-sm text-gray-600;
+}
+
+.required {
+  @apply text-red-500;
+}
+
+.dateInput {
+  @apply w-full h-[44px] rounded-lg border border-gray-300 px-4 py-3 text-sm;
+}
+
+.imageGallery {
+  @apply flex flex-col gap-3;
+}
+
+.mainPreview {
+  @apply relative aspect-[4/3] w-full overflow-hidden rounded-xl border border-gray-200 bg-white;
+}
+
+.mainPreviewEmpty {
+  @apply flex cursor-pointer items-center justify-center hover:bg-gray-50;
+}
+
+.thumbnailRow {
+  @apply flex gap-2 overflow-x-auto pb-1;
+}
+
+.uploadTile {
+  @apply flex h-20 w-20 shrink-0 flex-col items-center justify-center gap-1 rounded-lg border border-gray-200 bg-white text-gray-400 hover:bg-gray-50 hover:text-gray-600 disabled:opacity-50;
+}
+
+.uploadTileLabel {
+  @apply text-[10px] leading-none text-gray-500;
+}
+
+.thumbnail {
+  @apply relative h-20 w-20 shrink-0 overflow-hidden rounded-lg border-2 border-gray-200;
+}
+
+.removeBtn {
+  @apply absolute top-0.5 right-0.5 rounded-full bg-white/90 p-0.5 shadow-sm;
+}
+
 .uploadBtnFull {
-  @apply w-full inline-flex items-center justify-center gap-2 rounded-lg bg-[#646D72] px-4 py-3 text-sm text-white hover:bg-[#545c60] disabled:opacity-50;
+  @apply w-full inline-flex items-center justify-center gap-2 rounded-lg border border-gray-200 px-4 py-3 text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-50;
 }
 
 .photosLabel {
@@ -57,114 +137,17 @@
 }
 
 .photoThumb {
-  @apply relative w-20 h-28;
-}
-
-.removeBtn {
-  @apply absolute -top-1.5 -right-1.5 bg-gray-600 rounded-full p-0.5;
+  @apply relative h-20 w-20;
 }
 
 .addPhotoBtn {
-  @apply w-20 h-28 rounded-md border-2 border-dashed border-gray-300 flex items-center justify-center hover:border-gray-400 disabled:opacity-50;
+  @apply flex h-20 w-20 shrink-0 flex-col items-center justify-center gap-1 rounded-lg border border-gray-200 text-gray-400 hover:bg-gray-50 disabled:opacity-50;
 }
 
-.setCoverBtn {
-  @apply mt-3 inline-flex items-center gap-2 rounded border px-4 py-2 text-sm hover:bg-gray-50;
-}
-
-.uploadBtnDesktop {
-  @apply inline-flex items-center gap-2 rounded border px-4 py-2 text-sm hover:bg-gray-50 disabled:opacity-50;
-}
-
-.photoCount {
-  @apply mt-1.5 text-xs text-gray-400;
-}
-
-.sectionTitle {
-  @apply text-lg font-bold mb-4 md:text-2xl md:mb-5;
-}
-
-.fieldGrid {
-  @apply flex flex-col gap-5 md:grid md:grid-cols-2 md:gap-x-6 md:gap-y-5;
-}
-
-.field {
-  @apply flex flex-col gap-1.5 w-full;
-}
-
-.field input,
-.field select {
-  @apply h-[44px] rounded-lg border border-gray-300 px-4 py-3;
-}
-
-.fieldLabel {
-  @apply text-sm text-gray-600;
-}
-
-.dateInput {
-  @apply w-full rounded-lg border border-gray-300 px-4 py-3 text-sm h-[44px];
+.uploadError {
+  @apply text-sm text-red-600;
 }
 
 .mobileBtns {
   @apply md:hidden pb-4;
-}
-
-.mobileBtnGroup {
-  @apply flex flex-col gap-2 mt-8;
-}
-
-.btnPublish {
-  @apply w-full rounded-lg bg-[#9F9E97] px-4 py-3 text-sm text-white hover:bg-[#8a897e] disabled:opacity-50;
-}
-
-.btnSave {
-  @apply w-full rounded-lg bg-[#2C2C2C] px-4 py-3 text-sm text-white hover:bg-[#1A1A1A] disabled:opacity-50;
-}
-
-.modalOverlay {
-  @apply fixed inset-0 z-50 flex items-center justify-center bg-black/40;
-}
-
-.modalInner {
-  @apply relative w-[90%] max-w-[520px] max-h-[90vh] overflow-y-auto rounded-lg border border-gray-200 bg-white p-6 shadow-xl;
-}
-
-.modalClose {
-  @apply absolute right-4 top-4 text-gray-400 hover:text-gray-600;
-}
-
-.modalTitle {
-  @apply mb-5 text-base font-semibold text-gray-900;
-}
-
-.coverGrid {
-  @apply grid grid-cols-2 gap-3 mb-6;
-}
-
-.coverOption {
-  @apply relative aspect-[4/3] overflow-hidden rounded-lg border-2 transition-colors border-gray-200 hover:border-gray-400;
-}
-
-.coverOptionActive {
-  @apply relative aspect-[4/3] overflow-hidden rounded-lg border-2 transition-colors border-blue-600;
-}
-
-.coverRadio {
-  @apply absolute left-2 top-2 flex h-4 w-4 items-center justify-center rounded-full border-2 bg-white border-gray-400;
-}
-
-.coverRadioActive {
-  @apply absolute left-2 top-2 flex h-4 w-4 items-center justify-center rounded-full border-2 bg-white border-blue-600;
-}
-
-.coverRadioDot {
-  @apply h-2 w-2 rounded-full bg-blue-600;
-}
-
-.modalFooter {
-  @apply flex justify-end;
-}
-
-.btnSaveModal {
-  @apply rounded bg-gray-900 px-5 py-2 text-sm text-white hover:bg-gray-700;
 }

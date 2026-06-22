@@ -2,15 +2,15 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, useRef, ChangeEvent } from "react";
+import { useState, useRef, ChangeEvent, useMemo } from "react";
+import Image from "next/image";
 import { addItem, Item } from "@/api/items";
 import { addFarmer } from "@/api/farmers";
 import { uploadItemImage } from "@/lib/uploadImage";
 import EditableField from "@/components/ui/EditableField";
 import SelectField, { SelectOption } from "@/components/ui/selectField";
-import { Upload, X, Plus } from "lucide-react";
-import Image from "next/image";
 import { Card } from "@/components/ui/card";
+import { ImageIcon, Upload, X } from "lucide-react";
 import styles from "./Add-Form.module.css";
 
 const GRADE_OPTIONS: SelectOption[] = [
@@ -18,7 +18,6 @@ const GRADE_OPTIONS: SelectOption[] = [
   { label: "Medium", value: "Medium" },
   { label: "Long", value: "Long" },
   { label: "Rug", value: "Rug" },
-  { label: "Alpaca", value: "Alpaca" },
 ];
 
 const STATUS_OPTIONS: SelectOption[] = [
@@ -50,10 +49,21 @@ const STATE_OPTIONS: SelectOption[] = [
   "SD","TN","TX","UT","VT","VA","WA","WV","WI","WY",
 ].map((s) => ({ label: s, value: s }));
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({
+  label,
+  required,
+  children,
+}: {
+  label: string;
+  required?: boolean;
+  children: React.ReactNode;
+}) {
   return (
     <div className={styles.field}>
-      <label className={styles.fieldLabel}>{label}</label>
+      <label className={styles.fieldLabel}>
+        {label}
+        {required && <span className={styles.required}>*</span>}
+      </label>
       {children}
     </div>
   );
@@ -83,9 +93,11 @@ export default function AddForm() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [images, setImages] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [coverImage, setCoverImage] = useState<string>("");
-  const [showCoverPicker, setShowCoverPicker] = useState(false);
+  const [farmName, setFarmName] = useState("");
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
 
   const [itemFields, setItemFields] = useState<ItemFields>({
     breed: "",
@@ -93,7 +105,7 @@ export default function AddForm() {
     color: "",
     weight: "",
     palletLocation: "",
-    status: "Processing",
+    status: "",
     type: "",
     shearDate: "",
     purchasePrice: "",
@@ -112,18 +124,39 @@ export default function AddForm() {
   const setFarmerField = (field: keyof FarmerFormFields) => (val: string) =>
     setFarmerFormFields((prev) => ({ ...prev, [field]: val }));
 
+  const isFormValid = useMemo(() => {
+    return Boolean(
+      itemFields.breed.trim() &&
+        itemFields.grade &&
+        itemFields.color &&
+        itemFields.weight.trim() &&
+        itemFields.status &&
+        itemFields.type &&
+        itemFields.shearDate &&
+        itemFields.purchasePrice.trim() &&
+        farmerFormFields.name.trim() &&
+        farmerFormFields.state,
+    );
+  }, [itemFields, farmerFormFields]);
+
+  const previewImage = images[activeImageIndex] ?? images[0] ?? null;
+
   async function handleFileChange(e: ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? []);
     if (!files.length) return;
     const remaining = 3 - images.length;
     const selected = files.slice(0, remaining);
+
     setUploading(true);
+    setUploadError(null);
+
     try {
       const uploaded: string[] = [];
       for (const file of selected) {
         const url = await uploadItemImage(file, "temp", images.length + uploaded.length);
         uploaded.push(url);
       }
+
       setImages((prev) => {
         const newImages = [...prev, ...uploaded];
         if (!coverImage && newImages.length > 0) {
@@ -131,8 +164,9 @@ export default function AddForm() {
         }
         return newImages;
       });
+      setActiveImageIndex(images.length);
     } catch (err) {
-      console.error("Upload failed", err);
+      setUploadError(err instanceof Error ? err.message : "Upload failed.");
     } finally {
       setUploading(false);
       e.target.value = "";
@@ -147,25 +181,17 @@ export default function AddForm() {
       }
       return newImages;
     });
+    setActiveImageIndex((prev) => Math.max(0, prev - 1));
+  };
+
+  const triggerUpload = () => {
+    if (images.length < 3) {
+      inputRef.current?.click();
+    }
   };
 
   const handleAddLot = async () => {
-    const missing: string[] = [];
-    if (!itemFields.breed) missing.push("Breed");
-    if (!itemFields.grade) missing.push("Grade");
-    if (!itemFields.color) missing.push("Color");
-    if (itemFields.weight === "") missing.push("Weight");
-    if (itemFields.palletLocation === "") missing.push("Pallet Location");
-    if (!itemFields.status) missing.push("Status");
-    if (!itemFields.type) missing.push("Type");
-    if (!itemFields.shearDate) missing.push("Shear Date");
-    if (!farmerFormFields.name) missing.push("Farmer Name");
-    if (!farmerFormFields.city) missing.push("Farmer City");
-    if (!farmerFormFields.state) missing.push("Farmer State");
-    if (missing.length > 0) {
-      alert(`Please fill in the following required fields:\n• ${missing.join("\n• ")}`);
-      return;
-    }
+    if (!isFormValid) return;
 
     try {
       setLoading(true);
@@ -173,7 +199,10 @@ export default function AddForm() {
       const payload: Partial<Item> & Record<string, unknown> = {
         ...itemFields,
         weight: itemFields.weight ? parseFloat(itemFields.weight) : undefined,
-        purchasePrice: itemFields.purchasePrice !== "" ? parseFloat(itemFields.purchasePrice) : undefined,
+        purchasePrice:
+          itemFields.purchasePrice !== ""
+            ? parseFloat(itemFields.purchasePrice.replace(/[^0-9.]/g, ""))
+            : undefined,
         images,
         coverImage: coverImage || images[0] || "",
         name: itemFields.breed || "Unnamed Lot",
@@ -201,39 +230,60 @@ export default function AddForm() {
         </Link>
         <button
           onClick={handleAddLot}
-          disabled={loading}
+          disabled={loading || !isFormValid}
+          className={styles.btnAddLotMobile}
+        >
+          {loading ? "Adding..." : "Add Lot"}
+        </button>
+      </div>
+
+      <div className={styles.headerTop}>
+        <Link href="/inventory" className={styles.backLink}>
+          ← Back to Inventory
+        </Link>
+      </div>
+
+      <div className={styles.titleRow}>
+        <div>
+          <h1 className={styles.skuTitle}>SKU: _ _ - _ _ - _ _</h1>
+          <p className={styles.skuSub}>(auto generated)</p>
+        </div>
+        <button
+          onClick={handleAddLot}
+          disabled={loading || !isFormValid}
           className={styles.btnAddLot}
         >
           {loading ? "Adding..." : "Add Lot"}
         </button>
       </div>
 
-      <div className={styles.skuDesktop}>
-        <p className={styles.skuText}>SKU: ##-#-#-####-###</p>
-        <p className={styles.skuSub}>(Automatically generated)</p>
+      <div className={styles.skuMobile}>
+        <h1 className={styles.skuMobileTitle}>SKU: _ _ - _ _ - _ _</h1>
+        <p className={styles.skuMobileSub}>(auto generated)</p>
       </div>
+
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        multiple
+        disabled={uploading || images.length >= 3}
+        onChange={handleFileChange}
+        className="hidden"
+      />
 
       <div className={styles.layout}>
         <div className={styles.leftCol}>
           <div className={styles.mobileUpload}>
-            <input
-              ref={inputRef}
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              multiple
-              disabled={uploading || images.length >= 3}
-              onChange={handleFileChange}
-              className="hidden"
-            />
             {images.length === 0 ? (
               <button
                 type="button"
                 disabled={uploading}
-                onClick={() => inputRef.current?.click()}
+                onClick={triggerUpload}
                 className={styles.uploadBtnFull}
               >
                 <Upload className="h-4 w-4" />
-                {uploading ? "Uploading..." : "Upload photos"}
+                {uploading ? "Uploading..." : "Upload"}
               </button>
             ) : (
               <div>
@@ -241,13 +291,14 @@ export default function AddForm() {
                 <div className={styles.photoRow}>
                   {images.map((img, i) => (
                     <div key={i} className={styles.photoThumb}>
-                      <Image src={img} alt={`Photo ${i + 1}`} fill className="object-cover rounded-md" />
+                      <Image src={img} alt={`Photo ${i + 1}`} fill className="object-cover rounded-lg" />
                       <button
                         type="button"
                         onClick={() => removeImage(i)}
                         className={styles.removeBtn}
+                        aria-label="Remove photo"
                       >
-                        <X className="h-3 w-3 text-white" />
+                        <X className="h-3 w-3 text-gray-700" />
                       </button>
                     </div>
                   ))}
@@ -255,48 +306,42 @@ export default function AddForm() {
                     <button
                       type="button"
                       disabled={uploading}
-                      onClick={() => inputRef.current?.click()}
+                      onClick={triggerUpload}
                       className={styles.addPhotoBtn}
                     >
-                      <Plus className="h-5 w-5 text-gray-400" />
+                      <Upload size={18} />
                     </button>
                   )}
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setShowCoverPicker(true)}
-                  className={styles.setCoverBtn}
-                >
-                  Set cover photo
-                </button>
               </div>
             )}
+            {uploadError && <p className={styles.uploadError}>{uploadError}</p>}
           </div>
 
           <section>
-            <Card className="p-6">
-              <h2 className={styles.sectionTitle}>Lot Information</h2>
+            <Card className={styles.sectionCard}>
+              <h2 className={styles.sectionTitle}>General Information</h2>
               <div className={styles.fieldGrid}>
-                <Field label="Breed">
+                <Field label="Breed" required>
                   <EditableField isEditing value={itemFields.breed} placeholder="Breed" onChange={setItem("breed")} />
                 </Field>
-                <Field label="Grade">
+                <Field label="Grade" required>
                   <SelectField value={itemFields.grade} onChange={setItem("grade")} options={GRADE_OPTIONS} placeholder="Grade" />
                 </Field>
-                <Field label="Color">
+                <Field label="Color" required>
                   <SelectField value={itemFields.color} onChange={setItem("color")} options={COLOR_OPTIONS} placeholder="Color" />
                 </Field>
-                <Field label="Weight (lb)">
-                  <EditableField isEditing value={itemFields.weight} placeholder="Weight (lb)" onChange={setItem("weight")} />
+                <Field label="Quantity (lb)" required>
+                  <EditableField isEditing value={itemFields.weight} placeholder="0.0" onChange={setItem("weight")} />
+                </Field>
+                <Field label="Lot Status" required>
+                  <SelectField value={itemFields.status} onChange={setItem("status")} options={STATUS_OPTIONS} placeholder="Select status" />
+                </Field>
+                <Field label="Wool Type" required>
+                  <SelectField value={itemFields.type} onChange={setItem("type")} options={TYPE_OPTIONS} placeholder="Select wool type" />
                 </Field>
                 <Field label="Pallet Location">
                   <EditableField isEditing value={itemFields.palletLocation} placeholder="Pallet Number" onChange={setItem("palletLocation")} />
-                </Field>
-                <Field label="Status">
-                  <SelectField value={itemFields.status} onChange={setItem("status")} options={STATUS_OPTIONS} placeholder="Status" />
-                </Field>
-                <Field label="Type">
-                  <SelectField value={itemFields.type} onChange={setItem("type")} options={TYPE_OPTIONS} placeholder="Type" />
                 </Field>
               </div>
             </Card>
@@ -309,19 +354,22 @@ export default function AddForm() {
           </div>
 
           <section>
-            <Card className="p-6">
+            <Card className={styles.sectionCard}>
               <h2 className={styles.sectionTitle}>Purchase Information</h2>
               <div className={styles.fieldGrid}>
-                <Field label="Farmer Name">
-                  <EditableField isEditing value={farmerFormFields.name} placeholder="Name" onChange={setFarmerField("name")} />
+                <Field label="Farmer Name" required>
+                  <EditableField isEditing value={farmerFormFields.name} placeholder="Farmer" onChange={setFarmerField("name")} />
                 </Field>
-                <Field label="Farmer City">
+                <Field label="Farm Name">
+                  <EditableField isEditing value={farmName} placeholder="Farm" onChange={setFarmName} />
+                </Field>
+                <Field label="City">
                   <EditableField isEditing value={farmerFormFields.city} placeholder="City" onChange={setFarmerField("city")} />
                 </Field>
-                <Field label="Farmer State">
+                <Field label="State" required>
                   <SelectField value={farmerFormFields.state} onChange={setFarmerField("state")} options={STATE_OPTIONS} placeholder="State" />
                 </Field>
-                <Field label="Shear Date">
+                <Field label="Shear Date" required>
                   <input
                     type="date"
                     className={styles.dateInput}
@@ -329,108 +377,95 @@ export default function AddForm() {
                     onChange={(e) => setItem("shearDate")(e.target.value)}
                   />
                 </Field>
-                <Field label="Purchase Price ($/lb)">
-                  <EditableField isEditing value={itemFields.purchasePrice} placeholder="Price" onChange={setItem("purchasePrice")} />
+                <Field label="Intake Price ($/lb)" required>
+                  <EditableField isEditing value={itemFields.purchasePrice} placeholder="$0.00" onChange={setItem("purchasePrice")} />
                 </Field>
               </div>
             </Card>
           </section>
 
           <div className={styles.mobileBtns}>
-            <div className={styles.mobileBtnGroup}>
-              <button
-                onClick={handleAddLot}
-                disabled={loading}
-                className={styles.btnPublish}
-              >
-                {loading ? "Publishing..." : "Publish"}
-              </button>
-              <button
-                onClick={handleAddLot}
-                disabled={loading}
-                className={styles.btnSave}
-              >
-                {loading ? "Saving..." : "Save"}
-              </button>
-            </div>
+            <button
+              onClick={handleAddLot}
+              disabled={loading || !isFormValid}
+              className={styles.btnAddLotMobile}
+            >
+              {loading ? "Adding..." : "Add Lot"}
+            </button>
           </div>
         </div>
 
         <div className={styles.rightCol}>
-          <div>
-            <input
-              ref={inputRef}
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              multiple
-              disabled={uploading || images.length >= 3}
-              onChange={handleFileChange}
-              className="hidden"
-            />
-            <button
-              type="button"
-              disabled={uploading || images.length >= 3}
-              onClick={() => inputRef.current?.click()}
-              className={styles.uploadBtnDesktop}
+          <div className={styles.imageGallery}>
+            <div
+              className={`${styles.mainPreview} ${!previewImage ? styles.mainPreviewEmpty : ""}`}
+              onClick={() => !previewImage && triggerUpload()}
             >
-              <Upload className="h-4 w-4" />
-              {uploading ? "Uploading..." : "Upload photos"}
-            </button>
-            {images.length > 0 && (
-              <p className={styles.photoCount}>
-                {images.length} photo{images.length > 1 ? "s" : ""} selected
-              </p>
-            )}
+              {previewImage ? (
+                <Image src={previewImage} alt="Lot photo preview" fill className="object-cover" />
+              ) : (
+                <ImageIcon className="h-14 w-14 text-gray-300" />
+              )}
+            </div>
+
+            <div className={styles.thumbnailRow}>
+              <button
+                type="button"
+                disabled={uploading || images.length >= 3}
+                onClick={triggerUpload}
+                className={styles.uploadTile}
+                aria-label="Upload photos"
+              >
+                <Upload size={18} />
+                <span className={styles.uploadTileLabel}>
+                  {uploading ? "…" : "Upload"}
+                </span>
+              </button>
+
+              {images.map((src, idx) => (
+                <div
+                  key={`${src}-${idx}`}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => setActiveImageIndex(idx)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      setActiveImageIndex(idx);
+                    }
+                  }}
+                  className={`${styles.thumbnail} cursor-pointer`}
+                >
+                  <Image src={src} alt={`Photo ${idx + 1}`} fill className="object-cover" />
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeImage(idx);
+                    }}
+                    className={styles.removeBtn}
+                    aria-label="Remove photo"
+                  >
+                    <X className="h-3 w-3 text-gray-700" />
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            {uploadError && <p className={styles.uploadError}>{uploadError}</p>}
           </div>
 
-          <Field label="Notes">
-            <EditableField isEditing value={itemFields.notes} placeholder="Notes" multiline onChange={setItem("notes")} />
-          </Field>
+          <Card className={styles.sectionCard}>
+            <h2 className={styles.sectionTitle}>Notes</h2>
+            <EditableField
+              isEditing
+              value={itemFields.notes}
+              placeholder="e.g. Condition notes, storage details, special handling instructions"
+              multiline
+              onChange={setItem("notes")}
+            />
+          </Card>
         </div>
       </div>
-
-      {showCoverPicker && (
-        <div className={styles.modalOverlay}>
-          <div className={styles.modalInner}>
-            <button
-              onClick={() => setShowCoverPicker(false)}
-              className={styles.modalClose}
-            >
-              <X className="h-4 w-4" />
-            </button>
-
-            <h2 className={styles.modalTitle}>Set cover photo</h2>
-
-            <div className={styles.coverGrid}>
-              {images.map((url, idx) => {
-                const isSelected = url === coverImage;
-                return (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => setCoverImage(url)}
-                    className={isSelected ? styles.coverOptionActive : styles.coverOption}
-                  >
-                    <Image src={url} alt={`Photo ${idx + 1}`} fill className="object-cover" />
-                    <span className={isSelected ? styles.coverRadioActive : styles.coverRadio}>
-                      {isSelected && <span className={styles.coverRadioDot} />}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-
-            <div className={styles.modalFooter}>
-              <button
-                onClick={() => setShowCoverPicker(false)}
-                className={styles.btnSaveModal}
-              >
-                Save
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </main>
   );
 }

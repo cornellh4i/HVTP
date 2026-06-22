@@ -1,0 +1,73 @@
+@reference "tailwindcss";
+
+.imageGallery {
+  @apply flex flex-col gap-3;
+}
+
+.mainPreview {
+  @apply relative aspect-[4/3] w-full overflow-hidden rounded-xl border border-gray-200 bg-white;
+}
+
+.mainPreviewEmpty {
+  @apply flex cursor-pointer items-center justify-center hover:bg-gray-50;
+}
+
+.coverBadge {
+  @apply absolute left-3 top-3 z-10 inline-flex items-center gap-1.5 rounded-md bg-black/70 px-2.5 py-1 text-xs font-medium text-white;
+}
+
+.coverBadgeInteractive {
+  @apply cursor-pointer hover:bg-black/80;
+}
+
+.coverStarActive {
+  @apply fill-[#FFD700] text-[#FFD700];
+}
+
+.coverStarInactive {
+  @apply text-white;
+}
+
+.thumbnailRow {
+  @apply flex gap-2 overflow-x-auto pb-1;
+}
+
+.uploadTile {
+  @apply flex h-20 w-20 shrink-0 flex-col items-center justify-center gap-1 rounded-lg border border-gray-200 bg-white text-gray-400 hover:bg-gray-50 hover:text-gray-600 disabled:opacity-50;
+}
+
+.uploadTileLabel {
+  @apply text-[10px] leading-none text-gray-500;
+}
+
+.thumbnail {
+  @apply relative h-20 w-20 shrink-0 cursor-pointer overflow-hidden rounded-lg border-2 border-gray-200 transition-colors hover:border-gray-400;
+}
+
+.thumbnailActive {
+  @apply border-gray-900;
+}
+
+.thumbnailCover {
+  @apply border-[#848c2d];
+}
+
+.coverCheck {
+  @apply pointer-events-none absolute inset-0 flex items-center justify-center;
+}
+
+.coverCheckCircle {
+  @apply flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-sm;
+}
+
+.coverCheckIcon {
+  @apply h-4 w-4 text-[#3A4F0D];
+}
+
+.uploadError {
+  @apply text-sm text-red-600;
+}
+
+.sectionCard {
+  @apply rounded-xl border border-gray-200 p-6 shadow-none hover:shadow-none;
+}
