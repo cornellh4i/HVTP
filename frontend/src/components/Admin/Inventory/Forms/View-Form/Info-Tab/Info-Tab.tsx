@@ -1,13 +1,16 @@
 "use client";
 
-import dynamic from "next/dynamic";
-import { useState } from "react";
+import { ChangeEvent, useRef, useState } from "react";
+import Image from "next/image";
 import { Item } from "@/api/items";
 import EditableField from "@/components/ui/EditableField";
 import SelectField, { SelectOption } from "@/components/ui/selectField";
 import ItemImageUpload from "@/components/Admin/Inventory/Upload-Image/ItemImageUpload";
 import SetCoverPhotoModal from "@/components/Admin/Inventory/SetCoverPhotoModal";
+import { uploadItemImage } from "@/lib/uploadImage";
 import { Card } from "@/components/ui/card";
+import { Check, ImageIcon, Star, Upload } from "lucide-react";
+import styles from "./Info-Tab.module.css";
 
 const GRADE_OPTIONS: SelectOption[] = [
   { label: "Fine", value: "Fine" },
@@ -46,19 +49,175 @@ const STATE_OPTIONS: SelectOption[] = [
   "SD","TN","TX","UT","VT","VA","WA","WV","WI","WY",
 ].map((s) => ({ label: s, value: s }));
 
-const QRCode = dynamic(() => import("react-qr-code"), { ssr: false });
-
 function Field({
   label,
+  required,
   children,
 }: {
   label: string;
+  required?: boolean;
   children: React.ReactNode;
 }) {
   return (
     <div className="flex flex-col gap-1.5 w-full [&_input]:h-[44px] [&_input]:rounded-lg [&_input]:border [&_input]:border-gray-300 [&_input]:px-4 [&_input]:py-3 [&_select]:h-[44px] [&_select]:rounded-lg [&_select]:border [&_select]:border-gray-300 [&_select]:px-4 [&_select]:py-3">
-      <label className="text-sm text-gray-600">{label}</label>
+      <label className="text-sm text-gray-600">
+        {label}
+        {required && <span className="text-red-500">*</span>}
+      </label>
       {children}
+    </div>
+  );
+}
+
+function DesktopImageGallery({
+  sku,
+  images,
+  onImagesChange,
+  coverImage,
+  onCoverChange,
+}: {
+  sku: string;
+  images: string[];
+  onImagesChange: (images: string[]) => void;
+  coverImage: string;
+  onCoverChange: (url: string) => void;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const coverUrl = coverImage || images[0] || "";
+  const safeActiveIndex = images.length ? Math.min(activeIndex, images.length - 1) : 0;
+  const previewUrl = images[safeActiveIndex] ?? null;
+  const isCoverPreview = Boolean(previewUrl && previewUrl === coverUrl);
+
+  async function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(event.target.files ?? []);
+    if (!files.length) return;
+
+    setIsUploading(true);
+    setError(null);
+
+    try {
+      const uploadedUrls: string[] = [];
+
+      for (const file of files) {
+        const nextIndex = images.length + uploadedUrls.length;
+        const url = await uploadItemImage(file, sku, nextIndex);
+        uploadedUrls.push(url);
+      }
+
+      const newImages = [...images, ...uploadedUrls];
+      onImagesChange(newImages);
+
+      if (!coverUrl && newImages.length > 0) {
+        onCoverChange(newImages[0]);
+      }
+
+      setActiveIndex(images.length);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Upload failed.");
+    } finally {
+      setIsUploading(false);
+      event.target.value = "";
+    }
+  }
+
+  const handleSetCover = () => {
+    if (previewUrl && !isCoverPreview) {
+      onCoverChange(previewUrl);
+    }
+  };
+
+  return (
+    <div className={styles.imageGallery}>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        multiple
+        disabled={isUploading}
+        onChange={handleFileChange}
+        className="hidden"
+      />
+
+      <div
+        className={`${styles.mainPreview} ${!previewUrl ? styles.mainPreviewEmpty : ""}`}
+        onClick={() => !previewUrl && inputRef.current?.click()}
+      >
+        {previewUrl ? (
+          <Image src={previewUrl} alt="Lot photo preview" fill className="object-cover" />
+        ) : (
+          <ImageIcon className="h-14 w-14 text-gray-300" />
+        )}
+
+        {previewUrl &&
+          (isCoverPreview ? (
+            <span className={styles.coverBadge}>
+              <Star
+                size={12}
+                className={styles.coverStarActive}
+                fill="currentColor"
+              />
+              Cover
+            </span>
+          ) : (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleSetCover();
+              }}
+              className={`${styles.coverBadge} ${styles.coverBadgeInteractive}`}
+            >
+              <Star size={12} className={styles.coverStarInactive} fill="none" />
+              Cover
+            </button>
+          ))}
+      </div>
+
+      <div className={styles.thumbnailRow}>
+        <button
+          type="button"
+          disabled={isUploading}
+          onClick={() => inputRef.current?.click()}
+          className={styles.uploadTile}
+          aria-label="Upload photos"
+        >
+          <Upload size={18} />
+          <span className={styles.uploadTileLabel}>
+            {isUploading ? "…" : "Upload"}
+          </span>
+        </button>
+
+        {images.map((src, idx) => {
+          const isCover = src === coverUrl;
+          const isActive = idx === safeActiveIndex;
+
+          return (
+            <button
+              key={`${src}-${idx}`}
+              type="button"
+              onClick={() => setActiveIndex(idx)}
+              className={`${styles.thumbnail} ${
+                isCover ? styles.thumbnailCover : isActive ? styles.thumbnailActive : ""
+              }`}
+            >
+              <Image src={src} alt={`Photo ${idx + 1}`} fill className="object-cover" />
+              {isCover && (
+                <span className={styles.coverCheck}>
+                  <span className={styles.coverCheckCircle}>
+                    <Check className={styles.coverCheckIcon} strokeWidth={3} />
+                  </span>
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {error && <p className={styles.uploadError}>{error}</p>}
     </div>
   );
 }
@@ -73,6 +232,7 @@ type InfoTabProps = {
   saving: boolean;
   onPublish: () => void;
   onSave: () => void;
+  onStatusChange: (status: string) => void;
 };
 
 export default function InfoTab({
@@ -85,17 +245,34 @@ export default function InfoTab({
   saving,
   onPublish,
   onSave,
+  onStatusChange,
 }: InfoTabProps) {
+  const [farmName, setFarmName] = useState("");
   const [showCoverModal, setShowCoverModal] = useState(false);
-
-  const qrValue = formData.qrCode ?? item.qrCode ?? itemId;
 
   const set = (field: keyof Item) => (val: string) =>
     setFormData((prev) => ({ ...prev, [field]: val }));
 
+  const coverImage = formData.coverImage ?? images[0] ?? "";
+
+  const handleCoverChange = (url: string) => {
+    setFormData((prev) => ({ ...prev, coverImage: url }));
+  };
+
+  const handleImagesChange = (newImages: string[]) => {
+    setImages(newImages);
+    const currentCover = formData.coverImage ?? images[0] ?? "";
+    if (currentCover && !newImages.includes(currentCover)) {
+      setFormData((prev) => ({
+        ...prev,
+        coverImage: newImages[0] ?? "",
+      }));
+    }
+  };
+
   return (
     <>
-      <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_380px] gap-6 md:gap-12 items-start">
+      <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-6 md:gap-8 items-start">
         <div className="flex flex-col gap-6 md:gap-10 min-w-0">
           <div className="md:hidden">
             <p className="text-sm font-semibold text-gray-900 mb-2">Photos</p>
@@ -117,22 +294,33 @@ export default function InfoTab({
           </div>
 
           <section>
-            <Card className="p-6">
-              <h2 className="text-lg font-bold mb-4 md:text-2xl md:mb-5">
-                Lot Information
+            <Card className={styles.sectionCard}>
+              <h2 className="text-lg font-bold mb-4 md:mb-5">
+                General Information
               </h2>
               <div className="flex flex-col gap-5 md:grid md:grid-cols-2 md:gap-x-6 md:gap-y-5">
-                <Field label="Breed">
+                <Field label="Breed" required>
                   <EditableField isEditing value={formData.breed ?? ""} placeholder="Breed" onChange={set("breed")} />
                 </Field>
-                <Field label="Grade">
+                <Field label="Grade" required>
                   <SelectField value={formData.grade ?? ""} onChange={set("grade")} options={GRADE_OPTIONS} placeholder="Grade" />
                 </Field>
-                <Field label="Color">
+                <Field label="Color" required>
                   <SelectField value={formData.color ?? ""} onChange={set("color")} options={COLOR_OPTIONS} placeholder="Color" />
                 </Field>
-                <Field label="Quantity (lb)">
+                <Field label="Current Quantity (lb)" required>
                   <EditableField isEditing value={String(formData.weight ?? "")} placeholder="Weight" onChange={set("weight")} />
+                </Field>
+                <Field label="Lot Status" required>
+                  <SelectField value={formData.status ?? ""} onChange={onStatusChange} options={STATUS_OPTIONS} placeholder="Status" />
+                </Field>
+                <Field label="Wool Type" required>
+                  <SelectField
+                    value={(formData as { type?: string }).type ?? ""}
+                    onChange={(v) => setFormData((p) => ({ ...p, type: v }))}
+                    options={TYPE_OPTIONS}
+                    placeholder="Type"
+                  />
                 </Field>
                 <Field label="Pallet Location">
                   <EditableField
@@ -140,17 +328,6 @@ export default function InfoTab({
                     value={formData.palletLocation ?? ""}
                     placeholder="Pallet Number"
                     onChange={set("palletLocation")}
-                  />
-                </Field>
-                <Field label="Status">
-                  <SelectField value={formData.status ?? ""} onChange={set("status")} options={STATUS_OPTIONS} placeholder="Status" />
-                </Field>
-                <Field label="Type">
-                  <SelectField
-                    value={(formData as any).type ?? ""}
-                    onChange={(v) => setFormData((p) => ({ ...p, type: v }))}
-                    options={TYPE_OPTIONS}
-                    placeholder="Type"
                   />
                 </Field>
               </div>
@@ -170,12 +347,12 @@ export default function InfoTab({
           </div>
 
           <section>
-            <Card className="p-6">
-              <h2 className="text-lg font-bold mb-4 md:text-2xl md:mb-5">
+            <Card className={styles.sectionCard}>
+              <h2 className="text-lg font-bold mb-4 md:mb-5">
                 Purchase Information
               </h2>
               <div className="flex flex-col gap-5 md:grid md:grid-cols-2 md:gap-x-6 md:gap-y-5">
-                <Field label="Farmer Name">
+                <Field label="Farmer Name" required>
                   <EditableField
                     isEditing
                     value={formData.farmerName ?? ""}
@@ -183,7 +360,15 @@ export default function InfoTab({
                     onChange={set("farmerName")}
                   />
                 </Field>
-                <Field label="Farmer City">
+                <Field label="Farm Name">
+                  <EditableField
+                    isEditing
+                    value={farmName}
+                    placeholder="Farm Name"
+                    onChange={setFarmName}
+                  />
+                </Field>
+                <Field label="City">
                   <EditableField
                     isEditing
                     value={formData.farmerCity ?? ""}
@@ -191,7 +376,7 @@ export default function InfoTab({
                     onChange={set("farmerCity")}
                   />
                 </Field>
-                <Field label="Farmer State">
+                <Field label="State" required>
                   <SelectField
                     value={formData.farmerState ?? ""}
                     onChange={set("farmerState")}
@@ -199,10 +384,10 @@ export default function InfoTab({
                     placeholder="State"
                   />
                 </Field>
-                <Field label="Shear Date">
+                <Field label="Shear Date" required>
                   <EditableField isEditing value={formData.shearDate ?? ""} placeholder="MM/DD/YYYY" onChange={set("shearDate")} />
                 </Field>
-                <Field label="Purchase Price ($/lb)">
+                <Field label="Intake Price ($/lb)" required>
                   <EditableField
                     isEditing
                     value={String(formData.purchasePrice ?? "")}
@@ -233,53 +418,25 @@ export default function InfoTab({
           </div>
         </div>
 
-        <div className="hidden md:flex flex-col gap-4">
-          <section
-            data-print-label
-            className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
-          >
-            <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
-              <div className="space-y-2">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
-                  QR Label
-                </p>
-                <h2 className="text-2xl font-semibold text-slate-900">
-                  {formData.name ?? item.name}
-                </h2>
-                <div className="space-y-1 text-sm text-slate-600">
-                  <p><span className="font-medium text-slate-900">SKU:</span> {formData.sku ?? item.sku}</p>
-                  <p><span className="font-medium text-slate-900">Breed:</span> {formData.breed ?? item.breed ?? "-"}</p>
-                  <p><span className="font-medium text-slate-900">Grade:</span> {formData.grade ?? item.grade ?? "-"}</p>
-                  <p><span className="font-medium text-slate-900">Status:</span> {formData.status ?? item.status ?? "-"}</p>
-                  <p><span className="font-medium text-slate-900">Pallet Location:</span> {formData.palletLocation ?? item.palletLocation ?? "-"}</p>
-                </div>
-              </div>
-              <div className="flex flex-col items-center gap-3 self-center rounded-2xl bg-slate-50 p-4">
-                <QRCode value={qrValue} size={148} />
-                <p className="max-w-[180px] break-all text-center text-xs text-slate-500">{qrValue}</p>
-              </div>
-            </div>
-          </section>
-
-          <ItemImageUpload
+        <div className="hidden md:flex flex-col gap-6">
+          <DesktopImageGallery
             sku={item.sku}
-            existingImages={images}
-            onImagesChange={setImages}
+            images={images}
+            onImagesChange={handleImagesChange}
+            coverImage={coverImage}
+            onCoverChange={handleCoverChange}
           />
 
-          {images.length > 0 && (
-            <button
-              type="button"
-              onClick={() => setShowCoverModal(true)}
-              className="inline-flex items-center gap-2 rounded border px-4 py-2 text-sm hover:bg-gray-50 w-fit"
-            >
-              Set cover photo
-            </button>
-          )}
-
-          <Field label="Notes">
-            <EditableField isEditing value={formData.notes ?? ""} placeholder="Notes" multiline onChange={set("notes")} />
-          </Field>
+          <Card className={styles.sectionCard}>
+            <h2 className="text-lg font-bold mb-4">Notes</h2>
+            <EditableField
+              isEditing
+              value={formData.notes ?? ""}
+              placeholder="e.g. Condition notes, storage details, special handling instructions"
+              multiline
+              onChange={set("notes")}
+            />
+          </Card>
         </div>
       </div>
 

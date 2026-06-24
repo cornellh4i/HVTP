@@ -25,11 +25,13 @@ const dateFormatter = new Intl.DateTimeFormat("en-US", {
 });
 
 const formatDate = (value?: string) => {
-  if (!value) return "-";
+  if (!value) return "—";
   const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return "-";
+  if (Number.isNaN(d.getTime())) return "—";
   return dateFormatter.format(d);
 };
+
+const formatOptional = (value?: string) => (value?.trim() ? value.trim() : "—");
 
 type SalesTabProps = {
   item: Item;
@@ -53,24 +55,25 @@ export default function SalesTab({
           <table className="w-full table-fixed border-collapse text-left text-sm">
             <thead>
               <tr className="h-14 border-b border-[#d8d7cf] bg-white shadow-sm">
-                <th className="w-[12%] whitespace-nowrap px-7 text-left text-base font-semibold text-black">Date</th>
-                <th className="w-[12%] whitespace-nowrap px-7 text-right text-base font-semibold text-black">Quantity</th>
-                <th className="w-[14%] whitespace-nowrap px-7 text-right text-base font-semibold text-black">Selling Price</th>
-                <th className="w-[18%] whitespace-nowrap px-7 text-left text-base font-semibold text-black">Buyer</th>
-                <th className="w-[18%] whitespace-nowrap px-7 text-left text-base font-semibold text-black">Phone</th>
-                <th className="w-[26%] whitespace-nowrap px-7 text-left text-base font-semibold text-black">Email</th>
+                <th className="w-[10%] whitespace-nowrap px-7 text-left text-base font-semibold text-black">Date</th>
+                <th className="w-[10%] whitespace-nowrap px-7 text-right text-base font-semibold text-black">Quantity</th>
+                <th className="w-[10%] whitespace-nowrap px-7 text-right text-base font-semibold text-black">Selling Price</th>
+                <th className="w-[12%] whitespace-nowrap px-7 text-left text-base font-semibold text-black">Buyer</th>
+                <th className="w-[12%] whitespace-nowrap px-7 text-left text-base font-semibold text-black">Phone</th>
+                <th className="w-[18%] whitespace-nowrap px-7 text-left text-base font-semibold text-black">Email</th>
+                <th className="w-[28%] whitespace-nowrap px-7 text-left text-base font-semibold text-black">Address</th>
               </tr>
             </thead>
             <tbody>
               {salesLoading ? (
                 <tr>
-                  <td colSpan={6} className="px-7 py-10 text-center text-sm text-gray-500">
+                  <td colSpan={7} className="px-7 py-10 text-center text-sm text-gray-500">
                     Loading sales...
                   </td>
                 </tr>
               ) : sales.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-7 py-10 text-center text-sm text-gray-500">
+                  <td colSpan={7} className="px-7 py-10 text-center text-sm text-gray-500">
                     No sales recorded yet.
                   </td>
                 </tr>
@@ -92,13 +95,16 @@ export default function SalesTab({
                         {formatCurrency(sale.pricePerWeight)}
                       </td>
                       <td className="whitespace-nowrap px-7 text-left text-[#242424]">
-                        {sale.buyerName || "-"}
+                        {formatOptional(sale.buyerName)}
                       </td>
                       <td className="whitespace-nowrap px-7 text-left text-[#242424]">
-                        {sale.buyerPhone || "-"}
+                        {formatOptional(sale.buyerPhone)}
                       </td>
                       <td className="whitespace-nowrap px-7 text-left text-[#242424]">
-                        {sale.buyerEmail || "-"}
+                        {formatOptional(sale.buyerEmail)}
+                      </td>
+                      <td className="px-7 text-left text-[#242424]">
+                        {formatOptional(sale.buyerAddress)}
                       </td>
                     </tr>
                   );
