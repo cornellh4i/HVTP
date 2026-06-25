@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useState, useEffect, useCallback, useRef } from "react";
-import { getItemById, updateItem, deleteItem, Item } from "@/api/items";
+import { getItemById, updateItem, deleteItem, recalculateItemWeight, Item } from "@/api/items";
 import { getSalesByItemId, Sale } from "@/api/sales";
 import SaleModal from "@/components/Admin/Inventory/Forms/Add-Sale";
 import { formatItemDate } from "@/components/Admin/Inventory/inventory-utils";
@@ -44,6 +44,14 @@ export default function ViewForm() {
         setItem(data);
         setFormData(data);
         setImages(data.images ?? []);
+
+        try {
+          const { remainingWeight } = await recalculateItemWeight(itemId);
+          setItem((prev) => (prev ? { ...prev, remainingWeight } : prev));
+          setFormData((prev) => ({ ...prev, remainingWeight }));
+        } catch {
+          // Non-fatal: keep showing the last known remainingWeight if reconciliation fails.
+        }
       } catch {
         setError("Failed to load item.");
       } finally {

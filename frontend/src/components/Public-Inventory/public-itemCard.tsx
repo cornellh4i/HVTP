@@ -26,7 +26,7 @@ const ItemCard: React.FC<ItemCardProps> = ({ item }) => {
   const hasImage = Boolean(item.coverImage);
   const tags = [item.grade, item.color].filter(Boolean);
   const suitableForText =
-    item.notes?.trim() ||
+    item.suitableFor?.trim() ||
     "Textiles: Rugs, wall hangings, carpets, and mats\nAccessories: Bags and other sturdy items\nCrafts: Felted decorative items, upholstery";
   const detailRows = [
     { label: "Breed", value: item.breed ?? "-" },

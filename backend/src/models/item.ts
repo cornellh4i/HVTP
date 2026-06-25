@@ -14,6 +14,7 @@ export interface ItemFields {
   isActive: boolean;
   isPublic: boolean;
   notes: string;
+  suitableFor: string;
   palletLocation: string;
   shearDate: string;
   purchasePrice: number;

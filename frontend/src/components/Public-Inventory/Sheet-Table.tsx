@@ -35,7 +35,7 @@ export default function SheetTable({ items }: SheetTableProps) {
         {items.map((item) => {
           const tags = [item.grade, item.color].filter(Boolean);
           const suitableForText =
-            item.notes?.trim() ||
+            item.suitableFor?.trim() ||
             "Textiles: Rugs, wall hangings, carpets, and mats\nAccessories: Bags and other sturdy items\nCrafts: Felted decorative items, upholstery";
           const lastUpdated = formatDate(item.updatedAt) ?? formatDate(item.createdAt);
 

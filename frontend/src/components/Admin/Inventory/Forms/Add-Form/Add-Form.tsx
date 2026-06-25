@@ -80,6 +80,7 @@ type ItemFields = {
   shearDate: string;
   purchasePrice: string;
   notes: string;
+  suitableFor: string;
 };
 
 type FarmerFormFields = {
@@ -110,6 +111,7 @@ export default function AddForm() {
     shearDate: "",
     purchasePrice: "",
     notes: "",
+    suitableFor: "",
   });
 
   const [farmerFormFields, setFarmerFormFields] = useState<FarmerFormFields>({
@@ -347,9 +349,12 @@ export default function AddForm() {
             </Card>
           </section>
 
-          <div className="md:hidden">
-            <Field label="Notes">
+          <div className="md:hidden flex flex-col gap-5">
+            <Field label="Notes (internal only)">
               <EditableField isEditing value={itemFields.notes} placeholder="Notes" multiline onChange={setItem("notes")} />
+            </Field>
+            <Field label="Suitable For (shown on public listing)">
+              <EditableField isEditing value={itemFields.suitableFor} placeholder="e.g. Rugs, wall hangings, felted decorative items" multiline onChange={setItem("suitableFor")} />
             </Field>
           </div>
 
@@ -455,13 +460,24 @@ export default function AddForm() {
           </div>
 
           <Card className={styles.sectionCard}>
-            <h2 className={styles.sectionTitle}>Notes</h2>
+            <h2 className={styles.sectionTitle}>Notes (internal only)</h2>
             <EditableField
               isEditing
               value={itemFields.notes}
               placeholder="e.g. Condition notes, storage details, special handling instructions"
               multiline
               onChange={setItem("notes")}
+            />
+          </Card>
+
+          <Card className={styles.sectionCard}>
+            <h2 className={styles.sectionTitle}>Suitable For (shown on public listing)</h2>
+            <EditableField
+              isEditing
+              value={itemFields.suitableFor}
+              placeholder="e.g. Rugs, wall hangings, felted decorative items"
+              multiline
+              onChange={setItem("suitableFor")}
             />
           </Card>
         </div>

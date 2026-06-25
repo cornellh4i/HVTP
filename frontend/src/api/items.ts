@@ -18,6 +18,7 @@ export type Item = {
   isActive?: boolean;
   isPublic?: boolean;
   notes?: string;
+  suitableFor?: string;
   palletLocation?: string;
   shearDate?: string;
   purchasePrice?: number;
@@ -71,6 +72,14 @@ export const togglePublish = async (id: string) => {
   return apiRequest<Item>(`/api/togglePublish/${encodeURIComponent(id)}`, {
     method: "PATCH",
   });
+};
+
+// Recompute remainingWeight from sales history (admin only)
+export const recalculateItemWeight = async (id: string) => {
+  return apiRequest<{ id: string; remainingWeight: number; totalSold: number }>(
+    `/api/recalculateItemWeight/${encodeURIComponent(id)}`,
+    { method: "POST" }
+  );
 };
 
 // Fetch all publicly visible items (no auth required)

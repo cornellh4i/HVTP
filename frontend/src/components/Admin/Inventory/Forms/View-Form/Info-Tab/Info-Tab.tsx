@@ -308,8 +308,15 @@ export default function InfoTab({
                 <Field label="Color" required>
                   <SelectField value={formData.color ?? ""} onChange={set("color")} options={COLOR_OPTIONS} placeholder="Color" />
                 </Field>
-                <Field label="Current Quantity (lb)" required>
+                <Field label="Original Weight (lb)" required>
                   <EditableField isEditing value={String(formData.weight ?? "")} placeholder="Weight" onChange={set("weight")} />
+                </Field>
+                <Field label="Remaining Weight (lb)">
+                  <EditableField
+                    isEditing={false}
+                    value={String(formData.remainingWeight ?? formData.weight ?? "")}
+                    placeholder="Remaining"
+                  />
                 </Field>
                 <Field label="Lot Status" required>
                   <SelectField value={formData.status ?? ""} onChange={onStatusChange} options={STATUS_OPTIONS} placeholder="Status" />
@@ -334,14 +341,23 @@ export default function InfoTab({
             </Card>
           </section>
 
-          <div className="md:hidden">
-            <Field label="Notes">
+          <div className="md:hidden flex flex-col gap-5">
+            <Field label="Notes (internal only)">
               <EditableField
                 isEditing
                 value={formData.notes ?? ""}
-                placeholder="Notes"
+                placeholder="e.g. Condition notes, storage details, special handling instructions"
                 multiline
                 onChange={set("notes")}
+              />
+            </Field>
+            <Field label="Suitable For (shown on public listing)">
+              <EditableField
+                isEditing
+                value={formData.suitableFor ?? ""}
+                placeholder="e.g. Rugs, wall hangings, felted decorative items"
+                multiline
+                onChange={set("suitableFor")}
               />
             </Field>
           </div>
@@ -428,13 +444,24 @@ export default function InfoTab({
           />
 
           <Card className={styles.sectionCard}>
-            <h2 className="text-lg font-bold mb-4">Notes</h2>
+            <h2 className="text-lg font-bold mb-4">Notes (internal only)</h2>
             <EditableField
               isEditing
               value={formData.notes ?? ""}
               placeholder="e.g. Condition notes, storage details, special handling instructions"
               multiline
               onChange={set("notes")}
+            />
+          </Card>
+
+          <Card className={styles.sectionCard}>
+            <h2 className="text-lg font-bold mb-4">Suitable For (shown on public listing)</h2>
+            <EditableField
+              isEditing
+              value={formData.suitableFor ?? ""}
+              placeholder="e.g. Rugs, wall hangings, felted decorative items"
+              multiline
+              onChange={set("suitableFor")}
             />
           </Card>
         </div>
