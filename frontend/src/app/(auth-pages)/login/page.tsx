@@ -71,19 +71,13 @@ export default function LoginPage() {
           {error && <p className="text-sm text-red-500">{error}</p>}
           <button
             type="submit"
-            className="w-full rounded bg-blue-600 p-2 text-white hover:bg-blue-700"
+            className="w-full rounded bg-[#3d4f0a] p-2 text-white hover:bg-[#4a5f0c]"
           >
             Log In
           </button>
         </form>
         <p className="text-center text-sm">
-          Don&apos;t have an account?{" "}
-          <Link href="/signup" className="text-blue-600 hover:underline">
-            Sign Up
-          </Link>
-        </p>
-        <p className="text-center text-sm">
-          <Link href="/" className="text-blue-600 hover:underline">
+          <Link href="/" className="text-[#3d4f0a] hover:underline">
             Back to Inventory
           </Link>
         </p>

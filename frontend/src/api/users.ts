@@ -1,22 +1,9 @@
 import { auth } from "@/lib/firebase/firebase";
 import {
-  createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut,
 } from "firebase/auth";
 import { apiRequest } from "./APIWrapper";
-
-// Sign up a new user with Firebase Auth, then create their Firestore document
-export const signUp = async (name: string, email: string, password: string) => {
-  const credential = await createUserWithEmailAndPassword(auth, email, password);
-  const token = await credential.user.getIdToken();
-  document.cookie = `session=${token}; path=/; max-age=3600; SameSite=Strict`;
-  return apiRequest("/api/addUser", {
-    method: "POST",
-    body: { id: credential.user.uid, name, email },
-    token,
-  });
-};
 
 // Log in an existing user
 export const logIn = async (email: string, password: string) => {

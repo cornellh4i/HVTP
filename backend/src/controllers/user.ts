@@ -83,57 +83,6 @@ export const deleteUserById = async (req: Request, res: Response): Promise<void>
     }
 }
 
-// Add user controller
-export const addUser = async (req: Request, res: Response): Promise<void> => {
-    try {
-        const { id, name, email } = req.body as {
-            id?: unknown;
-            name?: unknown;
-            email?: unknown;
-        };
-
-        if (!name || typeof name !== 'string' || name.trim() === '') {
-            res.status(400).json(errorJson("Missing or invalid 'name' in request body"));
-            return;
-        }
-
-        if (!email || typeof email !== 'string' || email.trim() === '') {
-            res.status(400).json(errorJson("Missing or invalid 'email' in request body"));
-            return;
-        }
-
-        if (id !== undefined && (typeof id !== 'string' || id.trim() === '')) {
-            res.status(400).json(errorJson("Invalid 'id' in request body"));
-            return;
-        }
-
-        const db = getDb();
-        const payload = {
-            name: name.trim(),
-            email: email.trim(),
-        };
-
-        let userRef: FirebaseFirestore.DocumentReference;
-        if (typeof id === 'string' && id.trim() !== '') {
-            userRef = db.collection('users').doc(id.trim());
-            await userRef.set(payload);
-        } else {
-            userRef = await db.collection('users').add(payload);
-        }
-
-        const createdDoc = await userRef.get();
-        const createdUser: UserFields = {
-            id: createdDoc.id,
-            ...createdDoc.data()
-        } as UserFields;
-
-        res.status(201).json(successJson(createdUser));
-    } catch (error) {
-        console.error('Error adding user:', error);
-        res.status(500).json(errorJson('Failed to add user'));
-    }
-};
-
 // Update user controller
 export const updateUser = async (req: Request, res: Response): Promise<void> => {
     try {
