@@ -10,22 +10,31 @@ import {
   SlidersHorizontal,
   X,
 } from "lucide-react";
+import { getAllItems, Item } from "@/api/items";
 import { getAllSales, Sale } from "@/api/sales";
 import Calendar from "./Calendar/calendar";
+import PurchaseTable from "./Table/purchase-table";
 import SalesTable from "./Table/table";
 import {
   ColumnKey,
   DateRange,
   FilterKey,
+  PurchaseColumnKey,
+  TabKey,
   columnLabels,
   defaultColumns,
+  defaultPurchaseColumns,
   filterLabels,
   formatCurrency,
   formatQuantity,
   formatRange,
+  getItemDate,
+  getPurchaseValue,
   getSaleDate,
   getSaleValue,
+  isItemWithinRange,
   isWithinRange,
+  purchaseColumnLabels,
 } from "./transaction-utils";
 
 type Filters = Record<FilterKey, string[]>;
@@ -41,7 +50,17 @@ const filterKeys: FilterKey[] = [
   "farmerName",
 ];
 
+const purchaseFilterKeys: FilterKey[] = [
+  "status",
+  "woolType",
+  "breed",
+  "grade",
+  "color",
+  "publicationStatus",
+];
+
 const allColumns = Object.keys(columnLabels) as ColumnKey[];
+const allPurchaseColumns = Object.keys(purchaseColumnLabels) as PurchaseColumnKey[];
 
 const initialRange = (): DateRange => {
   const today = new Date();
@@ -51,15 +70,12 @@ const initialRange = (): DateRange => {
   return { start, end };
 };
 
-const rangeFromSales = (sales: Sale[]): DateRange | null => {
-  const dates = sales
-    .map(getSaleDate)
-    .filter((date): date is Date => Boolean(date))
-    .sort((a, b) => a.getTime() - b.getTime());
+const rangeFromDates = (dates: Date[]): DateRange | null => {
+  const sorted = dates.filter(Boolean).sort((a, b) => a.getTime() - b.getTime());
 
-  if (dates.length === 0) return null;
+  if (sorted.length === 0) return null;
 
-  const end = new Date(dates[dates.length - 1]);
+  const end = new Date(sorted[sorted.length - 1]);
   const start = new Date(end);
   start.setDate(end.getDate() - 27);
 
@@ -78,11 +94,23 @@ const copyFilters = (filters: Filters): Filters =>
     return acc;
   }, {} as Filters);
 
-const countFilters = (filters: Filters) =>
-  filterKeys.reduce((count, key) => count + filters[key].length, 0);
+const countFilters = (filters: Filters, keys: FilterKey[]) =>
+  keys.reduce((count, key) => count + filters[key].length, 0);
 
-function Summary({ sales }: { sales: Sale[] }) {
+function Summary({ sales, items, activeTab }: { sales: Sale[]; items: Item[]; activeTab: TabKey }) {
   const totals = useMemo(() => {
+    if (activeTab === "purchases") {
+      return items.reduce(
+        (acc, item) => {
+          const cost = (item.purchasePrice ?? 0) * (item.weight ?? 0);
+          acc.cost += cost;
+          acc.purchased += item.weight ?? 0;
+          return acc;
+        },
+        { revenue: 0, cost: 0, sold: 0, purchased: 0 }
+      );
+    }
+
     return sales.reduce(
       (acc, sale) => {
         const revenue = sale.totalPrice ?? sale.pricePerWeight * sale.weightSold;
@@ -96,12 +124,12 @@ function Summary({ sales }: { sales: Sale[] }) {
       },
       { revenue: 0, cost: 0, sold: 0, purchased: 0 }
     );
-  }, [sales]);
+  }, [sales, items, activeTab]);
 
   const stats = [
-    { label: "TOTAL REVENUE", value: formatCurrency(totals.revenue) },
-    { label: "TOTAL COST", value: formatCurrency(totals.cost) },
     { label: "TOTAL PROFIT", value: formatCurrency(totals.revenue - totals.cost) },
+    { label: "TOTAL COST", value: formatCurrency(totals.cost) },
+    { label: "TOTAL REVENUE", value: formatCurrency(totals.revenue) },
     { label: "QUANTITY PURCHASED", value: formatQuantity(totals.purchased) },
     { label: "QUANTITY SOLD", value: formatQuantity(totals.sold) },
   ];
@@ -124,6 +152,7 @@ function Summary({ sales }: { sales: Sale[] }) {
 function FilterPanel({
   options,
   draftFilters,
+  visibleFilterKeys,
   onToggle,
   onApply,
   onClear,
@@ -131,6 +160,7 @@ function FilterPanel({
 }: {
   options: Record<FilterKey, string[]>;
   draftFilters: Filters;
+  visibleFilterKeys: FilterKey[];
   onToggle: (key: FilterKey, value: string) => void;
   onApply: () => void;
   onClear: () => void;
@@ -147,7 +177,7 @@ function FilterPanel({
         </button>
       </div>
       <div className="py-5">
-        {filterKeys.map((key) => (
+        {visibleFilterKeys.map((key) => (
           <div key={key} className="border-b border-[#dfdfdc] py-3">
             <button
               type="button"
@@ -207,16 +237,26 @@ function FilterPanel({
 }
 
 function ColumnsPanel({
+  activeTab,
   draftColumns,
+  draftPurchaseColumns,
   onToggle,
+  onTogglePurchase,
   onApply,
   onCancel,
 }: {
+  activeTab: TabKey;
   draftColumns: ColumnKey[];
+  draftPurchaseColumns: PurchaseColumnKey[];
   onToggle: (column: ColumnKey) => void;
+  onTogglePurchase: (column: PurchaseColumnKey) => void;
   onApply: () => void;
   onCancel: () => void;
 }) {
+  const columns = activeTab === "purchases" ? allPurchaseColumns : allColumns;
+  const labels = activeTab === "purchases" ? purchaseColumnLabels : columnLabels;
+  const selected = activeTab === "purchases" ? draftPurchaseColumns : draftColumns;
+
   return (
     <div className="absolute left-0 top-[48px] z-20 w-[360px] rounded-lg bg-white p-6 shadow-lg ring-1 ring-black/5">
       <div className="flex items-center justify-between border-b border-[#dfdfdc] pb-4">
@@ -226,15 +266,21 @@ function ColumnsPanel({
         </button>
       </div>
       <div className="grid grid-cols-2 gap-x-8 gap-y-3 py-6">
-        {allColumns.map((column) => (
+        {columns.map((column) => (
           <label key={column} className="flex items-center gap-2 text-lg text-[#333]">
             <input
               type="checkbox"
-              checked={draftColumns.includes(column)}
-              onChange={() => onToggle(column)}
+              checked={selected.includes(column as ColumnKey & PurchaseColumnKey)}
+              onChange={() => {
+                if (activeTab === "purchases") {
+                  onTogglePurchase(column as PurchaseColumnKey);
+                } else {
+                  onToggle(column as ColumnKey);
+                }
+              }}
               className="h-5 w-5 accent-[#333]"
             />
-            {columnLabels[column]}
+            {labels[column as keyof typeof labels]}
           </label>
         ))}
       </div>
@@ -259,7 +305,9 @@ function ColumnsPanel({
 }
 
 export default function Transactions() {
+  const [activeTab, setActiveTab] = useState<TabKey>("purchases");
   const [sales, setSales] = useState<Sale[]>([]);
+  const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [dateRange, setDateRange] = useState<DateRange>(() => initialRange());
@@ -268,15 +316,29 @@ export default function Transactions() {
   const [draftFilters, setDraftFilters] = useState<Filters>(() => emptyFilters());
   const [visibleColumns, setVisibleColumns] = useState<ColumnKey[]>(defaultColumns);
   const [draftColumns, setDraftColumns] = useState<ColumnKey[]>(defaultColumns);
+  const [visiblePurchaseColumns, setVisiblePurchaseColumns] =
+    useState<PurchaseColumnKey[]>(defaultPurchaseColumns);
+  const [draftPurchaseColumns, setDraftPurchaseColumns] =
+    useState<PurchaseColumnKey[]>(defaultPurchaseColumns);
+
+  const activeFilterKeys = activeTab === "purchases" ? purchaseFilterKeys : filterKeys;
 
   useEffect(() => {
-    const fetchSales = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
         setError(null);
-        const data = await getAllSales();
-        setSales(data);
-        const defaultRange = rangeFromSales(data);
+        const [salesData, itemsData] = await Promise.all([getAllSales(), getAllItems()]);
+        setSales(salesData);
+        setItems(itemsData);
+
+        const saleDates = salesData
+          .map(getSaleDate)
+          .filter((date): date is Date => Boolean(date));
+        const itemDates = itemsData
+          .map(getItemDate)
+          .filter((date): date is Date => Boolean(date));
+        const defaultRange = rangeFromDates([...saleDates, ...itemDates]);
 
         if (defaultRange) {
           setDateRange(defaultRange);
@@ -288,15 +350,26 @@ export default function Transactions() {
       }
     };
 
-    fetchSales();
+    fetchData();
   }, []);
 
   const filterOptions = useMemo(() => {
+    if (activeTab === "purchases") {
+      return purchaseFilterKeys.reduce((acc, key) => {
+        acc[key] = Array.from(
+          new Set(items.map((item) => getPurchaseValue(item, key)).filter(Boolean))
+        ).sort();
+        return acc;
+      }, {} as Record<FilterKey, string[]>);
+    }
+
     return filterKeys.reduce((acc, key) => {
-      acc[key] = Array.from(new Set(sales.map((sale) => getSaleValue(sale, key)).filter(Boolean))).sort();
+      acc[key] = Array.from(
+        new Set(sales.map((sale) => getSaleValue(sale, key)).filter(Boolean))
+      ).sort();
       return acc;
     }, {} as Record<FilterKey, string[]>);
-  }, [sales]);
+  }, [sales, items, activeTab]);
 
   const filteredSales = useMemo(() => {
     return sales.filter((sale) => {
@@ -309,7 +382,18 @@ export default function Transactions() {
     });
   }, [sales, dateRange, filters]);
 
-  const activeFilterCount = countFilters(filters);
+  const filteredItems = useMemo(() => {
+    return items.filter((item) => {
+      if (!isItemWithinRange(item, dateRange)) return false;
+
+      return purchaseFilterKeys.every((key) => {
+        if (filters[key].length === 0) return true;
+        return filters[key].includes(getPurchaseValue(item, key));
+      });
+    });
+  }, [items, dateRange, filters]);
+
+  const activeFilterCount = countFilters(filters, activeFilterKeys);
 
   const toggleFilter = (key: FilterKey, value: string) => {
     setDraftFilters((current) => ({
@@ -328,6 +412,18 @@ export default function Transactions() {
       return [...current, column];
     });
   };
+
+  const togglePurchaseColumn = (column: PurchaseColumnKey) => {
+    setDraftPurchaseColumns((current) => {
+      if (current.includes(column)) {
+        return current.length === 1 ? current : current.filter((item) => item !== column);
+      }
+      return [...current, column];
+    });
+  };
+
+  const tabButtonClass = (tab: TabKey) =>
+    `pb-3 text-black ${activeTab === tab ? "border-b-[6px] border-[#848c2d]" : ""}`;
 
   return (
     <main className="min-h-screen bg-white px-6 py-8 md:px-10">
@@ -351,7 +447,7 @@ export default function Transactions() {
               className="inline-flex w-fit items-center gap-3 rounded-md bg-[#3d4f0a] px-5 py-3 text-white"
             >
               <Download className="h-5 w-5" />
-              Export
+              Download CSV
             </button>
           </div>
 
@@ -398,6 +494,7 @@ export default function Transactions() {
                 <FilterPanel
                   options={filterOptions}
                   draftFilters={draftFilters}
+                  visibleFilterKeys={activeFilterKeys}
                   onToggle={toggleFilter}
                   onClose={() => setOpenPanel(null)}
                   onClear={() => {
@@ -418,6 +515,7 @@ export default function Transactions() {
                 type="button"
                 onClick={() => {
                   setDraftColumns(visibleColumns);
+                  setDraftPurchaseColumns(visiblePurchaseColumns);
                   setOpenPanel(openPanel === "columns" ? null : "columns");
                 }}
                 className={`inline-flex items-center gap-3 rounded-md px-4 py-3 ${
@@ -433,11 +531,15 @@ export default function Transactions() {
               </button>
               {openPanel === "columns" && (
                 <ColumnsPanel
+                  activeTab={activeTab}
                   draftColumns={draftColumns}
+                  draftPurchaseColumns={draftPurchaseColumns}
                   onToggle={toggleColumn}
+                  onTogglePurchase={togglePurchaseColumn}
                   onCancel={() => setOpenPanel(null)}
                   onApply={() => {
                     setVisibleColumns(draftColumns);
+                    setVisiblePurchaseColumns(draftPurchaseColumns);
                     setOpenPanel(null);
                   }}
                 />
@@ -445,21 +547,44 @@ export default function Transactions() {
             </div>
           </div>
 
-          <Summary sales={filteredSales} />
+          <Summary
+            sales={filteredSales}
+            items={filteredItems}
+            activeTab={activeTab}
+          />
 
           <div className="pt-9">
             <div className="flex gap-10 border-b border-[#aeadab] text-2xl">
-              <button type="button" className="pb-3 text-black">
-                Purchases
+              <button
+                type="button"
+                className={tabButtonClass("purchases")}
+                onClick={() => setActiveTab("purchases")}
+              >
+                Purchase History
               </button>
-              <button type="button" className="border-b-[6px] border-[#848c2d] pb-3 text-black">
-                Sales
+              <button
+                type="button"
+                className={tabButtonClass("sales")}
+                onClick={() => setActiveTab("sales")}
+              >
+                Sales History
               </button>
             </div>
             <div className="border-t border-[#aeadab] pt-7">
-              {loading && <div className="rounded-md border p-8 text-center text-gray-500">Loading sales...</div>}
-              {error && <div className="rounded-md border p-8 text-center text-red-600">Error: {error}</div>}
-              {!loading && !error && <SalesTable sales={filteredSales} visibleColumns={visibleColumns} />}
+              {loading && (
+                <div className="rounded-md border p-8 text-center text-gray-500">
+                  Loading {activeTab === "purchases" ? "purchases" : "sales"}...
+                </div>
+              )}
+              {error && (
+                <div className="rounded-md border p-8 text-center text-red-600">Error: {error}</div>
+              )}
+              {!loading && !error && activeTab === "purchases" && (
+                <PurchaseTable items={filteredItems} visibleColumns={visiblePurchaseColumns} />
+              )}
+              {!loading && !error && activeTab === "sales" && (
+                <SalesTable sales={filteredSales} visibleColumns={visibleColumns} />
+              )}
             </div>
           </div>
         </div>

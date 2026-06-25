@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { FieldValue } from "firebase-admin/firestore";
 import { SaleInsert, SaleUpdate } from "../models/sales";
 import { ItemInsert } from "../models/item";
 import { FarmerInsert } from "../models/farmer";
@@ -138,6 +139,9 @@ export const addSale = async (
     const newSale: SaleInsert = { ...body, totalPrice };
 
     const ref = await db.collection("sales").add(newSale);
+    await db.collection("items").doc(body.itemId).update({
+      remainingWeight: FieldValue.increment(-body.weightSold),
+    });
     res.status(201).json(successJson({ id: ref.id, totalPrice }));
   } catch {
     res.status(500).json(errorJson("Error recording sale"));
@@ -166,6 +170,13 @@ export const updateSale = async (
       totalPrice: weightSold * pricePerWeight,
     };
 
+    if (updates.weightSold !== undefined && updates.weightSold !== existing.weightSold) {
+      const delta = weightSold - existing.weightSold;
+      await db.collection("items").doc(existing.itemId).update({
+        remainingWeight: FieldValue.increment(-delta),
+      });
+    }
+
     await doc.ref.update(payload);
     res.status(200).json(successJson({ id }));
   } catch {
@@ -185,6 +196,10 @@ export const deleteSale = async (
       return res.status(404).json(errorJson("Sale not found"));
     }
 
+    const sale = doc.data() as SaleInsert;
+    await db.collection("items").doc(sale.itemId).update({
+      remainingWeight: FieldValue.increment(sale.weightSold),
+    });
     await doc.ref.delete();
     res.status(200).json(successJson({ id }));
   } catch {

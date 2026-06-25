@@ -1,9 +1,21 @@
 import { Sale } from "@/api/sales";
+import { Item } from "@/api/items";
 
 export type DateRange = {
   start: Date;
   end: Date;
 };
+
+export type TabKey = "purchases" | "sales";
+
+export type PurchaseColumnKey =
+  | "sku"
+  | "grade"
+  | "woolType"
+  | "intakePrice"
+  | "quantity"
+  | "breed"
+  | "color";
 
 export type ColumnKey =
   | "grade"
@@ -28,6 +40,26 @@ export type FilterKey =
   | "publicationStatus"
   | "state"
   | "farmerName";
+
+export const purchaseColumnLabels: Record<PurchaseColumnKey, string> = {
+  sku: "SKU",
+  grade: "Grade",
+  woolType: "Wool Type",
+  intakePrice: "Intake Price",
+  quantity: "Quantity",
+  breed: "Breed",
+  color: "Color",
+};
+
+export const defaultPurchaseColumns: PurchaseColumnKey[] = [
+  "sku",
+  "grade",
+  "woolType",
+  "intakePrice",
+  "quantity",
+  "breed",
+  "color",
+];
 
 export const columnLabels: Record<ColumnKey, string> = {
   grade: "Grade",
@@ -67,6 +99,59 @@ export const filterLabels: Record<FilterKey, string> = {
   publicationStatus: "Publication Status",
   state: "State",
   farmerName: "Farm",
+};
+
+export const getItemDate = (item: Item): Date | null => {
+  const value = item.createdAt as unknown;
+
+  if (!value) return null;
+  if (typeof value === "string" || typeof value === "number") {
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+
+  if (typeof value === "object") {
+    const timestamp = value as { _seconds?: number; seconds?: number };
+    const seconds = timestamp._seconds ?? timestamp.seconds;
+
+    if (typeof seconds === "number") {
+      return new Date(seconds * 1000);
+    }
+  }
+
+  return null;
+};
+
+export const getPurchaseValue = (item: Item, key: PurchaseColumnKey | FilterKey): string => {
+  switch (key) {
+    case "woolType":
+    case "status":
+      return item.status ?? "Unknown";
+    case "intakePrice":
+      return formatCurrency(item.purchasePrice ?? 0);
+    case "quantity":
+      return formatQuantity(item.weight);
+    case "publicationStatus":
+      return item.isPublic ? "Public" : "Private";
+    default: {
+      const value = item[key as keyof Item];
+      if (typeof value === "boolean") return value ? "Yes" : "No";
+      if (typeof value === "number") return String(value);
+      if (typeof value === "string") return value;
+      return "Unknown";
+    }
+  }
+};
+
+export const isItemWithinRange = (item: Item, range: DateRange) => {
+  const date = getItemDate(item);
+  if (!date) return false;
+
+  const day = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+  const start = new Date(range.start.getFullYear(), range.start.getMonth(), range.start.getDate()).getTime();
+  const end = new Date(range.end.getFullYear(), range.end.getMonth(), range.end.getDate()).getTime();
+
+  return day >= start && day <= end;
 };
 
 export const getSaleDate = (sale: Sale): Date | null => {

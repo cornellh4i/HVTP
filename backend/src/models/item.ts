@@ -6,6 +6,7 @@ export interface ItemFields {
   grade: string;
   color: string;
   weight: number;
+  remainingWeight: number;
   status: string;
   images: string[];
   coverImage: string;
