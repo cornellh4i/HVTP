@@ -2,6 +2,7 @@
 
 import { Item } from "@/api/items";
 import { Sale } from "@/api/sales";
+import { Card } from "@/components/ui/card";
 
 const formatCurrency = (value?: number) =>
   new Intl.NumberFormat("en-US", {
@@ -48,9 +49,65 @@ export default function SalesTab({
 }: SalesTabProps) {
   void _item;
   void _formData;
+  if (salesLoading) {
+    return (
+      <section>
+        <div className="rounded-md border border-[#b8b8b2] bg-white px-7 py-10 text-center text-sm text-gray-500">
+          Loading sales...
+        </div>
+      </section>
+    );
+  }
+
+  if (sales.length === 0) {
+    return (
+      <section>
+        <div className="rounded-md border border-[#b8b8b2] bg-white px-7 py-10 text-center text-sm text-gray-500">
+          No sales recorded yet.
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section>
-      <div className="overflow-hidden rounded-md border border-[#b8b8b2] bg-white">
+      {/* Mobile: stacked cards */}
+      <div className="flex flex-col gap-3 md:hidden">
+        {sales.map((sale, index) => (
+          <Card
+            key={`${sale.itemId}-${sale.soldAt}-${index}`}
+            className="flex flex-col gap-2 p-4 text-sm"
+          >
+            <div className="flex items-center justify-between">
+              <span className="font-semibold text-black">{formatDate(sale.soldAt)}</span>
+              <span className="text-[#242424]">{formatWeight(sale.weightSold, sale.weightUnit)}</span>
+            </div>
+            <div className="flex items-center justify-between text-[#242424]">
+              <span className="text-gray-500">Selling Price</span>
+              <span>{formatCurrency(sale.pricePerWeight)}</span>
+            </div>
+            <div className="flex items-center justify-between text-[#242424]">
+              <span className="text-gray-500">Buyer</span>
+              <span className="text-right">{formatOptional(sale.buyerName)}</span>
+            </div>
+            <div className="flex items-center justify-between text-[#242424]">
+              <span className="text-gray-500">Phone</span>
+              <span className="text-right">{formatOptional(sale.buyerPhone)}</span>
+            </div>
+            <div className="flex items-center justify-between text-[#242424]">
+              <span className="text-gray-500">Email</span>
+              <span className="break-all text-right">{formatOptional(sale.buyerEmail)}</span>
+            </div>
+            <div className="flex items-start justify-between text-[#242424]">
+              <span className="flex-none text-gray-500">Address</span>
+              <span className="ml-3 text-right">{formatOptional(sale.buyerAddress)}</span>
+            </div>
+          </Card>
+        ))}
+      </div>
+
+      {/* Desktop: table */}
+      <div className="hidden overflow-hidden rounded-md border border-[#b8b8b2] bg-white md:block">
         <div className="overflow-x-auto">
           <table className="w-full table-fixed border-collapse text-left text-sm">
             <thead>
@@ -65,51 +122,37 @@ export default function SalesTab({
               </tr>
             </thead>
             <tbody>
-              {salesLoading ? (
-                <tr>
-                  <td colSpan={7} className="px-7 py-10 text-center text-sm text-gray-500">
-                    Loading sales...
-                  </td>
-                </tr>
-              ) : sales.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="px-7 py-10 text-center text-sm text-gray-500">
-                    No sales recorded yet.
-                  </td>
-                </tr>
-              ) : (
-                sales.map((sale, index) => {
-                  const rowBg = index % 2 === 1 ? "bg-[#f3f0e8]" : "bg-white";
-                  return (
-                    <tr
-                      key={`${sale.itemId}-${sale.soldAt}-${index}`}
-                      className={`h-12 ${rowBg}`}
-                    >
-                      <td className="whitespace-nowrap px-7 text-left text-[#242424]">
-                        {formatDate(sale.soldAt)}
-                      </td>
-                      <td className="whitespace-nowrap px-7 text-right text-[#242424]">
-                        {formatWeight(sale.weightSold, sale.weightUnit)}
-                      </td>
-                      <td className="whitespace-nowrap px-7 text-right text-[#242424]">
-                        {formatCurrency(sale.pricePerWeight)}
-                      </td>
-                      <td className="whitespace-nowrap px-7 text-left text-[#242424]">
-                        {formatOptional(sale.buyerName)}
-                      </td>
-                      <td className="whitespace-nowrap px-7 text-left text-[#242424]">
-                        {formatOptional(sale.buyerPhone)}
-                      </td>
-                      <td className="whitespace-nowrap px-7 text-left text-[#242424]">
-                        {formatOptional(sale.buyerEmail)}
-                      </td>
-                      <td className="px-7 text-left text-[#242424]">
-                        {formatOptional(sale.buyerAddress)}
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
+              {sales.map((sale, index) => {
+                const rowBg = index % 2 === 1 ? "bg-[#f3f0e8]" : "bg-white";
+                return (
+                  <tr
+                    key={`${sale.itemId}-${sale.soldAt}-${index}`}
+                    className={`h-12 ${rowBg}`}
+                  >
+                    <td className="whitespace-nowrap px-7 text-left text-[#242424]">
+                      {formatDate(sale.soldAt)}
+                    </td>
+                    <td className="whitespace-nowrap px-7 text-right text-[#242424]">
+                      {formatWeight(sale.weightSold, sale.weightUnit)}
+                    </td>
+                    <td className="whitespace-nowrap px-7 text-right text-[#242424]">
+                      {formatCurrency(sale.pricePerWeight)}
+                    </td>
+                    <td className="whitespace-nowrap px-7 text-left text-[#242424]">
+                      {formatOptional(sale.buyerName)}
+                    </td>
+                    <td className="whitespace-nowrap px-7 text-left text-[#242424]">
+                      {formatOptional(sale.buyerPhone)}
+                    </td>
+                    <td className="whitespace-nowrap px-7 text-left text-[#242424]">
+                      {formatOptional(sale.buyerEmail)}
+                    </td>
+                    <td className="px-7 text-left text-[#242424]">
+                      {formatOptional(sale.buyerAddress)}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
