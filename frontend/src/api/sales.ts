@@ -8,8 +8,10 @@ export type Sale = {
   pricePerWeight: number;
   totalPrice: number;
   costPerWeight: number;
-  soldAt: string;
-  buyerName: string;       
+  // ISO string on input; reads may return a serialized Firestore Timestamp
+  // after the createdAt/soldAt timestamp migration.
+  soldAt: string | { _seconds: number; _nanoseconds?: number; seconds?: number };
+  buyerName: string;
   buyerPhone?: string;    
   buyerEmail?: string;     
   buyerAddress?: string; 

@@ -1,10 +1,11 @@
 import { Request, Response } from "express";
-import { FieldValue } from "firebase-admin/firestore";
+import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import { SaleInsert, SaleUpdate } from "../models/sales";
 import { ItemInsert } from "../models/item";
 import { FarmerInsert } from "../models/farmer";
 import { getDb } from "../config/firebase";
 import { successJson, errorJson } from "../utils/jsonResponses";
+import { toTimestamp } from "../utils/dates";
 
 const db = getDb();
 
@@ -136,7 +137,13 @@ export const addSale = async (
     }
 
     const totalPrice = body.weightSold * body.pricePerWeight;
-    const newSale: SaleInsert = { ...body, totalPrice };
+    // Normalize the client-supplied ISO string into a Firestore Timestamp so
+    // date-range queries (e.g. the dashboard) match correctly.
+    const newSale: SaleInsert = {
+      ...body,
+      totalPrice,
+      soldAt: toTimestamp(body.soldAt) ?? Timestamp.now(),
+    };
 
     const ref = await db.collection("sales").add(newSale);
     await db.collection("items").doc(body.itemId).update({

@@ -1,7 +1,9 @@
 import { Request, Response } from "express";
+import { Timestamp } from "firebase-admin/firestore";
 import { ItemInsert, ItemUpdate } from "../models/item";
 import { getDb } from "../config/firebase";
 import { successJson, errorJson } from "../utils/jsonResponses";
+import { toTimestamp } from "../utils/dates";
 
 const db = getDb();
 
@@ -135,6 +137,9 @@ export const addItem = async (
       sku,
       name: newItem.breed,
       remainingWeight: newItem.weight,
+      // Normalize the client-supplied ISO string into a Firestore Timestamp so
+      // date-range queries (e.g. the dashboard) match correctly.
+      createdAt: toTimestamp(newItem.createdAt) ?? Timestamp.now(),
     };
 
     const ref = await db.collection("items").add(itemToInsert);

@@ -25,9 +25,20 @@ const dateFormatter = new Intl.DateTimeFormat("en-US", {
   year: "numeric",
 });
 
-const formatDate = (value?: string) => {
+// Accepts an ISO string or a serialized Firestore Timestamp ({ _seconds } /
+// { seconds }) — sales created after the timestamp migration arrive as the latter.
+const formatDate = (value?: unknown) => {
   if (!value) return "—";
-  const d = new Date(value);
+  let d: Date;
+  if (typeof value === "object" && ("_seconds" in value || "seconds" in value)) {
+    const seconds =
+      (value as { _seconds?: number; seconds?: number })._seconds ??
+      (value as { seconds?: number }).seconds;
+    if (typeof seconds !== "number") return "—";
+    d = new Date(seconds * 1000);
+  } else {
+    d = new Date(value as string | number);
+  }
   if (Number.isNaN(d.getTime())) return "—";
   return dateFormatter.format(d);
 };
