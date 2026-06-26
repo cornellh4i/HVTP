@@ -36,6 +36,7 @@ import {
   isWithinRange,
   purchaseColumnLabels,
 } from "./transaction-utils";
+import styles from "./transactions.module.css";
 
 type Filters = Record<FilterKey, string[]>;
 
@@ -135,14 +136,14 @@ function Summary({ sales, items, activeTab }: { sales: Sale[]; items: Item[]; ac
   ];
 
   return (
-    <div className="grid overflow-hidden rounded-md border border-[#aeadab] bg-white md:grid-cols-5">
+    <div className={styles.summary}>
       {stats.map((stat, index) => (
         <div
           key={stat.label}
-          className={`px-7 py-4 ${index > 0 ? "border-t border-[#aeadab] md:border-l md:border-t-0" : ""}`}
+          className={`${styles.summaryCell} ${index > 0 ? styles.summaryCellDivider : ""}`}
         >
-          <div className="text-sm tracking-wide text-[#6a6a6a]">{stat.label}</div>
-          <div className="mt-1 text-2xl font-bold text-black">{stat.value}</div>
+          <div className={styles.summaryLabel}>{stat.label}</div>
+          <div className={styles.summaryValue}>{stat.value}</div>
         </div>
       ))}
     </div>
@@ -169,43 +170,43 @@ function FilterPanel({
   const [openKey, setOpenKey] = useState<FilterKey | null>(null);
 
   return (
-    <div className="absolute left-0 top-[48px] z-20 w-[532px] rounded-lg bg-white p-7 shadow-lg ring-1 ring-black/5">
-      <div className="flex items-center justify-between border-b border-[#dfdfdc] pb-4">
-        <h2 className="text-2xl font-medium">Filters</h2>
+    <div className={styles.filterPanel}>
+      <div className={styles.panelHeader}>
+        <h2 className={styles.panelTitle}>Filters</h2>
         <button type="button" aria-label="Close filters" onClick={onClose}>
-          <X className="h-6 w-6" />
+          <X className={styles.closeIcon} />
         </button>
       </div>
-      <div className="py-5">
+      <div className={styles.filterBody}>
         {visibleFilterKeys.map((key) => (
-          <div key={key} className="border-b border-[#dfdfdc] py-3">
+          <div key={key} className={styles.filterRow}>
             <button
               type="button"
               onClick={() => setOpenKey(openKey === key ? null : key)}
-              className="flex w-full items-center justify-between text-left text-lg"
+              className={styles.filterToggle}
             >
               <span>
                 {filterLabels[key]}
                 {draftFilters[key].length > 0 && (
-                  <span className="ml-2 text-sm text-[#66721a]">
+                  <span className={styles.filterCount}>
                     ({draftFilters[key].length})
                   </span>
                 )}
               </span>
-              <span className="text-xl">⌄</span>
+              <span className={styles.chevron}>⌄</span>
             </button>
             {openKey === key && (
-              <div className="mt-3 grid grid-cols-2 gap-2">
+              <div className={styles.optionsGrid}>
                 {options[key].length === 0 ? (
-                  <div className="col-span-2 text-sm text-gray-500">No options available</div>
+                  <div className={styles.noOptions}>No options available</div>
                 ) : (
                   options[key].map((option) => (
-                    <label key={option} className="flex items-center gap-2 text-sm text-[#333]">
+                    <label key={option} className={styles.optionLabel}>
                       <input
                         type="checkbox"
                         checked={draftFilters[key].includes(option)}
                         onChange={() => onToggle(key, option)}
-                        className="h-4 w-4 accent-[#3d4f0a]"
+                        className={styles.checkbox}
                       />
                       {option}
                     </label>
@@ -216,19 +217,11 @@ function FilterPanel({
           </div>
         ))}
       </div>
-      <div className="flex items-center justify-between border-t border-[#efefec] pt-5">
-        <button
-          type="button"
-          onClick={onClear}
-          className="rounded-md border border-[#3d4f0a] px-4 py-2 text-[#3d4f0a]"
-        >
+      <div className={styles.filterFooter}>
+        <button type="button" onClick={onClear} className={styles.btnOutline}>
           Clear All
         </button>
-        <button
-          type="button"
-          onClick={onApply}
-          className="rounded-md bg-[#3d4f0a] px-4 py-2 text-white"
-        >
+        <button type="button" onClick={onApply} className={styles.btnPrimary}>
           Apply Filters
         </button>
       </div>
@@ -258,16 +251,16 @@ function ColumnsPanel({
   const selected = activeTab === "purchases" ? draftPurchaseColumns : draftColumns;
 
   return (
-    <div className="absolute left-0 top-[48px] z-20 w-[360px] rounded-lg bg-white p-6 shadow-lg ring-1 ring-black/5">
-      <div className="flex items-center justify-between border-b border-[#dfdfdc] pb-4">
-        <h2 className="text-2xl font-medium">Show Columns</h2>
+    <div className={styles.columnsPanel}>
+      <div className={styles.panelHeader}>
+        <h2 className={styles.panelTitle}>Show Columns</h2>
         <button type="button" aria-label="Close columns" onClick={onCancel}>
-          <X className="h-6 w-6" />
+          <X className={styles.closeIcon} />
         </button>
       </div>
-      <div className="grid grid-cols-2 gap-x-8 gap-y-3 py-6">
+      <div className={styles.columnsGrid}>
         {columns.map((column) => (
-          <label key={column} className="flex items-center gap-2 text-lg text-[#333]">
+          <label key={column} className={styles.columnLabel}>
             <input
               type="checkbox"
               checked={selected.includes(column as ColumnKey & PurchaseColumnKey)}
@@ -278,25 +271,17 @@ function ColumnsPanel({
                   onToggle(column as ColumnKey);
                 }
               }}
-              className="h-5 w-5 accent-[#333]"
+              className={styles.columnCheckbox}
             />
             {labels[column as keyof typeof labels]}
           </label>
         ))}
       </div>
-      <div className="flex items-center justify-between">
-        <button
-          type="button"
-          onClick={onCancel}
-          className="rounded-md border border-[#3d4f0a] px-4 py-2 text-[#333]"
-        >
+      <div className={styles.columnsFooter}>
+        <button type="button" onClick={onCancel} className={styles.btnOutlineDark}>
           Cancel
         </button>
-        <button
-          type="button"
-          onClick={onApply}
-          className="rounded-md bg-[#3d4f0a] px-4 py-2 text-white"
-        >
+        <button type="button" onClick={onApply} className={styles.btnPrimary}>
           Apply
         </button>
       </div>
@@ -423,42 +408,39 @@ export default function Transactions() {
   };
 
   const tabButtonClass = (tab: TabKey) =>
-    `pb-3 text-black ${activeTab === tab ? "border-b-[6px] border-[#848c2d]" : ""}`;
+    `${styles.tab} ${activeTab === tab ? styles.tabActive : ""}`;
 
   return (
-    <main className="min-h-screen bg-white px-6 py-8 md:px-10">
-      <div className="mx-auto max-w-[1560px]">
-        <h1 className="text-5xl font-bold tracking-normal text-black">Transactions</h1>
+    <main className={styles.main}>
+      <div className={styles.container}>
+        <h1 className={styles.title}>Transactions</h1>
 
-        <div className="mt-14 flex flex-col gap-7">
-          <div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
-            <div className="flex w-full max-w-[392px] items-center gap-3 rounded-md border border-[#aeadab] px-4 py-3 text-[#949494]">
-              <Search className="h-6 w-6" />
+        <div className={styles.content}>
+          <div className={styles.toolbar}>
+            <div className={styles.searchBox}>
+              <Search className={styles.searchIcon} />
               <input
                 aria-label="Search"
                 placeholder="Search"
                 disabled
-                className="w-full bg-transparent text-lg outline-none placeholder:text-[#949494]"
+                className={styles.searchInput}
               />
             </div>
 
-            <button
-              type="button"
-              className="inline-flex w-fit items-center gap-3 rounded-md bg-[#3d4f0a] px-5 py-3 text-white"
-            >
-              <Download className="h-5 w-5" />
+            <button type="button" className={styles.btnDownload}>
+              <Download className={styles.btnIcon} />
               Download CSV
             </button>
           </div>
 
-          <div className="flex flex-wrap items-center gap-7">
-            <div className="relative">
+          <div className={styles.controls}>
+            <div className={styles.control}>
               <button
                 type="button"
                 onClick={() => setOpenPanel(openPanel === "calendar" ? null : "calendar")}
-                className="inline-flex items-center gap-3 rounded-md bg-[#3d4f0a] px-4 py-3 text-white"
+                className={`${styles.trigger} ${styles.triggerPrimary}`}
               >
-                <CalendarDays className="h-5 w-5" />
+                <CalendarDays className={styles.btnIcon} />
                 {formatRange(dateRange)}
               </button>
               {openPanel === "calendar" && (
@@ -473,20 +455,20 @@ export default function Transactions() {
               )}
             </div>
 
-            <div className="relative">
+            <div className={styles.control}>
               <button
                 type="button"
                 onClick={() => {
                   setDraftFilters(copyFilters(filters));
                   setOpenPanel(openPanel === "filters" ? null : "filters");
                 }}
-                className={`inline-flex items-center gap-3 rounded-md px-4 py-3 ${
+                className={`${styles.trigger} ${
                   openPanel === "filters" || activeFilterCount > 0
-                    ? "bg-[#a4a39e] text-white"
-                    : "bg-white text-black"
+                    ? styles.triggerActive
+                    : styles.triggerInactive
                 }`}
               >
-                <Plus className="h-5 w-5 text-[#3d4f0a]" />
+                <Plus className={styles.triggerIconAccent} />
                 Filters
                 {activeFilterCount > 0 && <span>({activeFilterCount})</span>}
               </button>
@@ -510,7 +492,7 @@ export default function Transactions() {
               )}
             </div>
 
-            <div className="relative">
+            <div className={styles.control}>
               <button
                 type="button"
                 onClick={() => {
@@ -518,14 +500,14 @@ export default function Transactions() {
                   setDraftPurchaseColumns(visiblePurchaseColumns);
                   setOpenPanel(openPanel === "columns" ? null : "columns");
                 }}
-                className={`inline-flex items-center gap-3 rounded-md px-4 py-3 ${
-                  openPanel === "columns" ? "bg-[#a4a39e] text-white" : "bg-white text-black"
+                className={`${styles.trigger} ${
+                  openPanel === "columns" ? styles.triggerActive : styles.triggerInactive
                 }`}
               >
                 {openPanel === "columns" ? (
-                  <Columns3 className="h-5 w-5 text-white" />
+                  <Columns3 className={styles.triggerIconWhite} />
                 ) : (
-                  <SlidersHorizontal className="h-5 w-5 text-[#3d4f0a]" />
+                  <SlidersHorizontal className={styles.triggerIconAccent} />
                 )}
                 Show Columns
               </button>
@@ -553,8 +535,8 @@ export default function Transactions() {
             activeTab={activeTab}
           />
 
-          <div className="pt-9">
-            <div className="flex gap-10 border-b border-[#aeadab] text-2xl">
+          <div className={styles.tabsSection}>
+            <div className={styles.tabs}>
               <button
                 type="button"
                 className={tabButtonClass("purchases")}
@@ -570,14 +552,14 @@ export default function Transactions() {
                 Sales History
               </button>
             </div>
-            <div className="border-t border-[#aeadab] pt-7">
+            <div className={styles.tableArea}>
               {loading && (
-                <div className="rounded-md border p-8 text-center text-gray-500">
+                <div className={styles.stateLoading}>
                   Loading {activeTab === "purchases" ? "purchases" : "sales"}...
                 </div>
               )}
               {error && (
-                <div className="rounded-md border p-8 text-center text-red-600">Error: {error}</div>
+                <div className={styles.stateError}>Error: {error}</div>
               )}
               {!loading && !error && activeTab === "purchases" && (
                 <PurchaseTable items={filteredItems} visibleColumns={visiblePurchaseColumns} />

@@ -1,0 +1,82 @@
+@reference "tailwindcss";
+
+.calendar {
+  @apply absolute left-0 top-12 z-30 min-w-[680px] rounded-xl border border-gray-200 bg-white shadow-xl;
+}
+
+.months {
+  @apply flex flex-row gap-8 px-5 py-4;
+}
+
+.footer {
+  @apply flex items-center justify-end gap-2 border-t border-gray-100 px-5 py-3;
+}
+
+.btnCancel {
+  @apply rounded-md border border-gray-200 px-4 py-1.5 text-sm font-medium text-gray-700 transition hover:bg-gray-100;
+}
+
+.btnConfirm {
+  @apply rounded-md bg-[#3d4f0a] px-4 py-1.5 text-sm font-medium text-white transition hover:bg-[#4a5f0c] disabled:cursor-not-allowed disabled:opacity-40;
+}
+
+/* react-day-picker theme overrides — kept global so they reach the library's
+   .rdp-* nodes (CSS modules would otherwise hash these class names). */
+:global(.rdp-root) {
+  --rdp-accent-color: #1a1a1a !important;
+  --rdp-accent-background-color: #f3f4f6 !important;
+}
+:global(.rdp-months) {
+  display: flex !important;
+  flex-direction: row !important;
+  gap: 2rem !important;
+}
+:global(.rdp-month) {
+  flex: 1 !important;
+}
+:global(.rdp-month_caption) {
+  font-weight: 700 !important;
+  font-size: 1rem !important;
+  color: #111 !important;
+  margin-bottom: 0.75rem !important;
+}
+:global(.rdp-weekday) {
+  color: #6b7280 !important;
+  font-weight: 500 !important;
+  font-size: 0.8rem !important;
+  width: 2.5rem !important;
+  text-align: center !important;
+}
+:global(.rdp-day) {
+  width: 2.25rem !important;
+  height: 2.25rem !important;
+  font-size: 0.875rem !important;
+  border-radius: 0 !important;
+}
+:global(.rdp-selected .rdp-day_button) {
+  background-color: #1a1a1a !important;
+  color: white !important;
+  border-radius: 9999px !important;
+  border: none !important;
+}
+:global(.rdp-range_middle .rdp-day_button) {
+  background-color: #f3f4f6 !important;
+  color: #1a1a1a !important;
+  border-radius: 9999px !important;
+}
+:global(.rdp-range_start .rdp-day_button),
+:global(.rdp-range_end .rdp-day_button) {
+  background-color: #1a1a1a !important;
+  color: white !important;
+  border-radius: 9999px !important;
+}
+:global(.rdp-today .rdp-day_button) {
+  font-weight: 700 !important;
+  color: #3d4f0a !important;
+}
+:global(.rdp-nav button) {
+  border: 1px solid #e5e7eb !important;
+  border-radius: 6px !important;
+  padding: 4px !important;
+  color: #111 !important;
+}

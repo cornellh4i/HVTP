@@ -3,6 +3,7 @@
 import { ArrowDownAZ, ArrowUpAZ } from "lucide-react";
 import { Sale } from "@/api/sales";
 import { ColumnKey, columnLabels, getSaleValue } from "../transaction-utils";
+import styles from "./table.module.css";
 
 type SalesTableProps = {
   sales: Sale[];
@@ -11,22 +12,19 @@ type SalesTableProps = {
 
 export default function SalesTable({ sales, visibleColumns }: SalesTableProps) {
   return (
-    <div className="overflow-hidden rounded-md border border-[#b8b8b2] bg-white">
-      <div className="overflow-x-auto">
-        <table className="min-w-[1180px] w-full border-collapse text-left text-sm">
+    <div className={styles.wrapper}>
+      <div className={styles.scroll}>
+        <table className={styles.table}>
           <thead>
-            <tr className="h-14 border-b border-[#d8d7cf] bg-white shadow-sm">
+            <tr className={styles.headRow}>
               {visibleColumns.map((column) => (
-                <th
-                  key={column}
-                  className="whitespace-nowrap px-7 text-base font-semibold text-black"
-                >
-                  <span className="inline-flex items-center gap-1">
+                <th key={column} className={styles.headCell}>
+                  <span className={styles.headLabel}>
                     {columnLabels[column]}
                     {(column === "grade" || column === "woolType") && (
-                      <span className="inline-flex items-center -space-x-2">
-                        <ArrowUpAZ className="h-4 w-4" />
-                        <ArrowDownAZ className="h-4 w-4" />
+                      <span className={styles.sortIcons}>
+                        <ArrowUpAZ className={styles.sortIcon} />
+                        <ArrowDownAZ className={styles.sortIcon} />
                       </span>
                     )}
                   </span>
@@ -37,10 +35,7 @@ export default function SalesTable({ sales, visibleColumns }: SalesTableProps) {
           <tbody>
             {sales.length === 0 ? (
               <tr>
-                <td
-                  colSpan={visibleColumns.length}
-                  className="px-7 py-10 text-center text-sm text-gray-500"
-                >
+                <td colSpan={visibleColumns.length} className={styles.emptyCell}>
                   No sales found for the selected date range.
                 </td>
               </tr>
@@ -48,10 +43,10 @@ export default function SalesTable({ sales, visibleColumns }: SalesTableProps) {
               sales.map((sale, index) => (
                 <tr
                   key={sale.id}
-                  className={`h-12 ${index % 2 === 1 ? "bg-[#f3f0e8]" : "bg-white"}`}
+                  className={`${styles.row} ${index % 2 === 1 ? styles.rowAlt : styles.rowDefault}`}
                 >
                   {visibleColumns.map((column) => (
-                    <td key={column} className="whitespace-nowrap px-7 text-[#242424]">
+                    <td key={column} className={styles.cell}>
                       {getSaleValue(sale, column)}
                     </td>
                   ))}

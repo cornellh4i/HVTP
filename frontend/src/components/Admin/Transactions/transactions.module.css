@@ -1,0 +1,217 @@
+@reference "tailwindcss";
+
+/* ── Page shell ─────────────────────────────────────────────────────────── */
+.main {
+  @apply min-h-screen bg-white px-6 py-8 md:px-10;
+}
+
+.container {
+  @apply mx-auto max-w-[1560px];
+}
+
+.title {
+  @apply text-5xl font-bold tracking-normal text-black;
+}
+
+.content {
+  @apply mt-14 flex flex-col gap-7;
+}
+
+/* ── Toolbar (search + download) ────────────────────────────────────────── */
+.toolbar {
+  @apply flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between;
+}
+
+.searchBox {
+  @apply flex w-full max-w-[392px] items-center gap-3 rounded-md border border-[#aeadab] px-4 py-3 text-[#949494];
+}
+
+.searchIcon {
+  @apply h-6 w-6;
+}
+
+.searchInput {
+  @apply w-full bg-transparent text-lg outline-none placeholder:text-[#949494];
+}
+
+.btnDownload {
+  @apply inline-flex w-fit items-center gap-3 rounded-md bg-[#3d4f0a] px-5 py-3 text-white;
+}
+
+.btnIcon {
+  @apply h-5 w-5;
+}
+
+/* ── Control row (calendar / filters / columns triggers) ────────────────── */
+.controls {
+  @apply flex flex-wrap items-center gap-7;
+}
+
+.control {
+  @apply relative;
+}
+
+.trigger {
+  @apply inline-flex items-center gap-3 rounded-md px-4 py-3;
+}
+
+.triggerPrimary {
+  @apply bg-[#3d4f0a] text-white;
+}
+
+.triggerActive {
+  @apply bg-[#a4a39e] text-white;
+}
+
+.triggerInactive {
+  @apply bg-white text-black;
+}
+
+.triggerIconAccent {
+  @apply h-5 w-5 text-[#3d4f0a];
+}
+
+.triggerIconWhite {
+  @apply h-5 w-5 text-white;
+}
+
+/* ── Summary stats ──────────────────────────────────────────────────────── */
+.summary {
+  @apply grid overflow-hidden rounded-md border border-[#aeadab] bg-white md:grid-cols-5;
+}
+
+.summaryCell {
+  @apply px-7 py-4;
+}
+
+.summaryCellDivider {
+  @apply border-t border-[#aeadab] md:border-l md:border-t-0;
+}
+
+.summaryLabel {
+  @apply text-sm tracking-wide text-[#6a6a6a];
+}
+
+.summaryValue {
+  @apply mt-1 text-2xl font-bold text-black;
+}
+
+/* ── Popover panels (shared header/title/close) ─────────────────────────── */
+.panelHeader {
+  @apply flex items-center justify-between border-b border-[#dfdfdc] pb-4;
+}
+
+.panelTitle {
+  @apply text-2xl font-medium;
+}
+
+.closeIcon {
+  @apply h-6 w-6;
+}
+
+/* ── Filter panel ───────────────────────────────────────────────────────── */
+.filterPanel {
+  @apply absolute left-0 top-[48px] z-20 w-[532px] rounded-lg bg-white p-7 shadow-lg ring-1 ring-black/5;
+}
+
+.filterBody {
+  @apply py-5;
+}
+
+.filterRow {
+  @apply border-b border-[#dfdfdc] py-3;
+}
+
+.filterToggle {
+  @apply flex w-full items-center justify-between text-left text-lg;
+}
+
+.filterCount {
+  @apply ml-2 text-sm text-[#66721a];
+}
+
+.chevron {
+  @apply text-xl;
+}
+
+.optionsGrid {
+  @apply mt-3 grid grid-cols-2 gap-2;
+}
+
+.noOptions {
+  @apply col-span-2 text-sm text-gray-500;
+}
+
+.optionLabel {
+  @apply flex items-center gap-2 text-sm text-[#333];
+}
+
+.checkbox {
+  @apply h-4 w-4 accent-[#3d4f0a];
+}
+
+.filterFooter {
+  @apply flex items-center justify-between border-t border-[#efefec] pt-5;
+}
+
+.btnOutline {
+  @apply rounded-md border border-[#3d4f0a] px-4 py-2 text-[#3d4f0a];
+}
+
+.btnPrimary {
+  @apply rounded-md bg-[#3d4f0a] px-4 py-2 text-white;
+}
+
+/* ── Columns panel ──────────────────────────────────────────────────────── */
+.columnsPanel {
+  @apply absolute left-0 top-[48px] z-20 w-[360px] rounded-lg bg-white p-6 shadow-lg ring-1 ring-black/5;
+}
+
+.columnsGrid {
+  @apply grid grid-cols-2 gap-x-8 gap-y-3 py-6;
+}
+
+.columnLabel {
+  @apply flex items-center gap-2 text-lg text-[#333];
+}
+
+.columnCheckbox {
+  @apply h-5 w-5 accent-[#333];
+}
+
+.columnsFooter {
+  @apply flex items-center justify-between;
+}
+
+.btnOutlineDark {
+  @apply rounded-md border border-[#3d4f0a] px-4 py-2 text-[#333];
+}
+
+/* ── Tabs + table area ──────────────────────────────────────────────────── */
+.tabsSection {
+  @apply pt-9;
+}
+
+.tabs {
+  @apply flex gap-10 border-b border-[#aeadab] text-2xl;
+}
+
+.tab {
+  @apply pb-3 text-black;
+}
+
+.tabActive {
+  @apply border-b-[6px] border-[#848c2d];
+}
+
+.tableArea {
+  @apply border-t border-[#aeadab] pt-7;
+}
+
+.stateLoading {
+  @apply rounded-md border p-8 text-center text-gray-500;
+}
+
+.stateError {
+  @apply rounded-md border p-8 text-center text-red-600;
+}
