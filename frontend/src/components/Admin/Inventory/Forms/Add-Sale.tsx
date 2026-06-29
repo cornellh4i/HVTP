@@ -1,29 +1,38 @@
 "use client";
 
 import { useRef, useState, useEffect, useCallback } from "react";
-import { addSale, SaleInput } from "@/api/sales";
+import { addSale, updateSale, SaleInput, Sale } from "@/api/sales";
 import EditableField from "@/components/ui/EditableField";
 
 interface SaleModalProps {
   itemId: string;
   costPerWeight: number; // intake price $/lb
+  editSale?: Sale; // when provided, the modal edits this sale instead of creating one
   onClose: () => void;
   onSaleRecorded?: (saleId: string, totalPrice: number) => void;
+  onSaleUpdated?: () => void;
 }
 
 export default function SaleModal({
   itemId,
   costPerWeight,
+  editSale,
   onClose,
   onSaleRecorded,
+  onSaleUpdated,
 }: SaleModalProps) {
-  const [weightSold, setWeightSold] = useState("");
-  const [pricePerWeight, setPricePerWeight] = useState("");
-  const [notes, setNotes] = useState("");
-  const [buyerName, setBuyerName] = useState("");
-  const [buyerPhone, setBuyerPhone] = useState("");
-  const [buyerEmail, setBuyerEmail] = useState("");
-  const [buyerAddress, setBuyerAddress] = useState("");
+  const isEditing = Boolean(editSale);
+  const [weightSold, setWeightSold] = useState(
+    editSale ? String(editSale.weightSold ?? "") : ""
+  );
+  const [pricePerWeight, setPricePerWeight] = useState(
+    editSale ? String(editSale.pricePerWeight ?? "") : ""
+  );
+  const [notes, setNotes] = useState(editSale?.notes ?? "");
+  const [buyerName, setBuyerName] = useState(editSale?.buyerName ?? "");
+  const [buyerPhone, setBuyerPhone] = useState(editSale?.buyerPhone ?? "");
+  const [buyerEmail, setBuyerEmail] = useState(editSale?.buyerEmail ?? "");
+  const [buyerAddress, setBuyerAddress] = useState(editSale?.buyerAddress ?? "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -92,27 +101,50 @@ export default function SaleModal({
     setError(null);
     setSaving(true);
     try {
-     const payload: SaleInput = {
-      itemId,
-      weightSold: parseFloat(weightSold),
-      weightUnit: "lb",
-      pricePerWeight: parseFloat(pricePerWeight),
-      totalPrice: parseFloat(totalPrice!),
-      costPerWeight: Number(costPerWeight),
-      soldAt: new Date().toISOString(),
-      buyerName,
-      buyerPhone: buyerPhone.trim() || undefined,
-      buyerEmail: buyerEmail.trim() || undefined,
-      buyerAddress: buyerAddress.trim() || undefined,
-      notes: notes?.trim() || "",
-    };
-      console.log("SALE PAYLOAD:", payload);
+      if (isEditing && editSale) {
+        // Edit: only the user-editable fields; soldAt/costPerWeight are preserved.
+        const updates: Partial<SaleInput> = {
+          weightSold: parseFloat(weightSold),
+          pricePerWeight: parseFloat(pricePerWeight),
+          totalPrice: parseFloat(totalPrice!),
+          buyerName,
+          buyerPhone: buyerPhone.trim() || undefined,
+          buyerEmail: buyerEmail.trim() || undefined,
+          buyerAddress: buyerAddress.trim() || undefined,
+          notes: notes?.trim() || "",
+        };
+        await updateSale(editSale.id, updates);
+        onSaleUpdated?.();
+        onClose();
+        return;
+      }
+
+      const payload: SaleInput = {
+        itemId,
+        weightSold: parseFloat(weightSold),
+        weightUnit: "lb",
+        pricePerWeight: parseFloat(pricePerWeight),
+        totalPrice: parseFloat(totalPrice!),
+        costPerWeight: Number(costPerWeight),
+        soldAt: new Date().toISOString(),
+        buyerName,
+        buyerPhone: buyerPhone.trim() || undefined,
+        buyerEmail: buyerEmail.trim() || undefined,
+        buyerAddress: buyerAddress.trim() || undefined,
+        notes: notes?.trim() || "",
+      };
       const result = await addSale(payload);
       onSaleRecorded?.(result.id, result.totalPrice);
       onClose();
     } catch (err) {
-      console.error("addSale error:", err);
-      setError(err instanceof Error ? err.message : "Failed to record sale.");
+      console.error(isEditing ? "updateSale error:" : "addSale error:", err);
+      setError(
+        err instanceof Error
+          ? err.message
+          : isEditing
+            ? "Failed to update sale."
+            : "Failed to record sale."
+      );
     } finally {
       setSaving(false);
     }
@@ -156,7 +188,9 @@ export default function SaleModal({
           className="flex items-center justify-between px-6 pt-6 pb-2 cursor-move"
           onMouseDown={onMouseDown}
         >
-          <h2 className="text-2xl font-bold text-gray-900">Record a Sale</h2>
+          <h2 className="text-2xl font-bold text-gray-900">
+            {isEditing ? "Edit Sale" : "Record a Sale"}
+          </h2>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-700 text-xl leading-none p-1 rounded-full hover:bg-gray-100 transition-colors cursor-pointer"
@@ -258,7 +292,13 @@ export default function SaleModal({
               disabled={saving}
               className="rounded-lg bg-[#4a5c2f] hover:bg-[#3a4a24] text-white px-5 py-2 text-sm font-medium disabled:opacity-50 transition-colors cursor-pointer"
             >
-              {saving ? "Recording..." : "Record Sale"}
+              {saving
+                ? isEditing
+                  ? "Saving..."
+                  : "Recording..."
+                : isEditing
+                  ? "Save Changes"
+                  : "Record Sale"}
             </button>
           </div>
         </div>

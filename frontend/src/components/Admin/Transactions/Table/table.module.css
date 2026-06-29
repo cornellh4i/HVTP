@@ -51,3 +51,69 @@
 .cell {
   @apply whitespace-nowrap px-7 text-[#242424];
 }
+
+/* ── Row actions (kebab menu) ───────────────────────────────────────────── */
+.actionHeadCell {
+  @apply w-12 px-4;
+}
+
+.actionCell {
+  @apply px-4 text-right;
+}
+
+.kebabBtn {
+  @apply inline-flex items-center justify-center rounded p-1 text-[#242424] hover:bg-black/5;
+}
+
+.kebabIcon {
+  @apply h-5 w-5;
+}
+
+.menu {
+  @apply fixed z-50 w-36 overflow-hidden rounded-md border border-[#d8d7cf] bg-white py-1 shadow-lg;
+}
+
+.menuItem {
+  @apply flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-[#242424] hover:bg-[#f3f0e8];
+}
+
+.menuItemDanger {
+  @apply text-[#8B1A00] hover:bg-[#f7e9e6];
+}
+
+.menuIcon {
+  @apply h-4 w-4;
+}
+
+/* ── Delete confirmation modal (mirrors the delete-lot dialog) ──────────── */
+.modalBackdrop {
+  @apply fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4;
+}
+
+.modal {
+  @apply flex w-[400px] max-w-full flex-col items-center gap-6 rounded-3xl bg-white p-9 text-center shadow-xl;
+}
+
+.modalIcon {
+  @apply h-8 w-8 shrink-0 text-[#8B1A00];
+}
+
+.modalTitle {
+  @apply text-xl font-bold text-gray-900;
+}
+
+.modalDescription {
+  @apply text-sm leading-relaxed text-gray-900;
+}
+
+.modalActions {
+  @apply flex w-full items-center gap-2;
+}
+
+.modalConfirm {
+  @apply min-w-0 flex-[1.35] rounded-lg bg-[#8B1A00] px-3 py-2.5 text-sm font-medium whitespace-nowrap text-white hover:bg-[#731500] disabled:opacity-50;
+}
+
+.modalCancel {
+  @apply flex-1 rounded-lg bg-[#D3D3D3] px-3 py-2.5 text-sm font-medium whitespace-nowrap text-gray-900 hover:bg-[#c4c4c4] disabled:opacity-50;
+}

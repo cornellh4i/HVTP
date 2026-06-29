@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   CalendarDays,
   Columns3,
@@ -308,15 +308,17 @@ export default function Transactions() {
 
   const activeFilterKeys = activeTab === "purchases" ? purchaseFilterKeys : filterKeys;
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const [salesData, itemsData] = await Promise.all([getAllSales(), getAllItems()]);
-        setSales(salesData);
-        setItems(itemsData);
+  const loadData = useCallback(async (resetRange = false) => {
+    try {
+      setLoading(true);
+      setError(null);
+      const [salesData, itemsData] = await Promise.all([getAllSales(), getAllItems()]);
+      setSales(salesData);
+      setItems(itemsData);
 
+      // Only seed the date range from the data on first load — a later refresh
+      // (after editing/deleting a sale) must keep the user's selected range.
+      if (resetRange) {
         const saleDates = salesData
           .map(getSaleDate)
           .filter((date): date is Date => Boolean(date));
@@ -328,15 +330,17 @@ export default function Transactions() {
         if (defaultRange) {
           setDateRange(defaultRange);
         }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : String(err));
-      } finally {
-        setLoading(false);
       }
-    };
-
-    fetchData();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    loadData(true);
+  }, [loadData]);
 
   const filterOptions = useMemo(() => {
     if (activeTab === "purchases") {
@@ -565,7 +569,11 @@ export default function Transactions() {
                 <PurchaseTable items={filteredItems} visibleColumns={visiblePurchaseColumns} />
               )}
               {!loading && !error && activeTab === "sales" && (
-                <SalesTable sales={filteredSales} visibleColumns={visibleColumns} />
+                <SalesTable
+                  sales={filteredSales}
+                  visibleColumns={visibleColumns}
+                  onChanged={() => loadData()}
+                />
               )}
             </div>
           </div>
