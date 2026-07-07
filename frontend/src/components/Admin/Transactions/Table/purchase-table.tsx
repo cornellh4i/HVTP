@@ -1,6 +1,5 @@
 "use client";
 
-import { ArrowDownAZ, ArrowUpAZ } from "lucide-react";
 import { Item } from "@/api/items";
 import { PurchaseColumnKey, getPurchaseValue, purchaseColumnLabels } from "../transaction-utils";
 import styles from "./purchase-table.module.css";
@@ -19,15 +18,7 @@ export default function PurchaseTable({ items, visibleColumns }: PurchaseTablePr
             <tr className={styles.headRow}>
               {visibleColumns.map((column) => (
                 <th key={column} className={styles.headCell}>
-                  <span className={styles.headLabel}>
-                    {purchaseColumnLabels[column]}
-                    {(column === "grade" || column === "woolType") && (
-                      <span className={styles.sortIcons}>
-                        <ArrowUpAZ className={styles.sortIcon} />
-                        <ArrowDownAZ className={styles.sortIcon} />
-                      </span>
-                    )}
-                  </span>
+                  <span className={styles.headLabel}>{purchaseColumnLabels[column]}</span>
                 </th>
               ))}
             </tr>

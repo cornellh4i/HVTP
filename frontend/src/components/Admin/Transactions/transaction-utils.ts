@@ -1,5 +1,11 @@
 import { Sale } from "@/api/sales";
 import { Item } from "@/api/items";
+import {
+  InventoryFilterOptions,
+  InventoryFilters,
+  PublicationState,
+  parseItemTimestamp,
+} from "@/components/Admin/Inventory/inventory-utils";
 
 export type DateRange = {
   start: Date;
@@ -15,7 +21,8 @@ export type PurchaseColumnKey =
   | "intakePrice"
   | "quantity"
   | "breed"
-  | "color";
+  | "color"
+  | "farmerName";
 
 export type ColumnKey =
   | "grade"
@@ -49,16 +56,17 @@ export const purchaseColumnLabels: Record<PurchaseColumnKey, string> = {
   quantity: "Quantity",
   breed: "Breed",
   color: "Color",
+  farmerName: "Farmer Name",
 };
 
 export const defaultPurchaseColumns: PurchaseColumnKey[] = [
-  "sku",
   "grade",
   "woolType",
   "intakePrice",
   "quantity",
   "breed",
   "color",
+  "farmerName",
 ];
 
 export const columnLabels: Record<ColumnKey, string> = {
@@ -77,17 +85,11 @@ export const columnLabels: Record<ColumnKey, string> = {
 };
 
 export const defaultColumns: ColumnKey[] = [
-  "grade",
-  "woolType",
-  "intakePrice",
-  "sellingPrice",
-  "profit",
-  "quantity",
   "breed",
   "color",
-  "farmerName",
   "city",
-  "state",
+  "sellingPrice",
+  "sku",
 ];
 
 export const filterLabels: Record<FilterKey, string> = {
@@ -131,6 +133,8 @@ export const getPurchaseValue = (item: Item, key: PurchaseColumnKey | FilterKey)
       return formatCurrency(item.purchasePrice ?? 0);
     case "quantity":
       return formatQuantity(item.weight);
+    case "farmerName":
+      return item.farmerName ?? "Unknown";
     case "publicationStatus":
       return item.isPublic ? "Public" : "Private";
     default: {
@@ -237,3 +241,57 @@ export const formatRange = (range: DateRange) => {
 
   return `${formatter.format(range.start)} - ${formatter.format(range.end)}`;
 };
+
+/* ── Adapters so the shared Inventory Filter can drive the Sales tab ─────── */
+
+const normalizeValue = (value: string | undefined | null) => value?.trim() ?? "";
+
+const uniqueSorted = (values: Array<string | undefined | null>) =>
+  Array.from(new Set(values.map(normalizeValue).filter(Boolean))).sort((a, b) =>
+    a.localeCompare(b)
+  );
+
+const getSalePublicationState = (sale: Sale): PublicationState =>
+  sale.isPublic ? "published" : "unpublished";
+
+// The shared Filter component is typed around Item fields. Sales only carry a
+// subset of those (wool type via itemName, farmer state, publication state),
+// so grade/color/breed simply resolve to empty option lists.
+export const getSalesFilterOptions = (sales: Sale[]): InventoryFilterOptions => ({
+  grade: [],
+  color: [],
+  breed: [],
+  status: uniqueSorted(sales.map((sale) => sale.itemName)),
+  publicationState: ["published", "unpublished"],
+  state: uniqueSorted(sales.map((sale) => sale.farmerState)),
+});
+
+export const filterSales = (sales: Sale[], filters: InventoryFilters): Sale[] =>
+  [...sales]
+    .filter((sale) => {
+      const matchesStatus =
+        filters.status.length === 0 || filters.status.includes(normalizeValue(sale.itemName));
+      const matchesPublication =
+        filters.publicationState.length === 0 ||
+        filters.publicationState.includes(getSalePublicationState(sale));
+      const matchesState =
+        filters.state.length === 0 || filters.state.includes(normalizeValue(sale.farmerState));
+
+      return matchesStatus && matchesPublication && matchesState;
+    })
+    .sort((a, b) => {
+      const aTime = getSaleDate(a)?.getTime() ?? 0;
+      const bTime = getSaleDate(b)?.getTime() ?? 0;
+
+      return filters.sortBy === "date-asc" ? aTime - bTime : bTime - aTime;
+    });
+
+// Item sort mirrors filterInventoryItems' ordering without re-running its
+// filter pass (date-range + shared filters are applied separately).
+export const sortItemsByDate = (items: Item[], sortBy: InventoryFilters["sortBy"]): Item[] =>
+  [...items].sort((a, b) => {
+    const aTime = parseItemTimestamp(a.createdAt);
+    const bTime = parseItemTimestamp(b.createdAt);
+
+    return sortBy === "date-asc" ? aTime - bTime : bTime - aTime;
+  });

@@ -23,23 +23,23 @@
 }
 
 .searchBox {
-  @apply flex w-full max-w-[392px] items-center gap-3 rounded-md border border-[#aeadab] px-4 py-3 text-[#949494];
+  @apply flex h-12 w-full items-center gap-3 rounded-lg border border-[#aeadab] bg-white p-3 text-[#949494] lg:w-[330px];
 }
 
 .searchIcon {
-  @apply h-6 w-6;
+  @apply h-5 w-5;
 }
 
 .searchInput {
-  @apply w-full bg-transparent text-lg outline-none placeholder:text-[#949494];
+  @apply w-full bg-transparent text-base outline-none placeholder:text-[#949494];
 }
 
 .btnDownload {
-  @apply inline-flex w-fit items-center gap-3 rounded-md bg-[#3d4f0a] px-5 py-3 text-white;
+  @apply inline-flex h-9 w-fit items-center gap-3 rounded-lg bg-[#3E4E28] px-3 text-sm text-white;
 }
 
 .btnIcon {
-  @apply h-5 w-5;
+  @apply h-4 w-4;
 }
 
 /* ── Control row (calendar / filters / columns triggers) ────────────────── */
@@ -52,11 +52,11 @@
 }
 
 .trigger {
-  @apply inline-flex items-center gap-3 rounded-md px-4 py-3;
+  @apply inline-flex h-9 items-center gap-2 rounded-lg px-3 text-sm;
 }
 
 .triggerPrimary {
-  @apply bg-[#3d4f0a] text-white;
+  @apply bg-[#3E4E28] text-white;
 }
 
 .triggerActive {
@@ -64,20 +64,33 @@
 }
 
 .triggerInactive {
-  @apply bg-white text-black;
+  @apply bg-transparent text-black;
 }
 
 .triggerIconAccent {
-  @apply h-5 w-5 text-[#3d4f0a];
+  @apply h-4 w-4 text-[#3E4E28];
 }
 
 .triggerIconWhite {
-  @apply h-5 w-5 text-white;
+  @apply h-4 w-4 text-white;
+}
+
+/* ── Sort direction toggle (down / up) ──────────────────────────────────── */
+.sortToggle {
+  @apply inline-flex overflow-hidden rounded-lg border border-[#c9c8c3];
+}
+
+.sortToggleButton {
+  @apply inline-flex h-9 items-center justify-center px-3 text-[#6a6a6a] transition-colors hover:bg-[#f0efe9];
+}
+
+.sortToggleActive {
+  @apply bg-[#a4a39e] text-white hover:bg-[#a4a39e];
 }
 
 /* ── Summary stats ──────────────────────────────────────────────────────── */
 .summary {
-  @apply grid overflow-hidden rounded-md border border-[#aeadab] bg-white md:grid-cols-5;
+  @apply grid overflow-hidden rounded-lg border border-[#aeadab] bg-white md:grid-cols-5;
 }
 
 .summaryCell {
@@ -98,85 +111,36 @@
 
 /* ── Popover panels (shared header/title/close) ─────────────────────────── */
 .panelHeader {
-  @apply flex items-center justify-between border-b border-[#dfdfdc] pb-4;
+  @apply flex items-center justify-between border-b border-[#dfdfdc] pb-3;
 }
 
 .panelTitle {
-  @apply text-2xl font-medium;
+  @apply text-base font-medium;
 }
 
 .closeIcon {
-  @apply h-6 w-6;
-}
-
-/* ── Filter panel ───────────────────────────────────────────────────────── */
-.filterPanel {
-  @apply absolute left-0 top-[48px] z-20 w-[532px] rounded-lg bg-white p-7 shadow-lg ring-1 ring-black/5;
-}
-
-.filterBody {
-  @apply py-5;
-}
-
-.filterRow {
-  @apply border-b border-[#dfdfdc] py-3;
-}
-
-.filterToggle {
-  @apply flex w-full items-center justify-between text-left text-lg;
-}
-
-.filterCount {
-  @apply ml-2 text-sm text-[#66721a];
-}
-
-.chevron {
-  @apply text-xl;
-}
-
-.optionsGrid {
-  @apply mt-3 grid grid-cols-2 gap-2;
-}
-
-.noOptions {
-  @apply col-span-2 text-sm text-gray-500;
-}
-
-.optionLabel {
-  @apply flex items-center gap-2 text-sm text-[#333];
-}
-
-.checkbox {
-  @apply h-4 w-4 accent-[#3d4f0a];
-}
-
-.filterFooter {
-  @apply flex items-center justify-between border-t border-[#efefec] pt-5;
-}
-
-.btnOutline {
-  @apply rounded-md border border-[#3d4f0a] px-4 py-2 text-[#3d4f0a];
+  @apply h-4 w-4;
 }
 
 .btnPrimary {
-  @apply rounded-md bg-[#3d4f0a] px-4 py-2 text-white;
+  @apply rounded-lg bg-[#3E4E28] px-3 py-1.5 text-sm text-white;
 }
 
 /* ── Columns panel ──────────────────────────────────────────────────────── */
 .columnsPanel {
-  @apply absolute left-0 top-[48px] z-20 w-[360px] rounded-lg bg-white p-6 shadow-lg ring-1 ring-black/5;
+  @apply absolute left-0 top-[44px] z-20 w-[280px] rounded-lg bg-white p-4 shadow-lg ring-1 ring-black/5;
 }
 
 .columnsGrid {
-  @apply grid grid-cols-2 gap-x-8 gap-y-3 py-6;
+  @apply grid grid-cols-2 gap-x-6 gap-y-2.5 py-4;
 }
 
 .columnLabel {
-  @apply flex items-center gap-2 text-lg text-[#333];
+  @apply flex items-center gap-2 text-sm text-[#333];
 }
 
 .columnCheckbox {
-  @apply h-5 w-5 accent-[#333];
+  @apply h-4 w-4 accent-[#333];
 }
 
 .columnsFooter {
@@ -184,7 +148,7 @@
 }
 
 .btnOutlineDark {
-  @apply rounded-md border border-[#3d4f0a] px-4 py-2 text-[#333];
+  @apply rounded-lg border border-[#3E4E28] px-3 py-1.5 text-sm text-[#333];
 }
 
 /* ── Tabs + table area ──────────────────────────────────────────────────── */
@@ -193,7 +157,7 @@
 }
 
 .tabs {
-  @apply flex gap-10 border-b border-[#aeadab] text-2xl;
+  @apply flex gap-10 border-b border-[#aeadab] text-xl;
 }
 
 .tab {
@@ -201,7 +165,7 @@
 }
 
 .tabActive {
-  @apply border-b-[6px] border-[#848c2d];
+  @apply border-b-[3px] border-[#3E4E28] font-medium;
 }
 
 .tableArea {
@@ -209,9 +173,9 @@
 }
 
 .stateLoading {
-  @apply rounded-md border p-8 text-center text-gray-500;
+  @apply rounded-lg border p-8 text-center text-gray-500;
 }
 
 .stateError {
-  @apply rounded-md border p-8 text-center text-red-600;
+  @apply rounded-lg border p-8 text-center text-red-600;
 }
