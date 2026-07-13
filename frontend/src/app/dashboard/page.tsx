@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/utils/AuthContext";
 import { logOut } from "@/api/users";
 import { useRouter } from "next/navigation";
 import Calendar from "@/components/Dashboard/Calendar/calendar";
 import { getDashboardMetrics, DashboardMetrics } from "@/api/dashboard";
 import Graph from "@/components/Dashboard/Graph/graph";
+import { exportChartAsPng } from "@/components/Dashboard/exportChart";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 const taskIconEmpty = "https://www.figma.com/api/mcp/asset/200f9e41-1e8c-43c7-81ed-51961d41f553";
@@ -23,6 +24,13 @@ const MAX_BARS = 12;
 
 function formatDateLabel(date: Date): string {
   return date.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+}
+
+function formatDateForFilename(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 function formatCurrency(value: number): string {
@@ -86,6 +94,7 @@ export default function DashboardPage() {
   const [activeMetric, setActiveMetric] = useState<MetricKey>("grossIncome");
   const [activeTaskTab, setActiveTaskTab] = useState<"tasks" | "upcoming">("tasks");
   const [tasks, setTasks] = useState(initialTasks);
+  const chartExportRef = useRef<HTMLDivElement>(null);
 
   const handleSignOut = async () => {
     document.cookie = "session=; path=/; max-age=0";
@@ -195,6 +204,25 @@ export default function DashboardPage() {
     originalIndex: tasks.findIndex((t) => t.date === task.date && t.lot === task.lot && t.suffix === task.suffix),
   }));
 
+  const canExport = !loading && metrics !== null && chartData.length > 0;
+
+  const handleExport = async () => {
+    if (!chartExportRef.current || !canExport) {
+      return;
+    }
+
+    const metricTitle = getMetricTitle(activeMetric).replace(/\s+/g, "_");
+    const startDate = formatDateForFilename(dateRange.from);
+    const endDate = formatDateForFilename(dateRange.to);
+    const fileName = `dashboard_${metricTitle}_${startDate}_${endDate}.png`;
+
+    try {
+      await exportChartAsPng(chartExportRef.current, fileName);
+    } catch (error) {
+      console.error("Failed to export chart:", error);
+    }
+  };
+
   if (authLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#fbfaf4]">
@@ -222,32 +250,47 @@ export default function DashboardPage() {
             </p>
           </div>
 
-          <div className="relative self-start">
+          <div className="flex items-center gap-3 self-start">
+            <div className="relative">
+              <button
+                onClick={() => setCalendarOpen((prev) => !prev)}
+                className="flex items-center gap-3 rounded-[6px] bg-[#3a4f0d] px-4 py-2.5 text-[14px] font-light leading-[1.4] text-white transition hover:bg-[#314206]"
+                style={{ fontFamily: "Poppins, sans-serif" }}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="16" viewBox="0 0 14 16" fill="none">
+                  <path d="M4.08333 0.5V3.5M9.91667 0.5V3.5M0.5 6.5H13.5M2 2H12C12.8036 2 13.5 2.67645 13.5 3.5V13.5C13.5 14.3236 12.8036 15 12 15H2C1.19645 15 0.5 14.3236 0.5 13.5V3.5C0.5 2.67645 1.19645 2 2 2Z" stroke="white" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                {/* Show "Custom" when user manually picks a range */}
+                <span>
+                  {isCustomRange
+                    ? "Custom"
+                    : `${formatDateLabel(dateRange.from)} - ${formatDateLabel(dateRange.to)}`}
+                </span>
+              </button>
+
+              {calendarOpen && (
+                <div className="absolute right-0 z-50 mt-2">
+                  <Calendar
+                    onRangeChange={handleRangeChange}
+                    onClose={() => setCalendarOpen(false)}
+                    initialRange={dateRange}
+                  />
+                </div>
+              )}
+            </div>
+
             <button
-              onClick={() => setCalendarOpen((prev) => !prev)}
-              className="flex items-center gap-3 rounded-[6px] bg-[#3a4f0d] px-4 py-2.5 text-[14px] font-light leading-[1.4] text-white transition hover:bg-[#314206]"
+              type="button"
+              onClick={() => void handleExport()}
+              disabled={!canExport}
+              className="flex items-center gap-2 rounded-[6px] bg-[#3a4f0d] px-4 py-2.5 text-[14px] font-light leading-[1.4] text-white transition hover:bg-[#314206] disabled:cursor-not-allowed disabled:opacity-50"
               style={{ fontFamily: "Poppins, sans-serif" }}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="16" viewBox="0 0 14 16" fill="none">
-                <path d="M4.08333 0.5V3.5M9.91667 0.5V3.5M0.5 6.5H13.5M2 2H12C12.8036 2 13.5 2.67645 13.5 3.5V13.5C13.5 14.3236 12.8036 15 12 15H2C1.19645 15 0.5 14.3236 0.5 13.5V3.5C0.5 2.67645 1.19645 2 2 2Z" stroke="white" strokeLinecap="round" strokeLinejoin="round"/>
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path d="M7 9.33333V0.5M7 9.33333L3.5 5.83333M7 9.33333L10.5 5.83333M0.5 9.33333V12.1667C0.5 12.6269 0.8731 13 1.33333 13H12.6667C13.1269 13 13.5 12.6269 13.5 12.1667V9.33333" stroke="white" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
-              {/* Show "Custom" when user manually picks a range */}
-              <span>
-                {isCustomRange
-                  ? "Custom"
-                  : `${formatDateLabel(dateRange.from)} - ${formatDateLabel(dateRange.to)}`}
-              </span>
+              Export
             </button>
-
-            {calendarOpen && (
-              <div className="absolute right-0 z-50 mt-2">
-                <Calendar
-                  onRangeChange={handleRangeChange}
-                  onClose={() => setCalendarOpen(false)}
-                  initialRange={dateRange}
-                />
-              </div>
-            )}
           </div>
         </div>
 
@@ -359,14 +402,23 @@ export default function DashboardPage() {
 
           <Card className="-mt-px rounded-none border-0 shadow-none">
             <CardContent className="px-3 pb-4 pt-3 sm:px-3 sm:pb-4">
-              <div className="relative h-[430px] w-full">
-                {loading && (
-                  <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/70 backdrop-blur-[1px]">
-                    <p className="text-sm font-medium text-slate-500">Loading metrics...</p>
-                  </div>
-                )}
+              <div ref={chartExportRef} className="bg-white">
+                <p
+                  className="mb-3 text-[14px] font-normal leading-normal text-[rgba(0,0,0,0.7)]"
+                  style={{ fontFamily: "Acumin Pro, sans-serif" }}
+                >
+                  {getMetricTitle(activeMetric)} — {formatDateLabel(dateRange.from)} – {formatDateLabel(dateRange.to)}
+                </p>
 
-                <Graph data={chartData} barLabelFormatter={graphLabelFormatter} />
+                <div className="relative h-[430px] w-full">
+                  {loading && (
+                    <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/70 backdrop-blur-[1px]">
+                      <p className="text-sm font-medium text-slate-500">Loading metrics...</p>
+                    </div>
+                  )}
+
+                  <Graph data={chartData} barLabelFormatter={graphLabelFormatter} />
+                </div>
               </div>
             </CardContent>
           </Card>
