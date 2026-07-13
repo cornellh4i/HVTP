@@ -1,7 +1,7 @@
 @reference "tailwindcss";
 
 .calendar {
-  @apply absolute left-0 top-12 z-30 min-w-[680px] rounded-xl border border-gray-200 bg-white shadow-xl;
+  @apply absolute left-0 top-12 z-30 min-w-[680px] rounded-lg border border-gray-200 bg-white shadow-xl;
 }
 
 .months {
@@ -13,11 +13,11 @@
 }
 
 .btnCancel {
-  @apply rounded-md border border-gray-200 px-4 py-1.5 text-sm font-medium text-gray-700 transition hover:bg-gray-100;
+  @apply rounded-lg border border-gray-200 px-4 py-1.5 text-sm font-medium text-gray-700 transition hover:bg-gray-100;
 }
 
 .btnConfirm {
-  @apply rounded-md bg-[#3d4f0a] px-4 py-1.5 text-sm font-medium text-white transition hover:bg-[#4a5f0c] disabled:cursor-not-allowed disabled:opacity-40;
+  @apply rounded-lg bg-[#3E4E28] px-4 py-1.5 text-sm font-medium text-white transition hover:bg-[#4a5f0c] disabled:cursor-not-allowed disabled:opacity-40;
 }
 
 /* react-day-picker theme overrides — kept global so they reach the library's

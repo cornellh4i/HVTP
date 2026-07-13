@@ -90,7 +90,7 @@ export default function Calendar({ initialRange, onConfirm, onCancel }: Calendar
           disabled={confirmDisabled}
           className={styles.btnConfirm}
         >
-          Confirm
+          Save Changes
         </button>
       </div>
     </div>

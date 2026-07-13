@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowDownAZ, ArrowUpAZ, MoreVertical, Pencil, Trash2 } from "lucide-react";
+import { MoreVertical, Pencil, Trash2 } from "lucide-react";
 import { Sale, deleteSale } from "@/api/sales";
 import { ColumnKey, columnLabels, getSaleValue } from "../transaction-utils";
 import SaleModal from "@/components/Admin/Inventory/Forms/Add-Sale";
@@ -69,15 +69,7 @@ export default function SalesTable({ sales, visibleColumns, onChanged }: SalesTa
               <tr className={styles.headRow}>
                 {visibleColumns.map((column) => (
                   <th key={column} className={styles.headCell}>
-                    <span className={styles.headLabel}>
-                      {columnLabels[column]}
-                      {(column === "grade" || column === "woolType") && (
-                        <span className={styles.sortIcons}>
-                          <ArrowUpAZ className={styles.sortIcon} />
-                          <ArrowDownAZ className={styles.sortIcon} />
-                        </span>
-                      )}
-                    </span>
+                    <span className={styles.headLabel}>{columnLabels[column]}</span>
                   </th>
                 ))}
                 <th className={styles.actionHeadCell} aria-label="Actions" />

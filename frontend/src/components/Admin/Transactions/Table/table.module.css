@@ -1,7 +1,7 @@
 @reference "tailwindcss";
 
 .wrapper {
-  @apply overflow-hidden rounded-md border border-[#b8b8b2] bg-white;
+  @apply w-full overflow-x-auto rounded-lg border border-gray-200 bg-white;
 }
 
 .scroll {
@@ -13,35 +13,27 @@
 }
 
 .headRow {
-  @apply h-14 border-b border-[#d8d7cf] bg-white shadow-sm;
+  @apply border-b border-gray-900 bg-white;
 }
 
 .headCell {
-  @apply whitespace-nowrap px-7 text-base font-semibold text-black;
+  @apply whitespace-nowrap px-4 py-3 text-sm font-medium text-black;
 }
 
 .headLabel {
   @apply inline-flex items-center gap-1;
 }
 
-.sortIcons {
-  @apply inline-flex items-center -space-x-2;
-}
-
-.sortIcon {
-  @apply h-4 w-4;
-}
-
 .emptyCell {
-  @apply px-7 py-10 text-center text-sm text-gray-500;
+  @apply px-4 py-8 text-center text-sm text-gray-500;
 }
 
 .row {
-  @apply h-12;
+  @apply align-middle;
 }
 
 .rowAlt {
-  @apply bg-[#f3f0e8];
+  @apply bg-[#F6F3EB];
 }
 
 .rowDefault {
@@ -49,7 +41,7 @@
 }
 
 .cell {
-  @apply whitespace-nowrap px-7 text-[#242424];
+  @apply whitespace-nowrap px-4 py-3 text-[#242424];
 }
 
 /* ── Row actions (kebab menu) ───────────────────────────────────────────── */
@@ -58,11 +50,11 @@
 }
 
 .actionCell {
-  @apply px-4 text-right;
+  @apply px-4 py-3 text-right;
 }
 
 .kebabBtn {
-  @apply inline-flex items-center justify-center rounded p-1 text-[#242424] hover:bg-black/5;
+  @apply inline-flex items-center justify-center rounded-lg p-1 text-[#242424] hover:bg-black/5;
 }
 
 .kebabIcon {
@@ -70,7 +62,7 @@
 }
 
 .menu {
-  @apply fixed z-50 w-36 overflow-hidden rounded-md border border-[#d8d7cf] bg-white py-1 shadow-lg;
+  @apply fixed z-50 w-36 overflow-hidden rounded-lg border border-[#d8d7cf] bg-white py-1 shadow-lg;
 }
 
 .menuItem {
@@ -91,7 +83,7 @@
 }
 
 .modal {
-  @apply flex w-[400px] max-w-full flex-col items-center gap-6 rounded-3xl bg-white p-9 text-center shadow-xl;
+  @apply flex w-[400px] max-w-full flex-col items-center gap-6 rounded-lg bg-white p-9 text-center shadow-xl;
 }
 
 .modalIcon {

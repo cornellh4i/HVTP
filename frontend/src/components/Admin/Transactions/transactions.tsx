@@ -2,63 +2,47 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  ArrowDown,
+  ArrowUp,
   CalendarDays,
   Columns3,
   Download,
-  Plus,
   Search,
-  SlidersHorizontal,
   X,
 } from "lucide-react";
 import { getAllItems, Item } from "@/api/items";
 import { getAllSales, Sale } from "@/api/sales";
+import TransactionsFilterBar from "./TransactionsFilterBar";
+import {
+  InventoryFilters,
+  defaultInventoryFilters,
+  getInventoryFilterOptions,
+  filterInventoryItems,
+} from "@/components/Admin/Inventory/inventory-utils";
 import Calendar from "./Calendar/calendar";
 import PurchaseTable from "./Table/purchase-table";
 import SalesTable from "./Table/table";
 import {
   ColumnKey,
   DateRange,
-  FilterKey,
   PurchaseColumnKey,
   TabKey,
   columnLabels,
   defaultColumns,
   defaultPurchaseColumns,
-  filterLabels,
+  filterSales,
   formatCurrency,
   formatQuantity,
   formatRange,
   getItemDate,
-  getPurchaseValue,
   getSaleDate,
-  getSaleValue,
+  getSalesFilterOptions,
   isItemWithinRange,
   isWithinRange,
   purchaseColumnLabels,
+  sortItemsByDate,
 } from "./transaction-utils";
 import styles from "./transactions.module.css";
-
-type Filters = Record<FilterKey, string[]>;
-
-const filterKeys: FilterKey[] = [
-  "status",
-  "woolType",
-  "breed",
-  "grade",
-  "color",
-  "publicationStatus",
-  "state",
-  "farmerName",
-];
-
-const purchaseFilterKeys: FilterKey[] = [
-  "status",
-  "woolType",
-  "breed",
-  "grade",
-  "color",
-  "publicationStatus",
-];
 
 const allColumns = Object.keys(columnLabels) as ColumnKey[];
 const allPurchaseColumns = Object.keys(purchaseColumnLabels) as PurchaseColumnKey[];
@@ -82,21 +66,6 @@ const rangeFromDates = (dates: Date[]): DateRange | null => {
 
   return { start, end };
 };
-
-const emptyFilters = (): Filters =>
-  filterKeys.reduce((acc, key) => {
-    acc[key] = [];
-    return acc;
-  }, {} as Filters);
-
-const copyFilters = (filters: Filters): Filters =>
-  filterKeys.reduce((acc, key) => {
-    acc[key] = [...filters[key]];
-    return acc;
-  }, {} as Filters);
-
-const countFilters = (filters: Filters, keys: FilterKey[]) =>
-  keys.reduce((count, key) => count + filters[key].length, 0);
 
 function Summary({ sales, items, activeTab }: { sales: Sale[]; items: Item[]; activeTab: TabKey }) {
   const totals = useMemo(() => {
@@ -128,9 +97,9 @@ function Summary({ sales, items, activeTab }: { sales: Sale[]; items: Item[]; ac
   }, [sales, items, activeTab]);
 
   const stats = [
-    { label: "TOTAL PROFIT", value: formatCurrency(totals.revenue - totals.cost) },
-    { label: "TOTAL COST", value: formatCurrency(totals.cost) },
     { label: "TOTAL REVENUE", value: formatCurrency(totals.revenue) },
+    { label: "TOTAL COST", value: formatCurrency(totals.cost) },
+    { label: "TOTAL PROFIT", value: formatCurrency(totals.revenue - totals.cost) },
     { label: "QUANTITY PURCHASED", value: formatQuantity(totals.purchased) },
     { label: "QUANTITY SOLD", value: formatQuantity(totals.sold) },
   ];
@@ -146,85 +115,6 @@ function Summary({ sales, items, activeTab }: { sales: Sale[]; items: Item[]; ac
           <div className={styles.summaryValue}>{stat.value}</div>
         </div>
       ))}
-    </div>
-  );
-}
-
-function FilterPanel({
-  options,
-  draftFilters,
-  visibleFilterKeys,
-  onToggle,
-  onApply,
-  onClear,
-  onClose,
-}: {
-  options: Record<FilterKey, string[]>;
-  draftFilters: Filters;
-  visibleFilterKeys: FilterKey[];
-  onToggle: (key: FilterKey, value: string) => void;
-  onApply: () => void;
-  onClear: () => void;
-  onClose: () => void;
-}) {
-  const [openKey, setOpenKey] = useState<FilterKey | null>(null);
-
-  return (
-    <div className={styles.filterPanel}>
-      <div className={styles.panelHeader}>
-        <h2 className={styles.panelTitle}>Filters</h2>
-        <button type="button" aria-label="Close filters" onClick={onClose}>
-          <X className={styles.closeIcon} />
-        </button>
-      </div>
-      <div className={styles.filterBody}>
-        {visibleFilterKeys.map((key) => (
-          <div key={key} className={styles.filterRow}>
-            <button
-              type="button"
-              onClick={() => setOpenKey(openKey === key ? null : key)}
-              className={styles.filterToggle}
-            >
-              <span>
-                {filterLabels[key]}
-                {draftFilters[key].length > 0 && (
-                  <span className={styles.filterCount}>
-                    ({draftFilters[key].length})
-                  </span>
-                )}
-              </span>
-              <span className={styles.chevron}>⌄</span>
-            </button>
-            {openKey === key && (
-              <div className={styles.optionsGrid}>
-                {options[key].length === 0 ? (
-                  <div className={styles.noOptions}>No options available</div>
-                ) : (
-                  options[key].map((option) => (
-                    <label key={option} className={styles.optionLabel}>
-                      <input
-                        type="checkbox"
-                        checked={draftFilters[key].includes(option)}
-                        onChange={() => onToggle(key, option)}
-                        className={styles.checkbox}
-                      />
-                      {option}
-                    </label>
-                  ))
-                )}
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-      <div className={styles.filterFooter}>
-        <button type="button" onClick={onClear} className={styles.btnOutline}>
-          Clear All
-        </button>
-        <button type="button" onClick={onApply} className={styles.btnPrimary}>
-          Apply Filters
-        </button>
-      </div>
     </div>
   );
 }
@@ -296,17 +186,14 @@ export default function Transactions() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [dateRange, setDateRange] = useState<DateRange>(() => initialRange());
-  const [openPanel, setOpenPanel] = useState<"calendar" | "filters" | "columns" | null>(null);
-  const [filters, setFilters] = useState<Filters>(() => emptyFilters());
-  const [draftFilters, setDraftFilters] = useState<Filters>(() => emptyFilters());
+  const [openPanel, setOpenPanel] = useState<"calendar" | "columns" | null>(null);
+  const [invFilters, setInvFilters] = useState<InventoryFilters>(defaultInventoryFilters);
   const [visibleColumns, setVisibleColumns] = useState<ColumnKey[]>(defaultColumns);
   const [draftColumns, setDraftColumns] = useState<ColumnKey[]>(defaultColumns);
   const [visiblePurchaseColumns, setVisiblePurchaseColumns] =
     useState<PurchaseColumnKey[]>(defaultPurchaseColumns);
   const [draftPurchaseColumns, setDraftPurchaseColumns] =
     useState<PurchaseColumnKey[]>(defaultPurchaseColumns);
-
-  const activeFilterKeys = activeTab === "purchases" ? purchaseFilterKeys : filterKeys;
 
   const loadData = useCallback(async (resetRange = false) => {
     try {
@@ -342,56 +229,24 @@ export default function Transactions() {
     loadData(true);
   }, [loadData]);
 
-  const filterOptions = useMemo(() => {
-    if (activeTab === "purchases") {
-      return purchaseFilterKeys.reduce((acc, key) => {
-        acc[key] = Array.from(
-          new Set(items.map((item) => getPurchaseValue(item, key)).filter(Boolean))
-        ).sort();
-        return acc;
-      }, {} as Record<FilterKey, string[]>);
-    }
-
-    return filterKeys.reduce((acc, key) => {
-      acc[key] = Array.from(
-        new Set(sales.map((sale) => getSaleValue(sale, key)).filter(Boolean))
-      ).sort();
-      return acc;
-    }, {} as Record<FilterKey, string[]>);
-  }, [sales, items, activeTab]);
+  const filterOptions = useMemo(
+    () => (activeTab === "purchases" ? getInventoryFilterOptions(items) : getSalesFilterOptions(sales)),
+    [items, sales, activeTab]
+  );
 
   const filteredSales = useMemo(() => {
-    return sales.filter((sale) => {
-      if (!isWithinRange(sale, dateRange)) return false;
-
-      return filterKeys.every((key) => {
-        if (filters[key].length === 0) return true;
-        return filters[key].includes(getSaleValue(sale, key));
-      });
-    });
-  }, [sales, dateRange, filters]);
+    const inRange = sales.filter((sale) => isWithinRange(sale, dateRange));
+    return filterSales(inRange, invFilters);
+  }, [sales, dateRange, invFilters]);
 
   const filteredItems = useMemo(() => {
-    return items.filter((item) => {
-      if (!isItemWithinRange(item, dateRange)) return false;
+    const inRange = items.filter((item) => isItemWithinRange(item, dateRange));
+    const filtered = filterInventoryItems(inRange, "", invFilters);
+    return sortItemsByDate(filtered, invFilters.sortBy);
+  }, [items, dateRange, invFilters]);
 
-      return purchaseFilterKeys.every((key) => {
-        if (filters[key].length === 0) return true;
-        return filters[key].includes(getPurchaseValue(item, key));
-      });
-    });
-  }, [items, dateRange, filters]);
-
-  const activeFilterCount = countFilters(filters, activeFilterKeys);
-
-  const toggleFilter = (key: FilterKey, value: string) => {
-    setDraftFilters((current) => ({
-      ...current,
-      [key]: current[key].includes(value)
-        ? current[key].filter((item) => item !== value)
-        : [...current[key], value],
-    }));
-  };
+  const setSortDirection = (sortBy: InventoryFilters["sortBy"]) =>
+    setInvFilters((current) => ({ ...current, sortBy }));
 
   const toggleColumn = (column: ColumnKey) => {
     setDraftColumns((current) => {
@@ -433,7 +288,7 @@ export default function Transactions() {
 
             <button type="button" className={styles.btnDownload}>
               <Download className={styles.btnIcon} />
-              Download CSV
+              Export
             </button>
           </div>
 
@@ -459,42 +314,37 @@ export default function Transactions() {
               )}
             </div>
 
-            <div className={styles.control}>
-              <button
-                type="button"
-                onClick={() => {
-                  setDraftFilters(copyFilters(filters));
-                  setOpenPanel(openPanel === "filters" ? null : "filters");
-                }}
-                className={`${styles.trigger} ${
-                  openPanel === "filters" || activeFilterCount > 0
-                    ? styles.triggerActive
-                    : styles.triggerInactive
-                }`}
-              >
-                <Plus className={styles.triggerIconAccent} />
-                Filters
-                {activeFilterCount > 0 && <span>({activeFilterCount})</span>}
-              </button>
-              {openPanel === "filters" && (
-                <FilterPanel
-                  options={filterOptions}
-                  draftFilters={draftFilters}
-                  visibleFilterKeys={activeFilterKeys}
-                  onToggle={toggleFilter}
-                  onClose={() => setOpenPanel(null)}
-                  onClear={() => {
-                    const cleared = emptyFilters();
-                    setDraftFilters(cleared);
-                    setFilters(cleared);
-                  }}
-                  onApply={() => {
-                    setFilters(copyFilters(draftFilters));
-                    setOpenPanel(null);
-                  }}
-                />
-              )}
-            </div>
+            <TransactionsFilterBar
+              filters={invFilters}
+              options={filterOptions}
+              onChange={setInvFilters}
+              sortToggle={
+                <div className={styles.sortToggle}>
+                  <button
+                    type="button"
+                    aria-label="Sort descending"
+                    aria-pressed={invFilters.sortBy === "date-desc"}
+                    onClick={() => setSortDirection("date-desc")}
+                    className={`${styles.sortToggleButton} ${
+                      invFilters.sortBy === "date-desc" ? styles.sortToggleActive : ""
+                    }`}
+                  >
+                    <ArrowDown className={styles.btnIcon} />
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="Sort ascending"
+                    aria-pressed={invFilters.sortBy === "date-asc"}
+                    onClick={() => setSortDirection("date-asc")}
+                    className={`${styles.sortToggleButton} ${
+                      invFilters.sortBy === "date-asc" ? styles.sortToggleActive : ""
+                    }`}
+                  >
+                    <ArrowUp className={styles.btnIcon} />
+                  </button>
+                </div>
+              }
+            />
 
             <div className={styles.control}>
               <button
@@ -508,11 +358,11 @@ export default function Transactions() {
                   openPanel === "columns" ? styles.triggerActive : styles.triggerInactive
                 }`}
               >
-                {openPanel === "columns" ? (
-                  <Columns3 className={styles.triggerIconWhite} />
-                ) : (
-                  <SlidersHorizontal className={styles.triggerIconAccent} />
-                )}
+                <Columns3
+                  className={
+                    openPanel === "columns" ? styles.triggerIconWhite : styles.triggerIconAccent
+                  }
+                />
                 Show Columns
               </button>
               {openPanel === "columns" && (
@@ -533,11 +383,7 @@ export default function Transactions() {
             </div>
           </div>
 
-          <Summary
-            sales={filteredSales}
-            items={filteredItems}
-            activeTab={activeTab}
-          />
+          <Summary sales={filteredSales} items={filteredItems} activeTab={activeTab} />
 
           <div className={styles.tabsSection}>
             <div className={styles.tabs}>
@@ -546,14 +392,14 @@ export default function Transactions() {
                 className={tabButtonClass("purchases")}
                 onClick={() => setActiveTab("purchases")}
               >
-                Purchase History
+                Purchases
               </button>
               <button
                 type="button"
                 className={tabButtonClass("sales")}
                 onClick={() => setActiveTab("sales")}
               >
-                Sales History
+                Sales
               </button>
             </div>
             <div className={styles.tableArea}>
@@ -562,9 +408,7 @@ export default function Transactions() {
                   Loading {activeTab === "purchases" ? "purchases" : "sales"}...
                 </div>
               )}
-              {error && (
-                <div className={styles.stateError}>Error: {error}</div>
-              )}
+              {error && <div className={styles.stateError}>Error: {error}</div>}
               {!loading && !error && activeTab === "purchases" && (
                 <PurchaseTable items={filteredItems} visibleColumns={visiblePurchaseColumns} />
               )}
