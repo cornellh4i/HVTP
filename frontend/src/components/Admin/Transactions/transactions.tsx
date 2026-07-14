@@ -35,7 +35,9 @@ import {
   formatQuantity,
   formatRange,
   getItemDate,
+  getPurchaseValue,
   getSaleDate,
+  getSaleValue,
   getSalesFilterOptions,
   isItemWithinRange,
   isWithinRange,
@@ -269,6 +271,35 @@ export default function Transactions() {
   const tabButtonClass = (tab: TabKey) =>
     `${styles.tab} ${activeTab === tab ? styles.tabActive : ""}`;
 
+  const handleExportCsv = () => {
+    const isPurchases = activeTab === "purchases";
+    const columns = isPurchases ? visiblePurchaseColumns : visibleColumns;
+    const labels = isPurchases ? purchaseColumnLabels : columnLabels;
+    const headers = ["Date", ...columns.map((col) => labels[col as keyof typeof labels])];
+
+    const rows = isPurchases
+      ? filteredItems.map((item) => [
+          getItemDate(item)?.toLocaleDateString("en-US") ?? "",
+          ...visiblePurchaseColumns.map((col) => getPurchaseValue(item, col)),
+        ])
+      : filteredSales.map((sale) => [
+          getSaleDate(sale)?.toLocaleDateString("en-US") ?? "",
+          ...visibleColumns.map((col) => getSaleValue(sale, col)),
+        ]);
+
+    const csv = [headers, ...rows]
+      .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","))
+      .join("\n");
+
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${activeTab}-history-${formatRange(dateRange).replace(/\s+/g, "_")}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <main className={styles.main}>
       <div className={styles.container}>
@@ -286,7 +317,7 @@ export default function Transactions() {
               />
             </div>
 
-            <button type="button" className={styles.btnDownload}>
+            <button type="button" onClick={handleExportCsv} className={styles.btnDownload}>
               <Download className={styles.btnIcon} />
               Export
             </button>
