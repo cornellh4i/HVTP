@@ -1,0 +1,235 @@
+@reference "tailwindcss";
+
+/* ── Loading state ──────────────────────────────────────────────────────── */
+.loadingScreen {
+  @apply flex min-h-screen items-center justify-center bg-[#fbfaf4];
+}
+
+.loadingText {
+  @apply text-sm font-medium tracking-wide text-slate-500;
+}
+
+/* ── Page shell ─────────────────────────────────────────────────────────── */
+.page {
+  @apply min-h-screen bg-[linear-gradient(180deg,#fbfaf4_0%,#ffffff_34%,#ffffff_100%)] px-4 py-6 sm:px-6 lg:px-8;
+}
+
+.container {
+  @apply mx-auto flex w-full max-w-[1240px] flex-col gap-6;
+}
+
+/* ── Header ─────────────────────────────────────────────────────────────── */
+.headerRow {
+  @apply flex flex-col items-start justify-between gap-3 lg:flex-row lg:items-center lg:gap-4;
+}
+
+.headerText {
+  @apply flex flex-col gap-3;
+}
+
+.title {
+  @apply text-[32px] font-bold leading-[1.2] text-black;
+  font-family: "Acumin Pro", sans-serif;
+}
+
+.subtitle {
+  @apply text-[20px] font-normal leading-none text-[rgba(0,0,0,0.8)];
+  font-family: "Acumin Pro", sans-serif;
+}
+
+.headerActions {
+  @apply flex items-center gap-3 self-start;
+}
+
+.calendarWrapper {
+  @apply relative;
+}
+
+.dateButton {
+  @apply flex items-center gap-3 rounded-[6px] bg-[#3a4f0d] px-4 py-2.5 text-[14px] font-light leading-[1.4] text-white transition hover:bg-[#314206];
+  font-family: "Poppins", sans-serif;
+}
+
+.calendarPopover {
+  @apply absolute right-0 z-50 mt-2;
+}
+
+.exportButton {
+  @apply flex items-center gap-2 rounded-[6px] bg-[#3a4f0d] px-4 py-2.5 text-[14px] font-light leading-[1.4] text-white transition hover:bg-[#314206] disabled:cursor-not-allowed disabled:opacity-50;
+  font-family: "Poppins", sans-serif;
+}
+
+/* ── Tasks card ─────────────────────────────────────────────────────────── */
+.tasksCard {
+  @apply rounded-[8px] border border-[rgba(0,0,0,0.2)] bg-white p-[12px];
+}
+
+.tasksCardInner {
+  @apply flex flex-col gap-5;
+}
+
+.tasksTabsRow {
+  @apply flex items-start;
+}
+
+.tasksTabs {
+  @apply flex h-[34px] items-center justify-center gap-2.5;
+}
+
+.taskTab {
+  @apply flex items-center justify-center border-t-4 px-1.5 py-2;
+}
+
+.taskTabActiveBorder {
+  @apply border-b-2 border-black border-t-transparent;
+}
+
+.taskTabInactiveBorder {
+  @apply border-b-2 border-transparent border-t-transparent;
+}
+
+.taskTabLabel {
+  @apply whitespace-nowrap text-[16px] leading-normal;
+  font-family: "Acumin Pro", sans-serif;
+}
+
+.taskTabLabelActive {
+  @apply font-bold text-black;
+}
+
+.taskTabLabelInactive {
+  @apply font-normal text-[rgba(0,0,0,0.6)];
+}
+
+.taskList {
+  @apply flex flex-col gap-2;
+}
+
+.taskRow {
+  @apply flex cursor-pointer items-center justify-between gap-4 rounded-md px-2 py-1.5 transition hover:bg-[rgba(0,0,0,0.02)];
+}
+
+.taskRowLeft {
+  @apply flex items-center gap-[24px];
+}
+
+.taskIconWrap {
+  @apply relative size-[24px] shrink-0 overflow-clip;
+}
+
+.taskIconInner {
+  @apply absolute inset-[12.5%_12.5%_0.78%_12.5%];
+}
+
+.taskIconImg {
+  @apply absolute block inset-0 max-w-none size-full;
+}
+
+.taskDate {
+  @apply whitespace-nowrap text-[15px] font-normal leading-normal;
+  font-family: "Acumin Pro", sans-serif;
+}
+
+.taskDateDone {
+  @apply text-[rgba(0,0,0,0.5)];
+}
+
+.taskDatePending {
+  @apply text-black;
+}
+
+.taskText {
+  @apply whitespace-nowrap text-[15px] font-normal leading-normal;
+  font-family: "Acumin Pro", sans-serif;
+}
+
+.taskTextDone {
+  @apply [text-decoration-skip-ink:none] decoration-solid line-through text-black;
+}
+
+.taskTextPending {
+  @apply text-black;
+}
+
+.taskLotLink {
+  @apply [text-decoration-skip-ink:none] decoration-solid underline;
+}
+
+/* ── Metrics + chart card ───────────────────────────────────────────────── */
+.metricsCard {
+  @apply overflow-hidden rounded-[8px] border border-[rgba(0,0,0,0.2)] bg-white shadow-none;
+}
+
+.metricsGrid {
+  @apply grid grid-cols-1 gap-px bg-[rgba(0,0,0,0.2)] lg:grid-cols-5;
+}
+
+.metricCard {
+  @apply relative overflow-hidden rounded-none border-0 bg-white shadow-none transition;
+}
+
+.metricCardDisabled {
+  @apply cursor-not-allowed opacity-50;
+}
+
+.metricCardActive {
+  @apply z-10 cursor-default -mb-px border-b border-b-white hover:bg-white hover:shadow-none;
+}
+
+.metricCardInactive {
+  @apply cursor-pointer border-b border-b-[rgba(0,0,0,0.2)] hover:bg-[#fafaf7];
+}
+
+.metricCardHoverBar {
+  @apply absolute left-0 top-0 h-1 w-full bg-[#7f8030] opacity-0 transition-opacity group-hover:opacity-100;
+}
+
+.metricCardActiveBar {
+  @apply absolute left-0 top-0 h-1 w-full bg-[#7f8030];
+}
+
+.metricCardHeader {
+  @apply gap-0 px-3 pb-1 pt-4;
+}
+
+.metricCardDescription {
+  @apply whitespace-nowrap uppercase text-[14px] font-normal leading-normal text-[rgba(0,0,0,0.6)];
+  font-family: "Acumin Pro", sans-serif;
+}
+
+.metricCardContent {
+  @apply px-3 pb-4 pt-0;
+}
+
+.metricCardTitle {
+  @apply text-[28px] font-bold tracking-tight text-slate-950 sm:text-[32px];
+}
+
+.chartCard {
+  @apply -mt-px rounded-none border-0 shadow-none;
+}
+
+.chartCardContent {
+  @apply px-3 pb-4 pt-3 sm:px-3 sm:pb-4;
+}
+
+.chartExportArea {
+  @apply bg-white;
+}
+
+.chartLabel {
+  @apply mb-3 text-[14px] font-normal leading-normal text-[rgba(0,0,0,0.7)];
+  font-family: "Acumin Pro", sans-serif;
+}
+
+.chartArea {
+  @apply relative h-[430px] w-full;
+}
+
+.chartLoadingOverlay {
+  @apply absolute inset-0 z-10 flex items-center justify-center bg-white/70 backdrop-blur-[1px];
+}
+
+.chartLoadingText {
+  @apply text-sm font-medium text-slate-500;
+}
