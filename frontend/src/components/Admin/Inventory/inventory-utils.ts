@@ -1,4 +1,5 @@
 import { Item } from "@/api/items";
+import { parseTimestamp, sortByDate } from "@/lib/sorting";
 
 export type InventorySort = "date-desc" | "date-asc";
 export type PublicationState = "published" | "unpublished";
@@ -42,30 +43,7 @@ function uniqueSorted(values: Array<string | undefined | null>) {
   ).sort((a, b) => a.localeCompare(b));
 }
 
-export function parseItemTimestamp(createdAt: unknown): number {
-  if (!createdAt) return 0;
-
-  if (typeof createdAt === "object" && createdAt !== null && "_seconds" in createdAt) {
-    const seconds = Number((createdAt as { _seconds?: number })._seconds);
-    return Number.isFinite(seconds) ? seconds * 1000 : 0;
-  }
-
-  if (typeof createdAt === "number") {
-    return Number.isFinite(createdAt) ? createdAt : 0;
-  }
-
-  if (typeof createdAt === "string") {
-    const asNumber = Number(createdAt);
-    if (Number.isFinite(asNumber) && createdAt.trim() !== "") {
-      return asNumber;
-    }
-
-    const parsed = Date.parse(createdAt);
-    return Number.isNaN(parsed) ? 0 : parsed;
-  }
-
-  return 0;
-}
+export const parseItemTimestamp = parseTimestamp;
 
 export function formatItemDate(createdAt: unknown): string | undefined {
   const timestamp = parseItemTimestamp(createdAt);
@@ -99,40 +77,35 @@ export function getInventoryFilterOptions(items: Item[]): InventoryFilterOptions
 export function filterInventoryItems(items: Item[], searchQuery: string, filters: InventoryFilters) {
   const normalizedSearch = searchQuery.trim().toLowerCase();
 
-  return [...items]
-    .filter((item) => {
-      const matchesSearch =
-        !normalizedSearch ||
-        item.sku?.toLowerCase().includes(normalizedSearch) ||
-        item.breed?.toLowerCase().includes(normalizedSearch) ||
-        item.grade?.toLowerCase().includes(normalizedSearch) ||
-        item.color?.toLowerCase().includes(normalizedSearch) ||
-        item.status?.toLowerCase().includes(normalizedSearch) ||
-        item.farmerState?.toLowerCase().includes(normalizedSearch);
+  const filtered = items.filter((item) => {
+    const matchesSearch =
+      !normalizedSearch ||
+      item.sku?.toLowerCase().includes(normalizedSearch) ||
+      item.breed?.toLowerCase().includes(normalizedSearch) ||
+      item.grade?.toLowerCase().includes(normalizedSearch) ||
+      item.color?.toLowerCase().includes(normalizedSearch) ||
+      item.status?.toLowerCase().includes(normalizedSearch) ||
+      item.farmerState?.toLowerCase().includes(normalizedSearch);
 
-      const matchesGrade = filters.grade.length === 0 || filters.grade.includes(normalizeValue(item.grade));
-      const matchesColor = filters.color.length === 0 || filters.color.includes(normalizeValue(item.color));
-      const matchesBreed = filters.breed.length === 0 || filters.breed.includes(normalizeValue(item.breed));
-      const matchesStatus = filters.status.length === 0 || filters.status.includes(normalizeValue(item.status));
-      const matchesPublication =
-        filters.publicationState.length === 0 ||
-        filters.publicationState.includes(getPublicationState(item));
-      const matchesState = filters.state.length === 0 || filters.state.includes(normalizeValue(item.farmerState));
+    const matchesGrade = filters.grade.length === 0 || filters.grade.includes(normalizeValue(item.grade));
+    const matchesColor = filters.color.length === 0 || filters.color.includes(normalizeValue(item.color));
+    const matchesBreed = filters.breed.length === 0 || filters.breed.includes(normalizeValue(item.breed));
+    const matchesStatus = filters.status.length === 0 || filters.status.includes(normalizeValue(item.status));
+    const matchesPublication =
+      filters.publicationState.length === 0 ||
+      filters.publicationState.includes(getPublicationState(item));
+    const matchesState = filters.state.length === 0 || filters.state.includes(normalizeValue(item.farmerState));
 
-      return (
-        matchesSearch &&
-        matchesGrade &&
-        matchesColor &&
-        matchesBreed &&
-        matchesStatus &&
-        matchesPublication &&
-        matchesState
-      );
-    })
-    .sort((a, b) => {
-      const aTime = parseItemTimestamp(a.createdAt);
-      const bTime = parseItemTimestamp(b.createdAt);
+    return (
+      matchesSearch &&
+      matchesGrade &&
+      matchesColor &&
+      matchesBreed &&
+      matchesStatus &&
+      matchesPublication &&
+      matchesState
+    );
+  });
 
-      return filters.sortBy === "date-asc" ? aTime - bTime : bTime - aTime;
-    });
+  return sortByDate(filtered, filters.sortBy, (item) => item.createdAt);
 }
