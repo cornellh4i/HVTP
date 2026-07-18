@@ -6,20 +6,22 @@ import { ChevronDown, ChevronUp, X } from "lucide-react";
 
 import {
   InventoryFilterOptions,
-  InventoryFilters,
-  InventorySort,
   PublicationState,
-  defaultInventoryFilters,
 } from "@/components/Admin/Inventory/inventory-utils";
+import { DateSortDirection } from "@/lib/sorting";
+import {
+  TransactionFilters,
+  defaultTransactionFilters,
+} from "./transaction-utils";
 
 type TransactionsFilterBarProps = {
-  filters: InventoryFilters;
+  filters: TransactionFilters;
   options: InventoryFilterOptions;
-  onChange: (filters: InventoryFilters) => void;
+  onChange: (filters: TransactionFilters) => void;
   sortToggle: ReactNode;
 };
 
-type FilterKey = Exclude<keyof InventoryFilters, "sortBy">;
+type FilterKey = Exclude<keyof TransactionFilters, "sortBy">;
 
 const filterSections: Array<{ key: FilterKey; label: string }> = [
   { key: "grade", label: "Grade" },
@@ -30,7 +32,7 @@ const filterSections: Array<{ key: FilterKey; label: string }> = [
   { key: "state", label: "State" },
 ];
 
-const sortOptions: Array<{ value: InventorySort; label: string }> = [
+const sortOptions: Array<{ value: DateSortDirection; label: string }> = [
   { value: "date-desc", label: "Date Added" },
   { value: "date-asc", label: "Date Added: Oldest" },
 ];
@@ -42,7 +44,7 @@ function getInitialExpandedState() {
   }, {} as Record<FilterKey, boolean>);
 }
 
-function cloneFilters(filters: InventoryFilters): InventoryFilters {
+function cloneFilters(filters: TransactionFilters): TransactionFilters {
   return {
     sortBy: filters.sortBy,
     grade: [...filters.grade],
@@ -66,7 +68,7 @@ function formatFilterValue(key: FilterKey, value: string) {
   return value;
 }
 
-function getAppliedFilterChips(filters: InventoryFilters) {
+function getAppliedFilterChips(filters: TransactionFilters) {
   return filterSections.flatMap((section) =>
     (filters[section.key] as string[]).map((value) => ({
       key: section.key,
@@ -83,7 +85,9 @@ export default function TransactionsFilterBar({
   sortToggle,
 }: TransactionsFilterBarProps) {
   const [open, setOpen] = useState(false);
-  const [draftFilters, setDraftFilters] = useState<InventoryFilters>(() => cloneFilters(filters));
+  const [draftFilters, setDraftFilters] = useState<TransactionFilters>(() =>
+    cloneFilters(filters)
+  );
   const [expandedSections, setExpandedSections] = useState<Record<FilterKey, boolean>>(
     getInitialExpandedState
   );
@@ -124,7 +128,7 @@ export default function TransactionsFilterBar({
     });
   };
 
-  const updateSort = (sortBy: InventorySort) => {
+  const updateSort = (sortBy: DateSortDirection) => {
     const nextFilters = {
       ...filters,
       sortBy,
@@ -153,7 +157,7 @@ export default function TransactionsFilterBar({
 
   const clearAppliedFilters = () => {
     const resetFilters = {
-      ...defaultInventoryFilters,
+      ...defaultTransactionFilters,
       sortBy: filters.sortBy,
     };
 
@@ -179,7 +183,7 @@ export default function TransactionsFilterBar({
       <div className="relative">
         <select
           value={filters.sortBy}
-          onChange={(event) => updateSort(event.target.value as InventorySort)}
+          onChange={(event) => updateSort(event.target.value as DateSortDirection)}
           className="h-9 appearance-none rounded-lg border border-[#556b2f] bg-[#556b2f] px-3 pr-9 text-sm font-medium text-white outline-none transition-colors hover:bg-[#465923]"
         >
           {sortOptions.map((option) => (
