@@ -2,36 +2,20 @@
 import { useState, useRef, useEffect } from "react";
 import { DayPicker, DateRange } from "react-day-picker";
 import "react-day-picker/dist/style.css";
+import styles from "./calendar.module.css";
 
 interface CalendarProps {
-  onRangeChange: (startDate: Date, endDate: Date, isQuickAction?: boolean) => void;
+  onRangeChange: (startDate: Date, endDate: Date) => void;
   onClose: () => void;
   initialRange?: { from: Date; to: Date };
-  maxBars?: number;
 }
 
 const quickActions = [
-  { label: "Last 7 days", days: 7 },
-  { label: "Last 30 days", days: 30 },
-  { label: "Last 90 days", days: 90 },
+  { label: "Last 7 Days", days: 7 },
+  { label: "Last 30 Days", days: 30 },
+  { label: "Last 6 Months", months: 6 },
+  { label: "Last 12 Months", months: 12 },
 ];
-
-function getWeekBucketCount(from: Date, to: Date): number {
-  const start = from < to ? from : to;
-  const end = from < to ? to : from;
-  const cursor = new Date(start);
-  cursor.setHours(0, 0, 0, 0);
-  cursor.setDate(cursor.getDate() - cursor.getDay());
-
-  let count = 0;
-
-  while (cursor <= end) {
-    count += 1;
-    cursor.setDate(cursor.getDate() + 7);
-  }
-
-  return count;
-}
 
 function addMonths(date: Date, n: number): Date {
   const d = new Date(date);
@@ -39,7 +23,23 @@ function addMonths(date: Date, n: number): Date {
   return d;
 }
 
-export default function Calendar({ onRangeChange, onClose, initialRange, maxBars = 12 }: CalendarProps) {
+function rangeFromQuickAction(action: { days?: number; months?: number }): { from: Date; to: Date } {
+  const end = new Date();
+  end.setHours(23, 59, 59, 999);
+  const start = new Date();
+  start.setHours(0, 0, 0, 0);
+
+  if (action.days) {
+    start.setDate(end.getDate() - (action.days - 1));
+  } else if (action.months) {
+    start.setMonth(end.getMonth() - action.months);
+    start.setDate(start.getDate() + 1);
+  }
+
+  return { from: start, to: end };
+}
+
+export default function Calendar({ onRangeChange, onClose, initialRange }: CalendarProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   const initialLeft = initialRange?.from ?? new Date();
@@ -48,6 +48,7 @@ export default function Calendar({ onRangeChange, onClose, initialRange, maxBars
   );
   const [leftMonth, setLeftMonth] = useState<Date>(initialLeft);
   const [rightMonth, setRightMonth] = useState<Date>(addMonths(initialLeft, 1));
+  const [activeQuickAction, setActiveQuickAction] = useState<string | null>(null);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -61,118 +62,48 @@ export default function Calendar({ onRangeChange, onClose, initialRange, maxBars
 
   function handleSelect(selected: DateRange | undefined) {
     setDraft(selected);
+    setActiveQuickAction(null);
   }
 
-  function handleQuickAction(days: number) {
-    const end = new Date();
-    const start = new Date();
-    start.setDate(end.getDate() - (days - 1));
-
-    if (getWeekBucketCount(start, end) > maxBars) return;
-
-    setDraft({ from: start, to: end });
-    setLeftMonth(start);
-    setRightMonth(end);
+  function handleQuickAction(label: string, action: { days?: number; months?: number }) {
+    const { from, to } = rangeFromQuickAction(action);
+    setDraft({ from, to });
+    setLeftMonth(from);
+    setRightMonth(to);
+    setActiveQuickAction(label);
   }
 
-  function handleConfirm() {
+  function handleSave() {
     if (!draft?.from || !draft?.to) return;
     const start = draft.from < draft.to ? draft.from : draft.to;
-    const end   = draft.from < draft.to ? draft.to   : draft.from;
-    onRangeChange(start, end, false);
+    const end = draft.from < draft.to ? draft.to : draft.from;
+    onRangeChange(start, end);
     onClose();
   }
 
-  const confirmDisabled = !draft?.from || !draft?.to;
+  const saveDisabled = !draft?.from || !draft?.to;
 
   return (
-    <div
-      ref={containerRef}
-      className="rounded-xl border border-gray-200 bg-white shadow-xl"
-      style={{ minWidth: "680px" }}
-    >
-      <style>{`
-        .rdp-root {
-          --rdp-accent-color: #1a1a1a !important;
-          --rdp-accent-background-color: #f3f4f6 !important;
-        }
-        .rdp-months {
-          display: flex !important;
-          flex-direction: row !important;
-          gap: 2rem !important;
-        }
-        .rdp-month {
-          flex: 1 !important;
-        }
-        .rdp-month_caption {
-          font-weight: 700 !important;
-          font-size: 1rem !important;
-          color: #111 !important;
-          margin-bottom: 0.75rem !important;
-        }
-        .rdp-weekday {
-          color: #6b7280 !important;
-          font-weight: 500 !important;
-          font-size: 0.8rem !important;
-          width: 2.5rem !important;
-          text-align: center !important;
-        }
-        .rdp-day {
-          width: 2.25rem !important;
-          height: 2.25rem !important;
-          font-size: 0.875rem !important;
-          border-radius: 0 !important;
-        }
-        .rdp-selected .rdp-day_button {
-          background-color: #1a1a1a !important;
-          color: white !important;
-          border-radius: 9999px !important;
-          border: none !important;
-        }
-        .rdp-range_middle .rdp-day_button {
-          background-color: #f3f4f6 !important;
-          color: #1a1a1a !important;
-          border-radius: 9999px !important;
-        }
-        .rdp-range_start .rdp-day_button,
-        .rdp-range_end .rdp-day_button {
-          background-color: #1a1a1a !important;
-          color: white !important;
-          border-radius: 9999px !important;
-        }
-        .rdp-today .rdp-day_button {
-          font-weight: 700 !important;
-          color: #3A4F00 !important;
-        }
-        .rdp-nav button {
-          border: 1px solid #e5e7eb !important;
-          border-radius: 6px !important;
-          padding: 4px !important;
-          color: #111 !important;
-        }
-      `}</style>
-
-      {/* Quick action buttons */}
-      <div className="flex gap-2 border-b border-gray-100 px-5 pt-4 pb-3">
-        {quickActions.map(({ label, days }) => (
-          <button
-            key={label}
-            disabled={(() => {
-              const end = new Date();
-              const start = new Date();
-              start.setDate(end.getDate() - (days - 1));
-              return getWeekBucketCount(start, end) > maxBars;
-            })()}
-            onClick={() => handleQuickAction(days)}
-            className="rounded-md border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-700 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-white"
-          >
-            {label}
-          </button>
-        ))}
+    <div ref={containerRef} className={styles.calendar}>
+      <div className={styles.quickActions}>
+        <p className={styles.quickActionsTitle}>Quick action time range</p>
+        <div className={styles.quickActionsList}>
+          {quickActions.map((action) => (
+            <button
+              key={action.label}
+              type="button"
+              onClick={() => handleQuickAction(action.label, action)}
+              className={`${styles.quickAction} ${
+                activeQuickAction === action.label ? styles.quickActionActive : ""
+              }`}
+            >
+              {action.label}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Two independent calendars */}
-      <div className="flex flex-row gap-8 px-5 py-4">
+      <div className={styles.months}>
         <DayPicker
           mode="range"
           numberOfMonths={1}
@@ -182,6 +113,7 @@ export default function Calendar({ onRangeChange, onClose, initialRange, maxBars
           onMonthChange={setLeftMonth}
           endMonth={addMonths(rightMonth, -1)}
           showOutsideDays={false}
+          className={styles.dayPicker}
         />
         <DayPicker
           mode="range"
@@ -192,23 +124,21 @@ export default function Calendar({ onRangeChange, onClose, initialRange, maxBars
           onMonthChange={setRightMonth}
           startMonth={addMonths(leftMonth, 1)}
           showOutsideDays={false}
+          className={styles.dayPicker}
         />
       </div>
 
-      {/* Footer */}
-      <div className="flex items-center justify-end gap-2 border-t border-gray-100 px-5 py-3">
-        <button
-          onClick={onClose}
-          className="rounded-md border border-gray-200 px-4 py-1.5 text-sm font-medium text-gray-700 transition hover:bg-gray-100"
-        >
+      <div className={styles.footer}>
+        <button type="button" onClick={onClose} className={styles.cancelButton}>
           Cancel
         </button>
         <button
-          onClick={handleConfirm}
-          disabled={confirmDisabled}
-          className="rounded-md bg-[#1a1a1a] px-4 py-1.5 text-sm font-medium text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-40"
+          type="button"
+          onClick={handleSave}
+          disabled={saveDisabled}
+          className={styles.saveButton}
         >
-          Confirm
+          Save
         </button>
       </div>
     </div>
