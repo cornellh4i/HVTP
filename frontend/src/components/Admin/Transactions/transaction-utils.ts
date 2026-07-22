@@ -6,11 +6,46 @@ import {
   PublicationState,
   parseItemTimestamp,
 } from "@/components/Admin/Inventory/inventory-utils";
+import { DateSortDirection } from "@/lib/sorting";
 
 export type DateRange = {
   start: Date;
   end: Date;
 };
+
+/** Transactions keep date-only sorting; inventory uses field + direction. */
+export type TransactionFilters = {
+  sortBy: DateSortDirection;
+  grade: string[];
+  color: string[];
+  breed: string[];
+  status: string[];
+  publicationState: PublicationState[];
+  state: string[];
+};
+
+export const defaultTransactionFilters: TransactionFilters = {
+  sortBy: "date-desc",
+  grade: [],
+  color: [],
+  breed: [],
+  status: [],
+  publicationState: [],
+  state: [],
+};
+
+export function toInventoryFilters(filters: TransactionFilters): InventoryFilters {
+  return {
+    sortField: null,
+    sortDirection: "asc",
+    grade: filters.grade,
+    color: filters.color,
+    breed: filters.breed,
+    status: filters.status,
+    publicationState: filters.publicationState,
+    state: filters.state,
+  };
+}
 
 export type TabKey = "purchases" | "sales";
 
@@ -266,7 +301,7 @@ export const getSalesFilterOptions = (sales: Sale[]): InventoryFilterOptions => 
   state: uniqueSorted(sales.map((sale) => sale.farmerState)),
 });
 
-export const filterSales = (sales: Sale[], filters: InventoryFilters): Sale[] =>
+export const filterSales = (sales: Sale[], filters: TransactionFilters): Sale[] =>
   [...sales]
     .filter((sale) => {
       const matchesStatus =
@@ -286,9 +321,9 @@ export const filterSales = (sales: Sale[], filters: InventoryFilters): Sale[] =>
       return filters.sortBy === "date-asc" ? aTime - bTime : bTime - aTime;
     });
 
-// Item sort mirrors filterInventoryItems' ordering without re-running its
-// filter pass (date-range + shared filters are applied separately).
-export const sortItemsByDate = (items: Item[], sortBy: InventoryFilters["sortBy"]): Item[] =>
+// Item sort mirrors date ordering without re-running the inventory filter pass
+// (date-range + shared filters are applied separately).
+export const sortItemsByDate = (items: Item[], sortBy: DateSortDirection): Item[] =>
   [...items].sort((a, b) => {
     const aTime = parseItemTimestamp(a.createdAt);
     const bTime = parseItemTimestamp(b.createdAt);

@@ -14,11 +14,10 @@ import { getAllItems, Item } from "@/api/items";
 import { getAllSales, Sale } from "@/api/sales";
 import TransactionsFilterBar from "./TransactionsFilterBar";
 import {
-  InventoryFilters,
-  defaultInventoryFilters,
   getInventoryFilterOptions,
   filterInventoryItems,
 } from "@/components/Admin/Inventory/inventory-utils";
+import { DateSortDirection } from "@/lib/sorting";
 import Calendar from "./Calendar/calendar";
 import PurchaseTable from "./Table/purchase-table";
 import SalesTable from "./Table/table";
@@ -27,7 +26,10 @@ import {
   DateRange,
   PurchaseColumnKey,
   TabKey,
+  TransactionFilters,
   columnLabels,
+  defaultTransactionFilters,
+  toInventoryFilters,
   defaultColumns,
   defaultPurchaseColumns,
   filterSales,
@@ -189,7 +191,7 @@ export default function Transactions() {
   const [error, setError] = useState<string | null>(null);
   const [dateRange, setDateRange] = useState<DateRange>(() => initialRange());
   const [openPanel, setOpenPanel] = useState<"calendar" | "columns" | null>(null);
-  const [invFilters, setInvFilters] = useState<InventoryFilters>(defaultInventoryFilters);
+  const [invFilters, setInvFilters] = useState<TransactionFilters>(defaultTransactionFilters);
   const [visibleColumns, setVisibleColumns] = useState<ColumnKey[]>(defaultColumns);
   const [draftColumns, setDraftColumns] = useState<ColumnKey[]>(defaultColumns);
   const [visiblePurchaseColumns, setVisiblePurchaseColumns] =
@@ -243,11 +245,11 @@ export default function Transactions() {
 
   const filteredItems = useMemo(() => {
     const inRange = items.filter((item) => isItemWithinRange(item, dateRange));
-    const filtered = filterInventoryItems(inRange, "", invFilters);
+    const filtered = filterInventoryItems(inRange, "", toInventoryFilters(invFilters));
     return sortItemsByDate(filtered, invFilters.sortBy);
   }, [items, dateRange, invFilters]);
 
-  const setSortDirection = (sortBy: InventoryFilters["sortBy"]) =>
+  const setSortDirection = (sortBy: DateSortDirection) =>
     setInvFilters((current) => ({ ...current, sortBy }));
 
   const toggleColumn = (column: ColumnKey) => {

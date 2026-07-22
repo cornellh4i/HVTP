@@ -1,16 +1,21 @@
 "use client";
 
 import * as Dialog from "@radix-ui/react-dialog";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ChevronDown, ChevronUp, X } from "lucide-react";
 
 import {
+  INVENTORY_SORT_OPTIONS,
   InventoryFilterOptions,
   InventoryFilters,
-  InventorySort,
+  InventorySortField,
   PublicationState,
+  SortDirection,
+  defaultDirectionForSortField,
   defaultInventoryFilters,
+  isArrowSortField,
 } from "@/components/Admin/Inventory/inventory-utils";
+import { SortDirectionToggle } from "@/components/ui/sort-direction-toggle";
 
 type FilterProps = {
   filters: InventoryFilters;
@@ -18,7 +23,7 @@ type FilterProps = {
   onChange: (filters: InventoryFilters) => void;
 };
 
-type FilterKey = Exclude<keyof InventoryFilters, "sortBy">;
+type FilterKey = Exclude<keyof InventoryFilters, "sortField" | "sortDirection">;
 
 const filterSections: Array<{ key: FilterKey; label: string }> = [
   { key: "grade", label: "Grade" },
@@ -27,11 +32,6 @@ const filterSections: Array<{ key: FilterKey; label: string }> = [
   { key: "status", label: "Wool Type" },
   { key: "publicationState", label: "Publication State" },
   { key: "state", label: "State" },
-];
-
-const sortOptions: Array<{ value: InventorySort; label: string }> = [
-  { value: "date-desc", label: "Date Added" },
-  { value: "date-asc", label: "Date Added: Oldest" },
 ];
 
 function getInitialExpandedState() {
@@ -43,7 +43,8 @@ function getInitialExpandedState() {
 
 function cloneFilters(filters: InventoryFilters): InventoryFilters {
   return {
-    sortBy: filters.sortBy,
+    sortField: filters.sortField,
+    sortDirection: filters.sortDirection,
     grade: [...filters.grade],
     color: [...filters.color],
     breed: [...filters.breed],
@@ -75,8 +76,15 @@ function getAppliedFilterChips(filters: InventoryFilters) {
   );
 }
 
+function getSortFieldLabel(field: InventorySortField | null) {
+  if (!field) return "Sort by";
+  return INVENTORY_SORT_OPTIONS.find((option) => option.value === field)?.label ?? "Sort by";
+}
+
 export default function Filter({ filters, options, onChange }: FilterProps) {
   const [open, setOpen] = useState(false);
+  const [sortMenuOpen, setSortMenuOpen] = useState(false);
+  const sortMenuRef = useRef<HTMLDivElement>(null);
   const [draftFilters, setDraftFilters] = useState<InventoryFilters>(() => cloneFilters(filters));
   const [expandedSections, setExpandedSections] = useState<Record<FilterKey, boolean>>(
     getInitialExpandedState
@@ -87,6 +95,29 @@ export default function Filter({ filters, options, onChange }: FilterProps) {
       setDraftFilters(cloneFilters(filters));
     }
   }, [filters, open]);
+
+  useEffect(() => {
+    if (!sortMenuOpen) return;
+
+    const handlePointerDown = (event: MouseEvent) => {
+      if (!sortMenuRef.current?.contains(event.target as Node)) {
+        setSortMenuOpen(false);
+      }
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setSortMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [sortMenuOpen]);
 
   const activeFilterCount = filterSections.reduce(
     (count, section) => count + filters[section.key].length,
@@ -118,14 +149,31 @@ export default function Filter({ filters, options, onChange }: FilterProps) {
     });
   };
 
-  const updateSort = (sortBy: InventorySort) => {
-    const nextFilters = {
-      ...filters,
-      sortBy,
-    };
-
+  const commitFilters = (nextFilters: InventoryFilters) => {
     onChange(nextFilters);
     setDraftFilters(cloneFilters(nextFilters));
+  };
+
+  const updateSortField = (sortField: InventorySortField | null) => {
+    const isFirstSelection = filters.sortField === null && sortField !== null;
+    const nextFilters: InventoryFilters = {
+      ...filters,
+      sortField,
+      sortDirection:
+        isFirstSelection && sortField
+          ? defaultDirectionForSortField(sortField)
+          : filters.sortDirection,
+    };
+
+    commitFilters(nextFilters);
+    setSortMenuOpen(false);
+  };
+
+  const updateSortDirection = (sortDirection: SortDirection) => {
+    commitFilters({
+      ...filters,
+      sortDirection,
+    });
   };
 
   const clearDraftFilters = () => {
@@ -148,11 +196,11 @@ export default function Filter({ filters, options, onChange }: FilterProps) {
   const clearAppliedFilters = () => {
     const resetFilters = {
       ...defaultInventoryFilters,
-      sortBy: filters.sortBy,
+      sortField: filters.sortField,
+      sortDirection: filters.sortDirection,
     };
 
-    onChange(resetFilters);
-    setDraftFilters(cloneFilters(resetFilters));
+    commitFilters(resetFilters);
   };
 
   const removeAppliedFilter = (key: FilterKey, value: string) => {
@@ -164,29 +212,64 @@ export default function Filter({ filters, options, onChange }: FilterProps) {
           : (filters[key].filter((entry) => entry !== value) as string[]),
     };
 
-    onChange(nextFilters);
-    setDraftFilters(cloneFilters(nextFilters));
+    commitFilters(nextFilters);
   };
 
   return (
     <div className="flex flex-wrap items-center gap-3">
-      <div className="relative">
-        <select
-          value={filters.sortBy}
-          onChange={(event) => updateSort(event.target.value as InventorySort)}
-          className="h-11 appearance-none rounded-2xl border border-[#556b2f] bg-[#556b2f] px-4 pr-10 text-sm font-medium text-white outline-none transition-colors hover:bg-[#465923]"
+      <div className="relative" ref={sortMenuRef}>
+        <button
+          type="button"
+          aria-haspopup="listbox"
+          aria-expanded={sortMenuOpen}
+          onClick={() => setSortMenuOpen((current) => !current)}
+          className="inline-flex h-11 items-center gap-2 rounded-2xl border border-[#556b2f] bg-[#556b2f] px-4 text-sm font-medium text-white outline-none transition-colors hover:bg-[#465923]"
         >
-          {sortOptions.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-        <ChevronDown
-          className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-white"
-          size={16}
-        />
+          <span>{getSortFieldLabel(filters.sortField)}</span>
+          <ChevronDown size={16} />
+        </button>
+
+        {sortMenuOpen && (
+          <div
+            role="listbox"
+            aria-label="Sort by"
+            className="absolute left-0 top-[calc(100%+8px)] z-30 min-w-[180px] overflow-hidden rounded-2xl border border-[#ebe6da] bg-white py-2 shadow-[0_12px_30px_rgba(53,51,42,0.14)]"
+          >
+            <div className="border-b border-[#ece7dc] px-4 py-2 text-sm font-semibold text-[#171717]">
+              Sort By
+            </div>
+            {INVENTORY_SORT_OPTIONS.map((option) => {
+              const selected = filters.sortField === option.value;
+
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  role="option"
+                  aria-selected={selected}
+                  onClick={() =>
+                    updateSortField(selected ? null : option.value)
+                  }
+                  className={`flex w-full px-4 py-2.5 text-left text-sm transition-colors hover:bg-[#f5f2ea] ${
+                    selected ? "font-medium text-[#556b2f]" : "text-[#2a2a2a]"
+                  }`}
+                >
+                  {option.label}
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
+
+      {filters.sortField && (
+        <SortDirectionToggle
+          mode={isArrowSortField(filters.sortField) ? "arrows" : "alpha"}
+          value={filters.sortDirection}
+          onChange={updateSortDirection}
+          className="h-11"
+        />
+      )}
 
       {appliedFilterChips.map((chip) => (
         <button
