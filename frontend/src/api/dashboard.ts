@@ -4,6 +4,7 @@ export type WeeklyBucket = {
   label: string;
   grossIncome: number;
   woolCost: number;
+  inventoryCost: number;
   weightSold: number;
   profit: number;
 };

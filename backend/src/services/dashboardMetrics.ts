@@ -16,6 +16,7 @@ export interface WeeklyBucket {
   label: string;
   grossIncome: number;
   woolCost: number;
+  inventoryCost: number;
   weightSold: number;
   profit: number;
 }
@@ -111,12 +112,9 @@ export async function computeDashboardMetrics(start: Date, end: Date): Promise<D
   // minus inventory acquired this period.
   const profit = grossIncome - costOfGoodsSold;
 
-  // ── All items (inventory cost — total current value regardless of date) ─────
-  const allItemsSnapshot = await db.collection("items").get();
-
+  // ── Inventory cost (items added in date range) ───────────────────────────────
   let inventoryCost = 0;
-  for (const doc of allItemsSnapshot.docs) {
-    const item = doc.data() as ItemFields;
+  for (const item of itemsInRange) {
     inventoryCost += safeNum(item.purchasePrice) * safeNum(item.weight);
   }
 
@@ -153,6 +151,7 @@ export async function computeDashboardMetrics(start: Date, end: Date): Promise<D
       label: formatBucketLabel(wStart, wEnd),
       grossIncome: weekGrossIncome,
       woolCost: weekWoolCost,
+      inventoryCost: weekWoolCost,
       weightSold: weekWeightSold,
       profit: weekGrossIncome - weekCogs,
     };

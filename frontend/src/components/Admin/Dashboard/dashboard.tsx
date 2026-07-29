@@ -159,10 +159,7 @@ export default function Dashboard() {
     if (activeMetric === "profit")          return { label: bucket.label, value: bucket.profit };
     if (activeMetric === "woolCost")        return { label: bucket.label, value: bucket.woolCost };
     if (activeMetric === "weightOfWoolSold") return { label: bucket.label, value: bucket.weightSold };
-    if (activeMetric === "inventoryCost") {
-      const bucketCount = Math.max((metrics?.weeklyData ?? []).length, 1);
-      return { label: bucket.label, value: (metrics?.inventoryCost ?? 0) / bucketCount };
-    }
+    if (activeMetric === "inventoryCost") return { label: bucket.label, value: bucket.inventoryCost };
     return { label: bucket.label, value: bucket.grossIncome };
   });
 
