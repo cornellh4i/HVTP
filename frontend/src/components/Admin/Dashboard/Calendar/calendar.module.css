@@ -1,0 +1,87 @@
+@reference "tailwindcss";
+
+.calendar {
+  @apply min-w-[680px] overflow-hidden rounded-xl border border-[rgba(0,0,0,0.12)] bg-white shadow-xl;
+}
+
+.quickActions {
+  @apply border-b border-[rgba(0,0,0,0.08)] px-5 pt-4 pb-3;
+}
+
+.quickActionsTitle {
+  @apply mb-2 text-[13px] font-medium text-[rgba(0,0,0,0.55)];
+  font-family: "Acumin Pro", sans-serif;
+}
+
+.quickActionsList {
+  @apply flex flex-wrap gap-2;
+}
+
+.quickAction {
+  @apply rounded-md border border-[rgba(0,0,0,0.15)] px-3 py-1.5 text-sm font-medium text-[#242424] transition hover:bg-[#f5f5f2];
+  font-family: "Poppins", sans-serif;
+}
+
+.quickActionActive {
+  @apply border-[#3a4f0d] bg-[#3a4f0d] text-white hover:bg-[#314206];
+}
+
+.months {
+  @apply flex flex-row gap-8 px-5 py-4;
+}
+
+.dayPicker {
+  @apply flex-1;
+}
+
+.dayPicker :global(.rdp-root) {
+  --rdp-accent-color: #1a1a1a;
+  --rdp-accent-background-color: #f3f4f6;
+}
+
+.dayPicker :global(.rdp-month_caption) {
+  @apply mb-3 text-base font-bold text-[#111];
+}
+
+.dayPicker :global(.rdp-weekday) {
+  @apply w-10 text-center text-[0.8rem] font-medium text-[#6b7280];
+}
+
+.dayPicker :global(.rdp-day) {
+  @apply h-9 w-9 rounded-none text-sm;
+}
+
+.dayPicker :global(.rdp-selected .rdp-day_button) {
+  @apply rounded-full border-none bg-[#1a1a1a] text-white;
+}
+
+.dayPicker :global(.rdp-range_middle .rdp-day_button) {
+  @apply rounded-full bg-[#f3f4f6] text-[#1a1a1a];
+}
+
+.dayPicker :global(.rdp-range_start .rdp-day_button),
+.dayPicker :global(.rdp-range_end .rdp-day_button) {
+  @apply rounded-full bg-[#1a1a1a] text-white;
+}
+
+.dayPicker :global(.rdp-today .rdp-day_button) {
+  @apply font-bold text-[#3a4f0d];
+}
+
+.dayPicker :global(.rdp-nav button) {
+  @apply rounded-md border border-[#e5e7eb] p-1 text-[#111];
+}
+
+.footer {
+  @apply flex items-center justify-end gap-2 border-t border-[rgba(0,0,0,0.08)] px-5 py-3;
+}
+
+.cancelButton {
+  @apply rounded-md border border-[rgba(0,0,0,0.15)] px-4 py-1.5 text-sm font-medium text-[#374151] transition hover:bg-[#f5f5f2];
+  font-family: "Poppins", sans-serif;
+}
+
+.saveButton {
+  @apply rounded-md bg-[#3a4f0d] px-4 py-1.5 text-sm font-medium text-white transition hover:bg-[#314206] disabled:cursor-not-allowed disabled:opacity-40;
+  font-family: "Poppins", sans-serif;
+}

@@ -77,10 +77,10 @@ export default function Graph({ data, barLabelFormatter }: GraphProps) {
 	return (
 		<div className="h-[430px] w-full">
 			<ResponsiveContainer width="100%" height="100%">
-				<BarChart data={data} margin={{ top: 24, right: 8, left: 0, bottom: 18 }} barCategoryGap="28%">
+				<BarChart data={data} margin={{ top: 28, right: 8, left: 0, bottom: 18 }} barCategoryGap="28%">
 					<defs>
-						<linearGradient id="gross-income-gradient" x1="0" x2="0" y1="0" y2="1">
-							<stop offset="0%" stopColor="#516a11" />
+						<linearGradient id="dashboard-bar-gradient" x1="0" x2="0" y1="0" y2="1">
+							<stop offset="0%" stopColor="#3a4f0d" />
 							<stop offset="100%" stopColor="#a0ae7d" />
 						</linearGradient>
 					</defs>
@@ -108,7 +108,7 @@ export default function Graph({ data, barLabelFormatter }: GraphProps) {
 						dx={0}
 					/>
 
-					<Bar dataKey="value" fill="url(#gross-income-gradient)" barSize={140} radius={0}>
+					<Bar dataKey="value" fill="url(#dashboard-bar-gradient)" barSize={140} radius={[4, 4, 0, 0]}>
 						<LabelList
 							dataKey="value"
 							position="top"
