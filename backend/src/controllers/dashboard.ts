@@ -1,5 +1,7 @@
 import { Request, Response } from "express";
 import { computeDashboardMetrics } from "../services/dashboardMetrics";
+import { getOrSetCache } from "../utils/cache";
+import { DASHBOARD_METRICS_CACHE_PREFIX, DEFAULT_CACHE_TTL_MS } from "../utils/cacheKeys";
 
 export async function getDashboardMetrics(req: Request, res: Response): Promise<void> {
   try {
@@ -24,7 +26,10 @@ export async function getDashboardMetrics(req: Request, res: Response): Promise<
       return;
     }
 
-    const data = await computeDashboardMetrics(start, end);
+    const cacheKey = `${DASHBOARD_METRICS_CACHE_PREFIX}${start.toISOString()}:${end.toISOString()}`;
+    const data = await getOrSetCache(cacheKey, DEFAULT_CACHE_TTL_MS, () =>
+      computeDashboardMetrics(start, end)
+    );
 
     res.status(200).json({ success: true, data });
   } catch (error) {

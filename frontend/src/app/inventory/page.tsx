@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import useSWR from "swr";
 import { LayoutGrid, AlignJustify, Plus } from "lucide-react";
 import Link from "next/link";
 
-import { getAllItems, Item } from "@/api/items";
+import { getAllItems } from "@/api/items";
 import CardTable from "@/components/Admin/Inventory/Table/Card-Table/Card-Table";
 import SheetTable from "@/components/Admin/Inventory/Table/Sheet-Table";
 import Filter from "@/components/Public-Inventory/Filter";
@@ -22,40 +23,10 @@ type ViewMode = "view" | "list";
 export default function InventoryPage() {
   const [mode, setMode] = useState<ViewMode>("view");
   const [search, setSearch] = useState("");
-  const [items, setItems] = useState<Item[]>([]);
   const [filters, setFilters] = useState<InventoryFilters>(defaultInventoryFilters);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    let cancelled = false;
-
-    async function loadItems() {
-      try {
-        setLoading(true);
-        setError(null);
-        const data = await getAllItems();
-
-        if (!cancelled) {
-          setItems(data ?? []);
-        }
-      } catch (err) {
-        if (!cancelled) {
-          setError(err instanceof Error ? err.message : String(err));
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
-    }
-
-    loadItems();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const { data: items = [], isLoading: loading, error: fetchError } = useSWR("items", getAllItems);
+  const error = fetchError ? (fetchError instanceof Error ? fetchError.message : String(fetchError)) : null;
 
   const filterOptions = getInventoryFilterOptions(items);
   const filteredItems = filterInventoryItems(items, search, filters);

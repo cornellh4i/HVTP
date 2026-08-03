@@ -4,16 +4,37 @@ import { ItemInsert, ItemUpdate } from "../models/item";
 import { getDb } from "../config/firebase";
 import { successJson, errorJson } from "../utils/jsonResponses";
 import { toTimestamp } from "../utils/dates";
+import { getOrSetCache, invalidateCache, invalidateCachePrefix } from "../utils/cache";
+import {
+  PUBLIC_ITEMS_CACHE_KEY,
+  ALL_ITEMS_CACHE_KEY,
+  ALL_SALES_CACHE_KEY,
+  DASHBOARD_METRICS_CACHE_PREFIX,
+  DEFAULT_CACHE_TTL_MS,
+} from "../utils/cacheKeys";
 
 const db = getDb();
 
+// Any write that can change what the public listing / admin item list shows,
+// or the denormalized item fields joined into getAllSales, or the dashboard's
+// revenue/inventory numbers, should call this so admins see the effect
+// immediately instead of waiting out the TTL.
+function invalidateItemCaches(): void {
+  invalidateCache(PUBLIC_ITEMS_CACHE_KEY);
+  invalidateCache(ALL_ITEMS_CACHE_KEY);
+  invalidateCache(ALL_SALES_CACHE_KEY);
+  invalidateCachePrefix(DASHBOARD_METRICS_CACHE_PREFIX);
+}
+
 export const getAllItems = async (_req: Request, res: Response) => {
   try {
-    const snapshot = await db.collection("items").get();
-    const items = snapshot.docs.map((doc) => ({ 
-      ...(doc.data() as ItemInsert), 
-      id: doc.id 
-    }));
+    const items = await getOrSetCache(ALL_ITEMS_CACHE_KEY, DEFAULT_CACHE_TTL_MS, async () => {
+      const snapshot = await db.collection("items").get();
+      return snapshot.docs.map((doc) => ({
+        ...(doc.data() as ItemInsert),
+        id: doc.id,
+      }));
+    });
     res.status(200).json(successJson(items));
   } catch (error) {
     res.status(500).json(errorJson("Error fetching items"));
@@ -144,6 +165,7 @@ export const addItem = async (
 
     const ref = await db.collection("items").add(itemToInsert);
     await ref.update({ qrCode: ref.id });
+    invalidateItemCaches();
 
     res.status(201).json(successJson({ id: ref.id, sku }));
   } catch (err) {
@@ -166,6 +188,7 @@ export const updateItem = async (
     }
 
     await doc.ref.update(req.body);
+    invalidateItemCaches();
     res.status(200).json(successJson({ id }));
   } catch {
     res.status(500).json(errorJson("Update failed"));
@@ -174,11 +197,13 @@ export const updateItem = async (
 
 export const getPublicItems = async (_req: Request, res: Response) => {
   try {
-    const snapshot = await db.collection("items").where("isPublic", "==", true).get();
-    const items = snapshot.docs.map((doc) => ({
-      ...(doc.data() as ItemInsert),
-      id: doc.id,
-    }));
+    const items = await getOrSetCache(PUBLIC_ITEMS_CACHE_KEY, DEFAULT_CACHE_TTL_MS, async () => {
+      const snapshot = await db.collection("items").where("isPublic", "==", true).get();
+      return snapshot.docs.map((doc) => ({
+        ...(doc.data() as ItemInsert),
+        id: doc.id,
+      }));
+    });
     res.status(200).json(successJson(items));
   } catch (err) {
     console.error("getPublicItems failed:", err);
@@ -197,6 +222,7 @@ export const togglePublish = async (req: Request<{ id: string }>, res: Response)
 
     const current = (doc.data() as ItemInsert).isPublic ?? false;
     await doc.ref.update({ isPublic: !current });
+    invalidateItemCaches();
     res.status(200).json(successJson({ id, isPublic: !current }));
   } catch {
     res.status(500).json(errorJson("Error toggling publish state"));
@@ -257,6 +283,7 @@ export const deleteItem = async (req: Request<{ id: string }>, res: Response) =>
     }
 
     await doc.ref.delete();
+    invalidateItemCaches();
     res.status(200).json(successJson({ id }));
   } catch {
     res.status(500).json(errorJson("Delete failed"));
@@ -285,6 +312,7 @@ export const recalculateRemainingWeight = async (req: Request, res: Response) =>
 
     const remainingWeight = item.weight - totalSold;
     await itemDoc.ref.update({ remainingWeight });
+    invalidateItemCaches();
 
     res.status(200).json(successJson({ id, remainingWeight, totalSold }));
   } catch {

@@ -6,57 +6,77 @@ import { FarmerInsert } from "../models/farmer";
 import { getDb } from "../config/firebase";
 import { successJson, errorJson } from "../utils/jsonResponses";
 import { toTimestamp } from "../utils/dates";
+import { getOrSetCache, invalidateCache, invalidateCachePrefix } from "../utils/cache";
+import {
+  PUBLIC_ITEMS_CACHE_KEY,
+  ALL_ITEMS_CACHE_KEY,
+  ALL_SALES_CACHE_KEY,
+  DASHBOARD_METRICS_CACHE_PREFIX,
+  DEFAULT_CACHE_TTL_MS,
+} from "../utils/cacheKeys";
 
 const db = getDb();
 
+// A sale changes items.remainingWeight (shown on the public listing and the
+// admin item list) and feeds the dashboard's revenue/weight-sold numbers, so
+// all three need to drop whenever one is recorded/edited/removed.
+function invalidateSaleCaches(): void {
+  invalidateCache(PUBLIC_ITEMS_CACHE_KEY);
+  invalidateCache(ALL_ITEMS_CACHE_KEY);
+  invalidateCache(ALL_SALES_CACHE_KEY);
+  invalidateCachePrefix(DASHBOARD_METRICS_CACHE_PREFIX);
+}
+
 export const getAllSales = async (req: Request, res: Response) => {
   try {
-    const snapshot = await db.collection("sales").get();
-    const sales = await Promise.all(
-      snapshot.docs.map(async (doc) => {
-        const sale = doc.data() as SaleInsert;
-        const joinedFields: Record<string, unknown> = {};
+    const sales = await getOrSetCache(ALL_SALES_CACHE_KEY, DEFAULT_CACHE_TTL_MS, async () => {
+      const snapshot = await db.collection("sales").get();
+      return Promise.all(
+        snapshot.docs.map(async (doc) => {
+          const sale = doc.data() as SaleInsert;
+          const joinedFields: Record<string, unknown> = {};
 
-        if (sale.itemId) {
-          const itemDoc = await db.collection("items").doc(sale.itemId).get();
+          if (sale.itemId) {
+            const itemDoc = await db.collection("items").doc(sale.itemId).get();
 
-          if (itemDoc.exists) {
-            const item = itemDoc.data() as ItemInsert;
-            Object.assign(joinedFields, {
-              itemName: item.name,
-              sku: item.sku,
-              breed: item.breed,
-              grade: item.grade,
-              color: item.color,
-              status: item.status,
-              isPublic: item.isPublic,
-              itemWeight: item.weight,
-              purchasePrice: item.purchasePrice,
-              farmerId: item.farmerId,
-            });
+            if (itemDoc.exists) {
+              const item = itemDoc.data() as ItemInsert;
+              Object.assign(joinedFields, {
+                itemName: item.name,
+                sku: item.sku,
+                breed: item.breed,
+                grade: item.grade,
+                color: item.color,
+                status: item.status,
+                isPublic: item.isPublic,
+                itemWeight: item.weight,
+                purchasePrice: item.purchasePrice,
+                farmerId: item.farmerId,
+              });
 
-            if (item.farmerId) {
-              const farmerDoc = await db.collection("farmers").doc(item.farmerId).get();
+              if (item.farmerId) {
+                const farmerDoc = await db.collection("farmers").doc(item.farmerId).get();
 
-              if (farmerDoc.exists) {
-                const farmer = farmerDoc.data() as FarmerInsert;
-                Object.assign(joinedFields, {
-                  farmerName: farmer.name,
-                  farmerCity: farmer.city,
-                  farmerState: farmer.state,
-                });
+                if (farmerDoc.exists) {
+                  const farmer = farmerDoc.data() as FarmerInsert;
+                  Object.assign(joinedFields, {
+                    farmerName: farmer.name,
+                    farmerCity: farmer.city,
+                    farmerState: farmer.state,
+                  });
+                }
               }
             }
           }
-        }
 
-        return {
-          id: doc.id,
-          ...sale,
-          ...joinedFields,
-        };
-      })
-    );
+          return {
+            id: doc.id,
+            ...sale,
+            ...joinedFields,
+          };
+        })
+      );
+    });
     res.status(200).json(successJson(sales));
   } catch {
     res.status(500).json(errorJson("Error fetching sales"));
@@ -149,6 +169,7 @@ export const addSale = async (
     await db.collection("items").doc(body.itemId).update({
       remainingWeight: FieldValue.increment(-body.weightSold),
     });
+    invalidateSaleCaches();
     res.status(201).json(successJson({ id: ref.id, totalPrice }));
   } catch {
     res.status(500).json(errorJson("Error recording sale"));
@@ -185,6 +206,7 @@ export const updateSale = async (
     }
 
     await doc.ref.update(payload);
+    invalidateSaleCaches();
     res.status(200).json(successJson({ id }));
   } catch {
     res.status(500).json(errorJson("Error updating sale"));
@@ -208,6 +230,7 @@ export const deleteSale = async (
       remainingWeight: FieldValue.increment(sale.weightSold),
     });
     await doc.ref.delete();
+    invalidateSaleCaches();
     res.status(200).json(successJson({ id }));
   } catch {
     res.status(500).json(errorJson("Error deleting sale"));

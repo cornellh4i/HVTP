@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import useSWR from "swr";
 import {
   ArrowDown,
   ArrowUp,
@@ -185,10 +186,6 @@ function ColumnsPanel({
 
 export default function Transactions() {
   const [activeTab, setActiveTab] = useState<TabKey>("purchases");
-  const [sales, setSales] = useState<Sale[]>([]);
-  const [items, setItems] = useState<Item[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [dateRange, setDateRange] = useState<DateRange>(() => initialRange());
   const [openPanel, setOpenPanel] = useState<"calendar" | "columns" | null>(null);
   const [invFilters, setInvFilters] = useState<TransactionFilters>(defaultTransactionFilters);
@@ -199,39 +196,35 @@ export default function Transactions() {
   const [draftPurchaseColumns, setDraftPurchaseColumns] =
     useState<PurchaseColumnKey[]>(defaultPurchaseColumns);
 
-  const loadData = useCallback(async (resetRange = false) => {
-    try {
-      setLoading(true);
-      setError(null);
-      const [salesData, itemsData] = await Promise.all([getAllSales(), getAllItems()]);
-      setSales(salesData);
-      setItems(itemsData);
+  const {
+    data,
+    isLoading: loading,
+    error: fetchError,
+    mutate: mutateTransactions,
+  } = useSWR("transactions", async () => {
+    const [salesData, itemsData] = await Promise.all([getAllSales(), getAllItems()]);
+    return { sales: salesData, items: itemsData };
+  });
 
-      // Only seed the date range from the data on first load — a later refresh
-      // (after editing/deleting a sale) must keep the user's selected range.
-      if (resetRange) {
-        const saleDates = salesData
-          .map(getSaleDate)
-          .filter((date): date is Date => Boolean(date));
-        const itemDates = itemsData
-          .map(getItemDate)
-          .filter((date): date is Date => Boolean(date));
-        const defaultRange = rangeFromDates([...saleDates, ...itemDates]);
+  const sales = data?.sales ?? [];
+  const items = data?.items ?? [];
+  const error = fetchError ? (fetchError instanceof Error ? fetchError.message : String(fetchError)) : null;
 
-        if (defaultRange) {
-          setDateRange(defaultRange);
-        }
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
+  // Seed the date range from the data once, on first load — a later refresh
+  // (after editing/deleting a sale) must keep the user's selected range.
+  const hasSeededRangeRef = useRef(false);
   useEffect(() => {
-    loadData(true);
-  }, [loadData]);
+    if (hasSeededRangeRef.current || !data) return;
+    hasSeededRangeRef.current = true;
+
+    const saleDates = data.sales.map(getSaleDate).filter((date): date is Date => Boolean(date));
+    const itemDates = data.items.map(getItemDate).filter((date): date is Date => Boolean(date));
+    const defaultRange = rangeFromDates([...saleDates, ...itemDates]);
+
+    if (defaultRange) {
+      setDateRange(defaultRange);
+    }
+  }, [data]);
 
   const filterOptions = useMemo(
     () => (activeTab === "purchases" ? getInventoryFilterOptions(items) : getSalesFilterOptions(sales)),
@@ -449,7 +442,7 @@ export default function Transactions() {
                 <SalesTable
                   sales={filteredSales}
                   visibleColumns={visibleColumns}
-                  onChanged={() => loadData()}
+                  onChanged={() => mutateTransactions()}
                 />
               )}
             </div>

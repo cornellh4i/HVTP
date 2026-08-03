@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import useSWR from "swr";
 import Link from "next/link";
 import { useAuth } from "@/utils/AuthContext";
 import { Check, ChevronDown, X } from "lucide-react";
 import Calendar from "./Calendar/calendar";
-import { getDashboardMetrics, DashboardMetrics } from "@/api/dashboard";
+import { getDashboardMetrics } from "@/api/dashboard";
 import { getAllTasks, addTask, updateTask, deleteTask, Task } from "@/api/tasks";
 import { formatItemDate } from "@/components/Admin/Inventory/inventory-utils";
 import Graph from "./Graph/graph";
@@ -68,17 +69,26 @@ export default function Dashboard() {
   const [containerOpen, setContainerOpen] = useState(false);
   const [dateRange, setDateRange] = useState<{ from: Date; to: Date }>(defaultDateRange);
   const [containerSize, setContainerSize] = useState<ContainerSize>("weekly");
-  const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
-  const [loading, setLoading] = useState(true);
   const [activeMetric, setActiveMetric] = useState<MetricKey>("profit");
   const [activeTaskTab, setActiveTaskTab] = useState<"tasks" | "upcoming">("tasks");
-  const [tasks, setTasks] = useState<Task[]>([]);
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [newTaskDueDate, setNewTaskDueDate] = useState("");
   const [addingTask, setAddingTask] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const chartExportRef = useRef<HTMLDivElement>(null);
   const containerMenuRef = useRef<HTMLDivElement>(null);
+
+  const metricsKey = !authLoading
+    ? (["dashboardMetrics", dateRange.from.getTime(), dateRange.to.getTime()] as const)
+    : null;
+  const { data: metrics = null, isLoading: loading } = useSWR(metricsKey, ([, fromMs, toMs]) =>
+    getDashboardMetrics(new Date(fromMs), new Date(toMs))
+  );
+
+  const { data: tasks = [], mutate: mutateTasks } = useSWR<Task[]>(
+    !authLoading ? "tasks" : null,
+    getAllTasks
+  );
 
   const handleRangeChange = (start: Date, end: Date) => {
     setCalendarOpen(false);
@@ -103,34 +113,40 @@ export default function Dashboard() {
   };
 
   const handleToggleTask = async (taskId: string) => {
-    const previous = tasks;
     const current = tasks.find((t) => t.id === taskId);
     if (!current) return;
 
-    setTasks((prevTasks) =>
-      prevTasks.map((task) =>
-        task.id === taskId ? { ...task, completed: !task.completed } : task
-      )
+    const optimisticData = tasks.map((task) =>
+      task.id === taskId ? { ...task, completed: !task.completed } : task
     );
 
     try {
-      await updateTask(taskId, { completed: !current.completed });
+      await mutateTasks(
+        async () => {
+          await updateTask(taskId, { completed: !current.completed });
+          return optimisticData;
+        },
+        { optimisticData, rollbackOnError: true, revalidate: false }
+      );
     } catch (error) {
       console.error("Failed to update task:", error);
-      setTasks(previous);
     }
   };
 
   const handleDeleteTask = async (e: React.MouseEvent, taskId: string) => {
     e.stopPropagation();
-    const previous = tasks;
-    setTasks((prevTasks) => prevTasks.filter((task) => task.id !== taskId));
+    const optimisticData = tasks.filter((task) => task.id !== taskId);
 
     try {
-      await deleteTask(taskId);
+      await mutateTasks(
+        async () => {
+          await deleteTask(taskId);
+          return optimisticData;
+        },
+        { optimisticData, rollbackOnError: true, revalidate: false }
+      );
     } catch (error) {
       console.error("Failed to delete task:", error);
-      setTasks(previous);
     }
   };
 
@@ -144,7 +160,7 @@ export default function Dashboard() {
         title: newTaskTitle.trim(),
         dueDate: newTaskDueDate || null,
       });
-      setTasks((prevTasks) => [...prevTasks, created]);
+      await mutateTasks([...tasks, created], { revalidate: false });
       setNewTaskTitle("");
       setNewTaskDueDate("");
     } catch (error) {
@@ -169,63 +185,6 @@ export default function Dashboard() {
     const timer = window.setTimeout(() => setToastMessage(null), 5000);
     return () => window.clearTimeout(timer);
   }, [toastMessage]);
-
-  useEffect(() => {
-    let active = true;
-
-    async function loadDashboardMetrics() {
-      setLoading(true);
-
-      try {
-        const data = await getDashboardMetrics(dateRange.from, dateRange.to);
-
-        if (active) {
-          setMetrics(data);
-        }
-      } catch (error) {
-        console.error("Failed to load dashboard metrics:", error);
-
-        if (active) {
-          setMetrics(null);
-        }
-      } finally {
-        if (active) {
-          setLoading(false);
-        }
-      }
-    }
-
-    if (!authLoading) {
-      void loadDashboardMetrics();
-    }
-
-    return () => {
-      active = false;
-    };
-  }, [authLoading, dateRange]);
-
-  useEffect(() => {
-    let active = true;
-
-    async function loadTasks() {
-      try {
-        const data = await getAllTasks();
-        if (active) {
-          setTasks(data);
-        }
-      } catch (error) {
-        console.error("Failed to load tasks:", error);
-      }
-    }
-
-    if (!authLoading) {
-      void loadTasks();
-    }
-
-    return () => {
-      active = false;
-    };
-  }, [authLoading]);
 
   const buckets = aggregateBuckets(metrics?.weeklyData ?? [], containerSize);
 
