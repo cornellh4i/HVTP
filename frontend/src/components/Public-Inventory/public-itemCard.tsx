@@ -5,6 +5,7 @@ import {
   Card,
 } from "@/components/ui/card";
 import { Item } from "@/api/items";
+import ImageCarousel from "@/components/ui/imageCarousel/ImageCarousel";
 
 interface ItemCardProps {
   item: Item;
@@ -23,7 +24,7 @@ function formatDate(raw: unknown): string | null {
 }
 
 const ItemCard: React.FC<ItemCardProps> = ({ item }) => {
-  const hasImage = Boolean(item.coverImage);
+  const displayImages = item.coverImages?.length ? item.coverImages : (item.images ?? []);
   const tags = [item.grade, item.color].filter(Boolean);
   const suitableForText =
     item.suitableFor?.trim() ||
@@ -39,14 +40,17 @@ const ItemCard: React.FC<ItemCardProps> = ({ item }) => {
   return (
     <Card className="box-border flex w-full flex-col overflow-hidden rounded-[15px] border border-gray-200 shadow-sm hover:shadow-none" style={{ backgroundColor: "#FFFFFF" }}>
       <div className="flex h-full flex-col px-[30px] py-[20px]">
-        <div className="h-[205.2px] w-full overflow-hidden rounded-[15px] bg-[#f5f5f5]">
-          {hasImage ? (
+        <ImageCarousel
+          images={displayImages}
+          className="h-[205.2px] w-full overflow-hidden rounded-[15px] bg-[#f5f5f5]"
+          renderImage={(src) => (
             <img
-              src={item.coverImage}
+              src={src}
               alt={item.sku}
               className="h-[205.2px] w-full rounded-[15px] object-cover"
             />
-          ) : (
+          )}
+          placeholder={
             <div className="flex h-[205.2px] w-full items-center justify-center rounded-[15px] bg-white text-slate-500">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -61,8 +65,8 @@ const ItemCard: React.FC<ItemCardProps> = ({ item }) => {
                 <path d="M21 15l-5-5L5 21" />
               </svg>
             </div>
-          )}
-        </div>
+          }
+        />
 
         <div className="flex flex-col gap-0 pt-[25px]">
           {tags.length > 0 && (

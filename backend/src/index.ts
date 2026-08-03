@@ -13,6 +13,7 @@ import auditLogRoutes from "./routes/auditLogs";
 import farmerRoutes from "./routes/farmers";
 import salesRoutes from "./routes/sales";
 import dashboardRoutes from "./routes/dashboard";
+import tasksRoutes from "./routes/tasks";
 
 const app = express();
 
@@ -36,6 +37,7 @@ app.use("/api/", auditLogRoutes);
 app.use("/api", farmerRoutes);
 app.use("/api", inventoryRoutes);
 app.use("/api", salesRoutes);
+app.use("/api", tasksRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 
 /**

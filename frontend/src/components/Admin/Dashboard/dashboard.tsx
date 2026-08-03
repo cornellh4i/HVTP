@@ -1,10 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useAuth } from "@/utils/AuthContext";
-import { Check, ChevronDown } from "lucide-react";
+import { Check, ChevronDown, X } from "lucide-react";
 import Calendar from "./Calendar/calendar";
 import { getDashboardMetrics, DashboardMetrics } from "@/api/dashboard";
+import { getAllTasks, addTask, updateTask, deleteTask, Task } from "@/api/tasks";
+import { formatItemDate } from "@/components/Admin/Inventory/inventory-utils";
 import Graph from "./Graph/graph";
 import { exportChartAsPng } from "./exportChart";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -58,33 +61,6 @@ function getMetricTitle(metric: MetricKey): string {
   return "Inventory Cost";
 }
 
-const initialTasks = [
-  {
-    date: "Mar. 10",
-    lot: "Lot #39",
-    suffix: " has reached 3 months since intake.",
-    completed: false,
-  },
-  {
-    date: "Mar. 11",
-    lot: "Lot #29",
-    suffix: " has reached 3 months since intake.",
-    completed: true,
-  },
-  {
-    date: "Mar. 12",
-    lot: "Lot #34",
-    suffix: " has reached 3 months since intake.",
-    completed: false,
-  },
-  {
-    date: "Mar. 12",
-    lot: "Lot #42",
-    suffix: " has reached 3 months since intake.",
-    completed: false,
-  },
-];
-
 export default function Dashboard() {
   const { loading: authLoading } = useAuth();
 
@@ -96,7 +72,10 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [activeMetric, setActiveMetric] = useState<MetricKey>("profit");
   const [activeTaskTab, setActiveTaskTab] = useState<"tasks" | "upcoming">("tasks");
-  const [tasks, setTasks] = useState(initialTasks);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [newTaskTitle, setNewTaskTitle] = useState("");
+  const [newTaskDueDate, setNewTaskDueDate] = useState("");
+  const [addingTask, setAddingTask] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const chartExportRef = useRef<HTMLDivElement>(null);
   const containerMenuRef = useRef<HTMLDivElement>(null);
@@ -123,12 +102,56 @@ export default function Dashboard() {
     setContainerOpen(false);
   };
 
-  const handleToggleTask = (taskIndex: number) => {
+  const handleToggleTask = async (taskId: string) => {
+    const previous = tasks;
+    const current = tasks.find((t) => t.id === taskId);
+    if (!current) return;
+
     setTasks((prevTasks) =>
-      prevTasks.map((task, index) =>
-        index === taskIndex ? { ...task, completed: !task.completed } : task
+      prevTasks.map((task) =>
+        task.id === taskId ? { ...task, completed: !task.completed } : task
       )
     );
+
+    try {
+      await updateTask(taskId, { completed: !current.completed });
+    } catch (error) {
+      console.error("Failed to update task:", error);
+      setTasks(previous);
+    }
+  };
+
+  const handleDeleteTask = async (e: React.MouseEvent, taskId: string) => {
+    e.stopPropagation();
+    const previous = tasks;
+    setTasks((prevTasks) => prevTasks.filter((task) => task.id !== taskId));
+
+    try {
+      await deleteTask(taskId);
+    } catch (error) {
+      console.error("Failed to delete task:", error);
+      setTasks(previous);
+    }
+  };
+
+  const handleAddTask = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newTaskTitle.trim() || addingTask) return;
+
+    setAddingTask(true);
+    try {
+      const created = await addTask({
+        title: newTaskTitle.trim(),
+        dueDate: newTaskDueDate || null,
+      });
+      setTasks((prevTasks) => [...prevTasks, created]);
+      setNewTaskTitle("");
+      setNewTaskDueDate("");
+    } catch (error) {
+      console.error("Failed to add task:", error);
+    } finally {
+      setAddingTask(false);
+    }
   };
 
   useEffect(() => {
@@ -181,6 +204,29 @@ export default function Dashboard() {
     };
   }, [authLoading, dateRange]);
 
+  useEffect(() => {
+    let active = true;
+
+    async function loadTasks() {
+      try {
+        const data = await getAllTasks();
+        if (active) {
+          setTasks(data);
+        }
+      } catch (error) {
+        console.error("Failed to load tasks:", error);
+      }
+    }
+
+    if (!authLoading) {
+      void loadTasks();
+    }
+
+    return () => {
+      active = false;
+    };
+  }, [authLoading]);
+
   const buckets = aggregateBuckets(metrics?.weeklyData ?? [], containerSize);
 
   const chartData = buckets.map((bucket) => {
@@ -224,13 +270,6 @@ export default function Dashboard() {
   };
 
   const visibleTasks = activeTaskTab === "tasks" ? tasks : tasks.filter((task) => !task.completed);
-
-  const visibleTasksWithIndex = visibleTasks.map((task) => ({
-    ...task,
-    originalIndex: tasks.findIndex(
-      (t) => t.date === task.date && t.lot === task.lot && t.suffix === task.suffix
-    ),
-  }));
 
   const canExport = !loading && metrics !== null && chartData.length > 0;
 
@@ -409,44 +448,93 @@ export default function Dashboard() {
                         : styles.taskTabLabelInactive
                     }`}
                   >
-                    Upcoming
+                    Incomplete
                   </p>
                 </button>
               </div>
             </div>
 
             <div className={styles.taskList}>
-              {visibleTasksWithIndex.map(({ date, lot, suffix, completed, originalIndex }, index) => {
-                const dateClass = completed ? styles.taskDateDone : styles.taskDatePending;
-                const textClass = completed ? styles.taskTextDone : styles.taskTextPending;
+              {visibleTasks.map((task) => {
+                const dateClass = task.completed ? styles.taskDateDone : styles.taskDatePending;
+                const textClass = task.completed ? styles.taskTextDone : styles.taskTextPending;
+                const dateLabel =
+                  task.type === "manual" && task.dueDate
+                    ? formatItemDate(task.dueDate)
+                    : formatItemDate(task.createdAt);
+                const lotPrefix = task.type === "auto" && task.sku ? `Lot ${task.sku}` : null;
 
                 return (
                   <div
-                    key={`${date}-${lot}-${index}`}
-                    onClick={() => handleToggleTask(originalIndex)}
+                    key={task.id}
+                    onClick={() => void handleToggleTask(task.id)}
                     className={styles.taskRow}
                     role="checkbox"
-                    aria-checked={completed}
+                    aria-checked={task.completed}
                   >
                     <div className={styles.taskRowLeft}>
                       <div
                         className={`${styles.taskCheckbox} ${
-                          completed ? styles.taskCheckboxChecked : ""
+                          task.completed ? styles.taskCheckboxChecked : ""
                         }`}
                       >
-                        {completed && <Check className={styles.taskCheckboxIcon} strokeWidth={3} />}
+                        {task.completed && <Check className={styles.taskCheckboxIcon} strokeWidth={3} />}
                       </div>
-                      <p className={`${styles.taskDate} ${dateClass}`}>{date}</p>
+                      <p className={`${styles.taskDate} ${dateClass}`}>{dateLabel ?? ""}</p>
                     </div>
 
                     <p className={`${styles.taskText} ${textClass}`}>
-                      <span className={styles.taskLotLink}>{lot}</span>
-                      <span>{suffix}</span>
+                      {lotPrefix && task.itemId ? (
+                        <>
+                          <Link
+                            href={`/inventory/${task.itemId}`}
+                            onClick={(e) => e.stopPropagation()}
+                            className={styles.taskLotLink}
+                          >
+                            {lotPrefix}
+                          </Link>
+                          <span>{task.title.replace(lotPrefix, "")}</span>
+                        </>
+                      ) : (
+                        <span>{task.title}</span>
+                      )}
                     </p>
+
+                    <button
+                      type="button"
+                      onClick={(e) => void handleDeleteTask(e, task.id)}
+                      className={styles.taskDeleteButton}
+                      aria-label="Delete task"
+                    >
+                      <X className={styles.taskDeleteIcon} />
+                    </button>
                   </div>
                 );
               })}
             </div>
+
+            <form className={styles.addTaskRow} onSubmit={(e) => void handleAddTask(e)}>
+              <input
+                type="text"
+                value={newTaskTitle}
+                onChange={(e) => setNewTaskTitle(e.target.value)}
+                placeholder="Add a task..."
+                className={styles.addTaskInput}
+              />
+              <input
+                type="date"
+                value={newTaskDueDate}
+                onChange={(e) => setNewTaskDueDate(e.target.value)}
+                className={styles.addTaskDateInput}
+              />
+              <button
+                type="submit"
+                disabled={!newTaskTitle.trim() || addingTask}
+                className={styles.exportButton}
+              >
+                Add
+              </button>
+            </form>
           </div>
         </div>
 

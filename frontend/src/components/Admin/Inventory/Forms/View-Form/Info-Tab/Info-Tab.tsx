@@ -9,7 +9,7 @@ import ItemImageUpload from "@/components/Admin/Inventory/Upload-Image/ItemImage
 import SetCoverPhotoModal from "@/components/Admin/Inventory/SetCoverPhotoModal";
 import { uploadItemImage } from "@/lib/uploadImage";
 import { Card } from "@/components/ui/card";
-import { Check, ImageIcon, Star, Upload } from "lucide-react";
+import { ImageIcon, Star, Upload } from "lucide-react";
 import styles from "./Info-Tab.module.css";
 
 const GRADE_OPTIONS: SelectOption[] = [
@@ -73,24 +73,25 @@ function DesktopImageGallery({
   sku,
   images,
   onImagesChange,
-  coverImage,
-  onCoverChange,
+  coverImages,
+  onCoverImagesChange,
 }: {
   sku: string;
   images: string[];
   onImagesChange: (images: string[]) => void;
-  coverImage: string;
-  onCoverChange: (url: string) => void;
+  coverImages: string[];
+  onCoverImagesChange: (urls: string[]) => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const coverUrl = coverImage || images[0] || "";
+  const isCover = (url: string) => coverImages.includes(url);
+  const coverOrder = (url: string) => coverImages.indexOf(url) + 1;
   const safeActiveIndex = images.length ? Math.min(activeIndex, images.length - 1) : 0;
   const previewUrl = images[safeActiveIndex] ?? null;
-  const isCoverPreview = Boolean(previewUrl && previewUrl === coverUrl);
+  const isCoverPreview = Boolean(previewUrl && isCover(previewUrl));
 
   async function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
     const files = Array.from(event.target.files ?? []);
@@ -111,8 +112,8 @@ function DesktopImageGallery({
       const newImages = [...images, ...uploadedUrls];
       onImagesChange(newImages);
 
-      if (!coverUrl && newImages.length > 0) {
-        onCoverChange(newImages[0]);
+      if (coverImages.length === 0 && newImages.length > 0) {
+        onCoverImagesChange([newImages[0]]);
       }
 
       setActiveIndex(images.length);
@@ -124,9 +125,12 @@ function DesktopImageGallery({
     }
   }
 
-  const handleSetCover = () => {
-    if (previewUrl && !isCoverPreview) {
-      onCoverChange(previewUrl);
+  const handleToggleCover = () => {
+    if (!previewUrl) return;
+    if (isCover(previewUrl)) {
+      onCoverImagesChange(coverImages.filter((u) => u !== previewUrl));
+    } else {
+      onCoverImagesChange([...coverImages, previewUrl]);
     }
   };
 
@@ -154,20 +158,27 @@ function DesktopImageGallery({
 
         {previewUrl &&
           (isCoverPreview ? (
-            <span className={styles.coverBadge}>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleToggleCover();
+              }}
+              className={`${styles.coverBadge} ${styles.coverBadgeInteractive}`}
+            >
               <Star
                 size={12}
                 className={styles.coverStarActive}
                 fill="currentColor"
               />
-              Cover
-            </span>
+              Cover #{coverOrder(previewUrl)}
+            </button>
           ) : (
             <button
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
-                handleSetCover();
+                handleToggleCover();
               }}
               className={`${styles.coverBadge} ${styles.coverBadgeInteractive}`}
             >
@@ -192,7 +203,7 @@ function DesktopImageGallery({
         </button>
 
         {images.map((src, idx) => {
-          const isCover = src === coverUrl;
+          const thumbIsCover = isCover(src);
           const isActive = idx === safeActiveIndex;
 
           return (
@@ -201,14 +212,14 @@ function DesktopImageGallery({
               type="button"
               onClick={() => setActiveIndex(idx)}
               className={`${styles.thumbnail} ${
-                isCover ? styles.thumbnailCover : isActive ? styles.thumbnailActive : ""
+                thumbIsCover ? styles.thumbnailCover : isActive ? styles.thumbnailActive : ""
               }`}
             >
               <Image src={src} alt={`Photo ${idx + 1}`} fill className="object-cover" />
-              {isCover && (
+              {thumbIsCover && (
                 <span className={styles.coverCheck}>
                   <span className={styles.coverCheckCircle}>
-                    <Check className={styles.coverCheckIcon} strokeWidth={3} />
+                    <span className={styles.coverCheckNumber}>{coverOrder(src)}</span>
                   </span>
                 </span>
               )}
@@ -253,20 +264,18 @@ export default function InfoTab({
   const set = (field: keyof Item) => (val: string) =>
     setFormData((prev) => ({ ...prev, [field]: val }));
 
-  const coverImage = formData.coverImage ?? images[0] ?? "";
+  const coverImages = formData.coverImages ?? [];
 
-  const handleCoverChange = (url: string) => {
-    setFormData((prev) => ({ ...prev, coverImage: url }));
+  const handleCoverImagesChange = (urls: string[]) => {
+    setFormData((prev) => ({ ...prev, coverImages: urls }));
   };
 
   const handleImagesChange = (newImages: string[]) => {
     setImages(newImages);
-    const currentCover = formData.coverImage ?? images[0] ?? "";
-    if (currentCover && !newImages.includes(currentCover)) {
-      setFormData((prev) => ({
-        ...prev,
-        coverImage: newImages[0] ?? "",
-      }));
+    const currentCovers = formData.coverImages ?? [];
+    const prunedCovers = currentCovers.filter((url) => newImages.includes(url));
+    if (prunedCovers.length !== currentCovers.length) {
+      setFormData((prev) => ({ ...prev, coverImages: prunedCovers }));
     }
   };
 
@@ -439,8 +448,8 @@ export default function InfoTab({
             sku={item.sku}
             images={images}
             onImagesChange={handleImagesChange}
-            coverImage={coverImage}
-            onCoverChange={handleCoverChange}
+            coverImages={coverImages}
+            onCoverImagesChange={handleCoverImagesChange}
           />
 
           <Card className={styles.sectionCard}>
@@ -471,9 +480,9 @@ export default function InfoTab({
         <SetCoverPhotoModal
           itemId={itemId}
           images={images}
-          currentCover={formData.coverImage ?? images[0] ?? ""}
+          currentCoverImages={formData.coverImages ?? []}
           onClose={() => setShowCoverModal(false)}
-          onSave={(newCover) => setFormData((p) => ({ ...p, coverImage: newCover }))}
+          onSave={(newCoverImages) => setFormData((p) => ({ ...p, coverImages: newCoverImages }))}
         />
       )}
     </>

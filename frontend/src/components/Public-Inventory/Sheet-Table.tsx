@@ -46,9 +46,9 @@ export default function SheetTable({ items }: SheetTableProps) {
             >
               <div className="flex flex-row items-start gap-3 p-3 sm:gap-6 sm:p-6">
                 <div className="relative h-24 w-24 flex-none overflow-hidden rounded-xl bg-[#f5f5f5] sm:h-44 sm:w-44 lg:h-55 lg:w-60">
-                  {item.coverImage ? (
+                  {(item.coverImages?.[0] ?? item.images?.[0]) ? (
                     <Image
-                      src={item.coverImage}
+                      src={item.coverImages?.[0] ?? item.images![0]}
                       alt={item.sku}
                       fill
                       className="object-cover"

@@ -128,7 +128,7 @@
 }
 
 .taskList {
-  @apply flex flex-col gap-2;
+  @apply flex max-h-80 flex-col gap-2 overflow-y-auto;
 }
 
 .taskRow {
@@ -179,6 +179,32 @@
 
 .taskLotLink {
   @apply [text-decoration-skip-ink:none] decoration-solid underline;
+}
+
+.taskDeleteButton {
+  @apply flex shrink-0 items-center justify-center rounded-md p-1 text-[rgba(0,0,0,0.35)] opacity-0 transition hover:bg-[rgba(0,0,0,0.06)] hover:text-[rgba(0,0,0,0.7)];
+}
+
+.taskRow:hover .taskDeleteButton {
+  @apply opacity-100;
+}
+
+.taskDeleteIcon {
+  @apply size-3.5;
+}
+
+.addTaskRow {
+  @apply flex items-center gap-2 border-t border-[rgba(0,0,0,0.1)] pt-3;
+}
+
+.addTaskInput {
+  @apply flex-1 rounded-[6px] border border-[rgba(0,0,0,0.2)] px-3 py-2 text-[14px] font-light text-[#242424];
+  font-family: "Poppins", sans-serif;
+}
+
+.addTaskDateInput {
+  @apply rounded-[6px] border border-[rgba(0,0,0,0.2)] px-3 py-2 text-[14px] font-light text-[#242424];
+  font-family: "Poppins", sans-serif;
 }
 
 /* ── Metrics + chart card ───────────────────────────────────────────────── */

@@ -13,7 +13,7 @@
 }
 
 .imageWrapper {
-  @apply flex w-[150px] h-[100px] sm:w-[200px] sm:h-[125px] lg:w-[250px] lg:h-[150px] shrink-0 items-center justify-center overflow-hidden rounded-lg border border-[#646D72] bg-slate-100;
+  @apply relative flex w-[150px] h-[100px] sm:w-[200px] sm:h-[125px] lg:w-[250px] lg:h-[150px] shrink-0 items-center justify-center overflow-hidden rounded-lg border border-[#646D72] bg-slate-100;
 }
 
 .image {

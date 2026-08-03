@@ -96,7 +96,7 @@ export default function AddForm() {
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [coverImage, setCoverImage] = useState<string>("");
+  const [coverImages, setCoverImages] = useState<string[]>([]);
   const [farmName, setFarmName] = useState("");
   const [activeImageIndex, setActiveImageIndex] = useState(0);
 
@@ -161,8 +161,8 @@ export default function AddForm() {
 
       setImages((prev) => {
         const newImages = [...prev, ...uploaded];
-        if (!coverImage && newImages.length > 0) {
-          setCoverImage(newImages[0]);
+        if (coverImages.length === 0 && newImages.length > 0) {
+          setCoverImages([newImages[0]]);
         }
         return newImages;
       });
@@ -178,9 +178,8 @@ export default function AddForm() {
   const removeImage = (index: number) => {
     setImages((prev) => {
       const newImages = prev.filter((_, i) => i !== index);
-      if (coverImage === prev[index]) {
-        setCoverImage(newImages[0] ?? "");
-      }
+      const removedUrl = prev[index];
+      setCoverImages((prevCovers) => prevCovers.filter((url) => url !== removedUrl));
       return newImages;
     });
     setActiveImageIndex((prev) => Math.max(0, prev - 1));
@@ -206,7 +205,7 @@ export default function AddForm() {
             ? parseFloat(itemFields.purchasePrice.replace(/[^0-9.]/g, ""))
             : undefined,
         images,
-        coverImage: coverImage || images[0] || "",
+        coverImages: coverImages.length > 0 ? coverImages : (images[0] ? [images[0]] : []),
         name: itemFields.breed || "Unnamed Lot",
         farmerId: farmer.id,
         isActive: true,

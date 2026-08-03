@@ -4,6 +4,7 @@ import Link from "next/link";
 
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import ImageCarousel from "@/components/ui/imageCarousel/ImageCarousel";
 import styles from "./itemCard.module.css";
 
 interface ItemCardProps {
@@ -14,7 +15,7 @@ interface ItemCardProps {
   status: string;
   state: string;
   href: string;
-  imgSrc?: string;
+  images?: string[];
   lastUpdated?: string;
   title?: string;
   subtitle?: string;
@@ -57,7 +58,7 @@ const ItemCard = React.forwardRef<HTMLDivElement, ItemCardProps>(
       status,
       state,
       href,
-      imgSrc,
+      images,
       lastUpdated,
       title,
       subtitle,
@@ -84,17 +85,19 @@ const ItemCard = React.forwardRef<HTMLDivElement, ItemCardProps>(
 
         {/* Image — small square on mobile, larger on desktop */}
         <div className={styles.imageWrapper}>
-          {imgSrc ? (
-            <Image
-              src={imgSrc}
-              alt={sku}
-              width={240}
-              height={176}
-              className={styles.image}
-            />
-          ) : (
-            <PlaceholderImage />
-          )}
+          <ImageCarousel
+            images={images ?? []}
+            placeholder={<PlaceholderImage />}
+            renderImage={(src) => (
+              <Image
+                src={src}
+                alt={sku}
+                width={240}
+                height={176}
+                className={styles.image}
+              />
+            )}
+          />
         </div>
 
         {/* Content */}

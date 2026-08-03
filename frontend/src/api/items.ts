@@ -13,7 +13,7 @@ export type Item = {
   remainingWeight?: number;
   status?: string;
   images?: string[];
-  coverImage?: string;
+  coverImages?: string[];
   qrCode?: string;
   isActive?: boolean;
   isPublic?: boolean;

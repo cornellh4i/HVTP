@@ -64,6 +64,10 @@
   @apply h-4 w-4 text-[#3A4F0D];
 }
 
+.coverCheckNumber {
+  @apply text-sm font-bold text-[#3A4F0D];
+}
+
 .uploadError {
   @apply text-sm text-red-600;
 }

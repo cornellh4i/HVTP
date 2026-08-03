@@ -8,29 +8,35 @@ import { updateItem } from "@/api/items";
 interface SetCoverPhotoModalProps {
   itemId: string;
   images: string[];
-  currentCover: string;
+  currentCoverImages: string[];
   onClose: () => void;
-  onSave: (newCover: string) => void;
+  onSave: (newCoverImages: string[]) => void;
 }
 
 export default function SetCoverPhotoModal({
   itemId,
   images,
-  currentCover,
+  currentCoverImages,
   onClose,
   onSave,
 }: SetCoverPhotoModalProps) {
-  const [selected, setSelected] = useState<string>(currentCover);
+  const [selected, setSelected] = useState<string[]>(currentCoverImages);
   const [saving, setSaving] = useState(false);
+
+  const toggle = (url: string) => {
+    setSelected((prev) =>
+      prev.includes(url) ? prev.filter((u) => u !== url) : [...prev, url]
+    );
+  };
 
   const handleSave = async () => {
     try {
       setSaving(true);
-      await updateItem(itemId, { coverImage: selected });
+      await updateItem(itemId, { coverImages: selected });
       onSave(selected);
       onClose();
     } catch {
-      alert("Failed to set cover photo");
+      alert("Failed to set cover photos");
     } finally {
       setSaving(false);
     }
@@ -50,19 +56,23 @@ export default function SetCoverPhotoModal({
           <X className="h-4 w-4" />
         </button>
 
-        <h2 className="mb-5 text-base font-semibold text-gray-900">
-          Set cover photo for public inventory
+        <h2 className="mb-1 text-base font-semibold text-gray-900">
+          Set cover photos for public inventory
         </h2>
+        <p className="mb-5 text-sm text-gray-500">
+          Select one or more photos. The order you select them in is the order they&apos;ll appear in the carousel.
+        </p>
 
-        {/* Image grid — 2 columns, radio-style selection */}
+        {/* Image grid — 2 columns, multi-select */}
         <div className="grid grid-cols-2 gap-3 mb-6">
           {images.map((url, idx) => {
-            const isSelected = url === selected;
+            const selectedIndex = selected.indexOf(url);
+            const isSelected = selectedIndex !== -1;
             return (
               <button
                 key={idx}
                 type="button"
-                onClick={() => setSelected(url)}
+                onClick={() => toggle(url)}
                 className={`relative aspect-[4/3] overflow-hidden rounded-lg border-2 transition-colors ${
                   isSelected
                     ? "border-blue-600"
@@ -75,15 +85,13 @@ export default function SetCoverPhotoModal({
                   fill
                   className="object-cover"
                 />
-                {/* Radio dot */}
+                {/* Order badge / empty checkbox */}
                 <span
-                  className={`absolute left-2 top-2 flex h-4 w-4 items-center justify-center rounded-full border-2 bg-white ${
-                    isSelected ? "border-blue-600" : "border-gray-400"
+                  className={`absolute left-2 top-2 flex h-5 w-5 items-center justify-center rounded-full border-2 bg-white text-xs font-semibold ${
+                    isSelected ? "border-blue-600 text-blue-600" : "border-gray-400 text-transparent"
                   }`}
                 >
-                  {isSelected && (
-                    <span className="h-2 w-2 rounded-full bg-blue-600" />
-                  )}
+                  {isSelected ? selectedIndex + 1 : ""}
                 </span>
               </button>
             );
@@ -94,7 +102,7 @@ export default function SetCoverPhotoModal({
         <div className="flex justify-end">
           <button
             onClick={handleSave}
-            disabled={saving || !selected}
+            disabled={saving}
             className="rounded bg-gray-900 px-5 py-2 text-sm text-white hover:bg-gray-700 disabled:opacity-50"
           >
             {saving ? "Saving..." : "Save"}

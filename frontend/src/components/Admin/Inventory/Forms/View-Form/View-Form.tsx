@@ -42,7 +42,11 @@ export default function ViewForm() {
       try {
         const data = await getItemById(itemId);
         setItem(data);
-        setFormData(data);
+        setFormData(
+          !data.coverImages && data.images?.length
+            ? { ...data, coverImages: [data.images[0]] }
+            : data
+        );
         setImages(data.images ?? []);
 
         try {
@@ -191,7 +195,7 @@ export default function ViewForm() {
       await updateItem(itemId, {
         ...formData,
         images,
-        coverImage: formData.coverImage ?? images[0] ?? "",
+        coverImages: formData.coverImages ?? [],
       });
       showToast(
         "Lot successfully updated!",

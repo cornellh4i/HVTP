@@ -159,7 +159,7 @@ export default function QrScanner() {
                 { label: "Status", value: item.status ?? "-" },
                 { label: "Pallet Location", value: item.palletLocation ?? "-" },
               ]}
-              imgSrc={item.coverImage}
+              images={item.coverImages?.length ? [item.coverImages[0]] : (item.images ? [item.images[0]] : [])}
             />
             <Button type="button" variant="outline" className="w-full" onClick={resetScanner}>
               <RefreshCw className="mr-2 h-4 w-4" />
