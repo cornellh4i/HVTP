@@ -7,15 +7,14 @@ import {
   updateSale,
   deleteSale,
 } from "../controllers/sales";
-import { authenticateToken } from "../middleware/middleware";
 
 const router = express.Router();
 
-router.get("/getAllSales", authenticateToken, getAllSales);
-router.get("/getSaleById/:id", authenticateToken, getSaleById);
-router.get("/getSalesByItemId/:itemId", authenticateToken, getSalesByItemId);
-router.post("/addSale", authenticateToken, addSale);
-router.patch("/updateSale/:id", authenticateToken, updateSale);
-router.delete("/deleteSale/:id", authenticateToken, deleteSale);
+router.get("/getAllSales", getAllSales);
+router.get("/getSaleById/:id", getSaleById);
+router.get("/getSalesByItemId/:itemId", getSalesByItemId);
+router.post("/addSale", addSale);
+router.patch("/updateSale/:id", updateSale);
+router.delete("/deleteSale/:id", deleteSale);
 
 export default router;

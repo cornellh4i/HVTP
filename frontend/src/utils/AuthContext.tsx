@@ -1,10 +1,11 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useRef, useState } from "react";
-import { onAuthStateChanged, User } from "firebase/auth";
+import { onIdTokenChanged, User } from "firebase/auth";
 import { auth } from "@/lib/firebase/firebase";
 import { logOut } from "@/api/users";
 import { generateTasks } from "@/api/tasks";
+import { setSessionCookie, clearSessionCookie } from "@/lib/session";
 
 interface AuthContextType {
   user: User | null;
@@ -25,11 +26,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const hasGeneratedTasksRef = useRef(false);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+    // onIdTokenChanged (rather than onAuthStateChanged) also fires when the SDK
+    // silently refreshes the ID token roughly every hour. Writing the new token
+    // to the cookie each time keeps it from expiring under a user who is still
+    // active, which would otherwise bounce them out of the admin pages.
+    const unsubscribe = onIdTokenChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser);
       setLoading(false);
 
       if (firebaseUser) {
+        try {
+          setSessionCookie(await firebaseUser.getIdToken());
+        } catch (error) {
+          console.error("Failed to refresh session cookie:", error);
+        }
+
         if (!hasGeneratedTasksRef.current) {
           hasGeneratedTasksRef.current = true;
           generateTasks().catch((error) => {
@@ -37,6 +48,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           });
         }
       } else {
+        clearSessionCookie();
         hasGeneratedTasksRef.current = false;
       }
     });

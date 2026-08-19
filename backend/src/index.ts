@@ -14,6 +14,7 @@ import farmerRoutes from "./routes/farmers";
 import salesRoutes from "./routes/sales";
 import dashboardRoutes from "./routes/dashboard";
 import tasksRoutes from "./routes/tasks";
+import { authenticateToken } from "./middleware/middleware";
 
 const app = express();
 
@@ -25,6 +26,23 @@ const allowedOrigins = [
 app.use(cors({ origin: allowedOrigins }));
 app.use(bodyParser.json());
 app.use("/api-docs", swaggerUI.serve, swaggerUI.setup(spec));
+
+/**
+ * Everything under /api requires a valid Firebase ID token unless it is
+ * explicitly listed here. Auth is deny-by-default on purpose: it used to be
+ * opt-in per route, and most routes simply never opted in, which left item,
+ * farmer, and location writes reachable without a token.
+ *
+ * Paths are relative to the /api mount point, since Express strips the mount
+ * prefix before this handler sees req.path.
+ */
+const PUBLIC_API_PATHS = new Set(["/public/items"]);
+
+app.use("/api", (req, res, next) => {
+  const path = req.path.replace(/\/+$/, "") || "/";
+  if (PUBLIC_API_PATHS.has(path)) return next();
+  return authenticateToken(req, res, next);
+});
 
 /**
  * Sub-routers for our main router, we should have one sub-router per 'entity' in the application

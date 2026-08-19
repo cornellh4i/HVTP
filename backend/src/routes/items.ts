@@ -13,7 +13,6 @@ import {
   getPublicItems,
   recalculateRemainingWeight,
 } from "../controllers/items";
-import { authenticateToken } from "../middleware/middleware";
 
 const router = express.Router();
 
@@ -22,15 +21,16 @@ router.get("/getItemById/:id", getItemById);
 router.post("/addItem", addItem);
 router.patch("/updateItem/:id", updateItem);
 router.delete("/deleteItem/:id", deleteItem);
-router.patch("/togglePublish/:id", authenticateToken, togglePublish);
-router.post("/recalculateItemWeight/:id", authenticateToken, recalculateRemainingWeight);
+router.patch("/togglePublish/:id", togglePublish);
+router.post("/recalculateItemWeight/:id", recalculateRemainingWeight);
 
 router.get("/getActiveItems", getActiveItems);
 router.get("/getInactiveItems", getInactiveItems);
 router.patch("/toggleActive/:id", toggleActive);
 router.get("/getFarmerByItemId/:id", getFarmerByItemId);
 
-// Public — no auth
+// Public — the one route exempted from auth, via PUBLIC_API_PATHS in index.ts.
+// Every other route in this file requires a Firebase ID token.
 router.get("/public/items", getPublicItems);
 
 export default router;

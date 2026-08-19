@@ -6,12 +6,11 @@ import {
     updateInventory
 } from '../controllers/inventory';
 
-import { authenticateToken } from "../middleware/middleware";
 
 const router = express.Router()
 
-router.get('/allInventories', authenticateToken, getAllInventory);
-router.get('/inventoryByItemId', authenticateToken, getInventoryByItemId);
+router.get('/allInventories', getAllInventory);
+router.get('/inventoryByItemId', getInventoryByItemId);
 
 
 

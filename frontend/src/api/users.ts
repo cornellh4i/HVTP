@@ -4,18 +4,20 @@ import {
   signOut,
 } from "firebase/auth";
 import { apiRequest } from "./APIWrapper";
+import { setSessionCookie, clearSessionCookie } from "@/lib/session";
 
 // Log in an existing user
 export const logIn = async (email: string, password: string) => {
   const credential = await signInWithEmailAndPassword(auth, email, password);
-  const token = await credential.user.getIdToken();
-  document.cookie = `session=${token}; path=/; max-age=3600; SameSite=Strict`;
+  // Set eagerly rather than waiting on AuthContext's listener, so the cookie is
+  // in place before the login page redirects into a middleware-gated route.
+  setSessionCookie(await credential.user.getIdToken());
   return credential.user;
 };
 
 // Log out the current user
 export const logOut = async () => {
-  document.cookie = "session=; path=/; max-age=0";
+  clearSessionCookie();
   await signOut(auth);
 };
 

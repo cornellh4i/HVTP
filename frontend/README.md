@@ -1,46 +1,49 @@
-# Getting Started with Create React App
+# HVTP Frontend
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+The frontend is built with Next.js (App Router), React, and TypeScript, and
+styled with Tailwind CSS. It serves both the admin dashboard and the public
+inventory listing.
 
-## Available Scripts
+## Getting Started
 
-In the project directory, you can run:
+Copy `.env.template` to `.env.local` and fill in the Firebase web config from
+the Firebase console, along with `NEXT_PUBLIC_API_URL` (`http://localhost:8000`
+for local development). All values are `NEXT_PUBLIC_*`, so they're embedded in
+the client bundle — none of them are secrets.
 
-### `yarn start`
+Then run:
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+```bash
+npm install
+npm run dev
+```
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+Open [http://localhost:3000](http://localhost:3000). The backend must be
+running as well, since every page fetches its data from the API.
 
-### `yarn test`
+## Calling the API
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+All requests go through [`src/api/APIWrapper.ts`](./src/api/APIWrapper.ts),
+which attaches the current user's Firebase ID token, unwraps the backend's
+`{ success, data }` envelope, and throws on failure. Pass `token: null` to
+skip authentication for public endpoints.
 
-### `yarn build`
+Pages fetch with [SWR](https://swr.vercel.app/) so revisiting a page renders
+from cache while revalidating in the background. After a mutation, call the
+`mutate` function returned by that page's `useSWR` to refresh immediately.
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## Route protection
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+[`src/middleware.ts`](./src/middleware.ts) gates the admin routes. It reads the
+Firebase ID token from a `session` cookie and verifies its signature and expiry
+against Google's public keys using `jose` — the Admin SDK can't run there,
+since middleware executes on the Edge runtime. An invalid or expired token
+redirects to `/login`.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+The cookie itself is managed in [`src/lib/session.ts`](./src/lib/session.ts) and
+kept fresh by `AuthContext`, which writes the new token whenever Firebase
+refreshes it. Set it only through that helper, so its flags and lifetime stay in
+sync with what the middleware expects.
 
-### `yarn eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
-
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
-
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
+This is a first line of defense, not the security boundary — the backend
+independently verifies the token on every request.

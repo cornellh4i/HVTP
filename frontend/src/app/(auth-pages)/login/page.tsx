@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { logIn } from "@/api/users";
 import { useAuth } from "@/utils/AuthContext";
+import { setSessionCookie } from "@/lib/session";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -17,7 +18,7 @@ export default function LoginPage() {
     if (!loading && user) {
       // Refresh the session cookie (it may have expired) before redirecting
       user.getIdToken().then((token) => {
-        document.cookie = `session=${token}; path=/; max-age=3600; SameSite=Strict`;
+        setSessionCookie(token);
         const isMobile = window.innerWidth < 768;
         router.replace(isMobile ? "/inventory" : "/dashboard");
       });
